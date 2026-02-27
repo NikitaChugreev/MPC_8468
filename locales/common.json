@@ -1,0 +1,1144 @@
+{
+  "recipe": [
+    "Рецепт", 
+    "Recipe", 
+    "配方"],
+  "recipes": [
+    "Рецепты", 
+    "Recipes",
+    "配方列表"],
+  "start": [
+    "Старт", 
+    "Start", 
+    "开始"],
+  "stop": [
+    "Стоп", 
+    "Stop", 
+    "停止"],
+  "save": [
+    "Сохранить", 
+    "Save", 
+    "保存"],
+  "cancel": [
+    "Отмена", 
+    "Cancel", 
+    "取消"],
+  "exit": [
+    "Выход", 
+    "Exit", 
+    "退出"],
+  "status": [
+    "Статус", 
+    "Status", 
+    "状态"],
+  "report": [
+    "Отчет", 
+    "Report", 
+    "报告"],
+  "clear": [
+    "Очистить", 
+    "Clear", 
+    "清除"],
+  "select": [
+    "Выбрать", 
+    "Select", 
+    "选择"],
+  "close": [
+    "Закрыть", 
+    "Close", 
+    "关闭"],
+  "reset": [
+    "Сбросить", 
+    "Reset", 
+    "重置"],
+  "update_software": [
+    "Обновить ПО", 
+    "Update software", 
+    "更新软件"],
+  "update": [
+    "Обновить", 
+    "Update", 
+    "更新"],
+  "name": [
+    "Название", 
+    "Name", 
+    "名称"],
+  "comment": [
+    "Комментарий", 
+    "Comment", 
+    "备注"],
+
+  "recipes_section": [
+    "Рецепты", 
+    "Recipes", 
+    "配方"],
+  "base_pressure": [
+    "Остаточное\nдавление", 
+    "Base pressure", 
+    "基底压力"],
+  "base_pressure_1": [
+    "Остаточное давление", 
+    "Base pressure",  
+    "基底压力"],
+  "power": [
+    "Мощность", 
+    "Power", 
+    "功率"],
+  "process_time": [
+    "Время обработки", 
+    "Process time", 
+    "处理时间"],
+  "heat_during": [
+    "Нагрев во время", 
+    "Heating during", 
+    "处理中加热"],
+  "heat_after": [
+    "Нагрев после", 
+    "Heating after", 
+    "处理后加热"],
+  "copy_parameters": [
+    "Копировать\nпараметры", 
+    "Copy\nparameters", 
+    "复制参数"],
+  "wrong_password": [
+    "Неверный пароль", 
+    "Wrong password", 
+    "密码错误"],
+  "select_profile": [
+    "Выберите профиль", 
+    "Select profile", 
+    "选择配置文件"],
+  "enter_password": [
+    "Введите пароль", 
+    "Enter password",
+    "请输入密码"],
+  "operator": [
+    "Оператор", 
+    "Operator", 
+    "操作员"],
+  "technologist": [
+    "Технолог", 
+    "Technologist", 
+    "工艺工程师"],
+  "settings": [
+    "Настройки", 
+    "Settings", 
+    "设置"],
+  "service_engineer": [
+    "Сервис-инженер", 
+    "Service engineer", 
+    "维修工程师"],
+  "turn_off": [
+    "Выключить", 
+    "Turn Off", 
+    "关闭"],
+  "use_password_for_technologist": [
+    "Использовать пароль\n(для Технолога)", 
+    "Use Password\n(for Technologist)", 
+    "为工艺工程师使用密码"],
+  "no": [
+    "Нет", 
+    "No", 
+    "否"],
+  "yes": [
+    "Да", 
+    "Yes", 
+    "是"],
+  "chamber_vent_time": [
+    "Время напуска в камеру", 
+    "Chamber vent time", 
+    "进气时间"],
+
+  "max_pump_down_time": [
+    "Предельное время\nожидания откачки",
+    "Maximum pump-down Time", 
+    "最大抽气等待时间"],
+  "mfc_coefficient_1": [
+    "Коэффициент РРГ 1:\nСм. Таблица А", 
+    "MFC Coefficient 1:\nSee Table A",
+    "质量流量控制器系数1：见表A"],
+  "mfc_coefficient_2": [
+    "Коэффициент РРГ 2:\nСм. Таблица А", 
+    "MFC Coefficient 2:\nSee Table A", 
+    "质量流量控制器系数2：见表A"],
+  "mfc_coefficient_3": [
+    "Коэффициент РРГ 3:\nСм. Таблица А", 
+    "MFC Coefficient 3:\nSee Table A", 
+    "质量流量控制器系数3：见表A"],
+  "system_operating_time": [
+    "Время работы установки", 
+    "System operating time", 
+    "系统运行时间"],
+  "pump_operating_time": [
+    "Время работы насоса", 
+    "Pump operating time", 
+    "真空泵运行时间"],
+  "reset_pump_operating_time": [
+    "Сбросить время\nработы насоса", 
+    "Reset pump\noperating time", 
+    "重置真空泵运行时间"],
+  "pump_maintenance_reminder": [
+    "Напоминание об\nобслуживании насоса", 
+    "Pump maintenance\nreminder", 
+    "真空泵维护提醒"],
+  "enable_sound": [
+    "Включить звук", 
+    "Enable sound", 
+    "启用声音"],
+  "delete": [
+    "Удалить", 
+    "Delete", 
+    "删除"],
+  "attempt": [
+    "Попытка",
+    "Attempt",
+    "試圖"
+  ],
+
+  "attempt_off_plasma": [
+    "отключить плазму",
+    "turn off the plasma.",
+    "關閉等離子電視。"
+  ],
+  "attempt_off_ps": [
+    "отключить блок питания генератора.",
+    "turn off the generator power supply.",
+    "關閉發電機電源。"
+  ],
+  "attempt_close_valves": [
+    "закрыть клапаны.",
+    "close the valves",
+    "關閉閥門。"
+  ],
+  "attempt_off_heat": [
+    "отключить нагрев.",
+    "turn off the heating.",
+    "關閉暖氣。"
+  ],
+  "attempt_on_heat": [
+    "включить нагрев.",
+    "turn on the heating.",
+    "打開暖氣。"
+  ],
+  "attempt_off_pump": [
+    "отключить насос.",
+    "turn off the pump.",
+    "關閉水泵。"
+  ],
+  "attempt_open_ve01": [
+    "открыть клапан напуска атмосферы.",
+    "open the atmosphere bleed valve.",
+    "打開大氣洩放閥。"
+  ],
+  "attempt_init": [
+    "инициализации устройств.",
+    "initialization of devices.",
+    "設備初始化。"
+  ],
+  "attempt_open_valves": [
+    "открыть клапаны.",
+    "open the valves.",
+    "打開閥門。"
+  ],
+  "attempt_set_flow": [
+    "установить поток в РРГ.",
+    "set the flow in MFC.",
+    "設定氣體流量調節器的流量。"
+  ],
+  "attempt_on_ps": [
+    "включить блок питания генератора.",
+    "turn on the generator power supply.",
+    "打開發電機電源。"
+  ],
+  "attempt_set_power": [
+    "задать мощность.",
+    "set power.",
+    "設定功率。"
+  ],
+  "attempt_set_temp": [
+    "установить температуру нагрева.",
+    "set the heating temperature.",
+    "設定加熱溫度。"
+  ],
+  "attempt_on_pump": [
+    "включить насос.",
+    "turn on the pump.",
+    "啟動水泵。"
+  ],
+  "attempt_on_plasma": [
+    "включить плазму.",
+    "turn on plasma.",
+    "打開等離子電視。"
+  ],
+  
+  "attempt_close_ve01": [
+    "закрыть клапан напуска атмосферы.",
+    "close the atmosphere bleed valve.",
+    "關閉大氣排放閥。"
+  ],
+
+  "select_language": [
+    "Выберите язык", 
+    "Select language", 
+    "选择语言"
+  ],
+
+  "init": [
+    "Инициализация...", 
+    "Initialization...", 
+    "初始化..."],
+
+  "system_ready": [
+    "Установка готова к запуску процесса.", 
+    "System ready to start process.", 
+    "系统已准备好启动流程。"],
+  "system_ready_oper": [
+    "Система готова. Выберите рецепт или выйдите для смены профиля.", 
+    "The system is ready. Select a recipe or exit to change profile.", 
+    "系统已准备好。请选择配方或退出以更改配置文件。"],
+  "system_ready_tech": ["Система готова.", "The system is ready.", "系统已准备好。"],
+  "waiting_cooling_complete": [
+    "Ожидание завершения охлаждения.", 
+    "Waiting for cooling to complete.", 
+    "等待冷却完成。"],
+  "waiting_target_temp": [
+    "Ожидание достижения целевой температуры.",
+    "Waiting for the target temperature to be reached.",
+    "等待達到目標溫度。"
+  ],
+  "waiting_complete_heating": [
+    "Ожидание завершения нагрева.", 
+    "Waiting for the heating to finish.", 
+    "等待加热完成。"],
+  "waiting_stabilizy_flow": [
+    "Ожидание стабилизации потоков газа.", 
+    "Waiting for gas flows to stabilize.", 
+    "等待气体流量稳定。"],
+  "waiting_setting_flow": [
+    "Ожидание установки потоков газа в РРГ.", 
+    "Waiting for gas flow recording in MFC.", 
+    "等待氣體流量調節器記錄氣體流量。"],
+  "waiting_stabilizy_pressure": [
+    "Ожидание стабилизации давления.", 
+    "Waiting for pressure to stabilize.", 
+    "等待壓力穩定。"],
+  
+  "turn_on_pump": [
+    "Включить насос", 
+    "Turn on pump", 
+    "开启真空泵"],
+  "turn_off_pump": [
+    "Отключить насос", 
+    "Turn off pump", 
+    "关闭真空泵"],
+  "start_pumping": [
+    "Включить откачку", 
+    "Start pumping", 
+    "开始抽气"],
+  "stop_pumping": [
+    "Отключить откачку", 
+    "Stop pumping", 
+    "停止抽气"],
+  "pump_on": [
+    "Насос включен.", 
+    "Pump is on.", 
+    "真空泵已开启。"],
+  "pump_off": [
+    "Насос отключен.", 
+    "Pump is off.", 
+    "真空泵已关闭。"],
+  "pumping_end_start_venting": [
+    "Откачка завершена.", 
+    "Purge. Pumping completed, transition to venting.", 
+    "抽气完成，进入进气阶段。"],
+  "pumping_end_start_heating": [
+    "Откачка завершена, переход к нагреву.", 
+    "Pumping completed, transition to heating.", 
+    "抽气完成，开始加热。"],
+
+  "start_purge": [
+    "Включить продувку", 
+    "Start purge",
+    "开始吹扫"],
+  "stop_purge": [
+    "Отключить продувку", 
+    "Stop purge", 
+    "停止吹扫"],
+  "purge_on": [
+    "Продувка включена.", 
+    "Purge is on.", 
+    "吹扫已开启。"],
+  "purge_off": [
+    "Продувка отключена.", 
+    "Purge is off.", 
+    "吹扫已关闭。"],
+
+  "turn_on_heating": [
+    "Включить нагрев", 
+    "Turn on heating", 
+    "开启加热"],
+  "turn_off_heating": [
+    "Отключить нагрев", 
+    "Turn off heating", 
+    "关闭加热"],
+  "set_heating_temp": [
+    "Установлена температура нагрева.", 
+    "The heating temperature is set.", 
+    "加热温度已设定。"],
+  "waiting_set_heating_temp": [
+    "Ожидание установки температуры нагрева.", 
+    "Waiting for the heating temperature to be set.", 
+    "等待設定加熱溫度。"],
+  "heating_on": [
+    "Нагрев включен.", 
+    "Heating is on.", 
+    "加热已开启。"],
+  "heating_off": [
+    "Нагрев отключен.", 
+    "Heating is turned off.", 
+    "加热已关闭。"],
+  "heating": [
+    "Нагрев", 
+    "Heating", 
+    "加热"],
+  "heating_time": [
+    "Время нагрева", 
+    "Heating time", 
+    "加热时间"],
+  "heating_temperature": [
+    "Температура нагрева", 
+    "Heating temperature", 
+    "加热温度"],
+  "heating_temperature_1": [
+    "Температура\nнагрева",
+    "Heating\ntemperature", 
+    "加热温度"],
+  "heating_time_after": [
+    "Время нагрева после", 
+    "Heating after time", 
+    "后续加热时间"],
+  "heating_time_after_process": [
+    "Время нагрева\nпосле обработки", 
+    "Heating time after process", 
+    "处理后的加热时间"],
+  "heating_off_start_venting": [
+    "Нагрев отключен, переход к напуску.", 
+    "Heating is turned off, transition to venting.", 
+    "加热关闭，进入进气阶段。"],
+  "heating_temperature_range": [
+    "От 24 до 350 °C", 
+    "From 24 to 350 °C", 
+    "24 至 350 °C"],
+
+  "cooling": [
+    "Охлаждение", 
+    "Cooling", 
+    "冷却"],
+  "cooling_time": [
+    "Время охлаждения", 
+    "Cooling time", 
+    "冷却时间"],
+  "cooling_temperature": [
+    "Температура охлаждения", 
+    "Cooling temperature", 
+    "冷却温度"],
+  "cooling_temperature_1": [
+    "Температура\nохлаждения", 
+    "Cooling\ntemperature", 
+    "冷却温度"],
+  "cooling_temperature_range": [
+    "От 24 до 350 °C", 
+    "From 24 to 350 °C", 
+    "24 至 350 °C"],
+
+  "purging_open_valve": [
+    "Продувка. Открыт клапан напуска.", 
+    "Purge. The valve is opened.", 
+    "吹扫：进气阀已打开。"],
+  "purging_close_valve": [
+    "Продувка. Закрыт клапан напуска.", 
+    "Purge. The valve is closed.", 
+    "吹扫：进气阀已关闭。"],
+  "purge_pump_on": [
+    "Продувка. Насос включен.", 
+    "Purge. Pump is on.", 
+    "吹扫：真空泵已开启。"],
+  "purge_pump_off": [
+    "Продувка. Насос отключен.", 
+    "Purge. Pump is off.", 
+    "吹扫：真空泵已关闭。"],
+  "purge_completed": [
+    "Продувка завершена.", 
+    "Purge completed.", 
+    "吹扫完成。"],
+
+  "plasma_on": [
+    "Плазма включена.", 
+    "Plasma is on.", 
+    "等离子体已开启。"],
+  "plasma_off": [
+    "Плазма отключена.", 
+    "Plasma is off.", 
+    "等离子体已关闭。"],
+  "turn_on_plasma": [
+    "Включить плазму", 
+    "Turn on plasma", 
+    "开启等离子体"],
+  "turn_off_plasma": [
+    "Отключить плазму", 
+    "Turn off plasma", 
+    "关闭等离子体"],
+  "turning_on_plasma": [
+    "Включение плазмы...", 
+    "Turning on plasma...", 
+    "正在开启等离子体..."],
+  "turning_off_plasma": [
+    "Выключение плазмы...", 
+    "Turning off plasma...", 
+    "正在关闭等离子体..."],
+
+  "on_ps": [
+    "Включен БП генератора.", 
+    "Turned on the PS.", 
+    "电源已开启。"],
+  "off_ps": [
+    "Отключен БП генератора.", 
+    "PS is turned off.", 
+    "电源已关闭。"],
+
+  "start_venting_gas": [
+    "Напустить газ", 
+    "Start venting gas", 
+    "开始进气"],
+  "stop_venting_gas": [
+    "Остановить напуск газа", 
+    "Stop venting gas", 
+    "停止进气"],
+  "start_venting": [
+    "Напустить в камеру", 
+    "Start venting", 
+    "向腔体进气"],
+  "stop_venting": [
+    "Остановить напуск", 
+    "Stop venting", 
+    "停止进气"],
+  "venting_gas": [
+    "Напуск газа",
+    "Venting gas", 
+    "气体进气"],
+  "venting_atm": [
+    "Напуск атмосферы в камеру.", 
+    "Venting atmosphere into the chamber.", 
+    "向腔体通入大气。"],
+  "end_venting_atm": [
+    "Напуск атмосферы завершен.", 
+    "Venting atm completed.", 
+    "大气进气完成。"],
+  "stopping_venting_gas": [
+    "Остановка напуска газов...", 
+    "Stopping venting gas...", 
+    "停止进气..."],
+  "setting_flows": [
+    "Установка потоков", 
+    "Setting flows", 
+    "设置流量"],
+  "auto_venting": [
+    "Автоматический\nнапуск", 
+    "Auto venting", 
+    "自动进气"],
+  "venting_atm_end_for": [
+    "Напуск атмосферы завершится через", 
+    "Venting atm will be completed in", 
+    "大气进气将在以下时间后完成："],
+  "venting_mixture_gases": [
+    "Напуск смеси газов", 
+    "Venting mixture gases", 
+    "混合气体进气"],
+
+  "final_pressure": [
+    "Ост. давление", 
+    "Final pressure", 
+    "最终压力"],
+  "gas": [
+    "газ", 
+    "gas", 
+    "气体"],
+  "gas_1": [
+    "Газ 1", 
+    "Gas 1", 
+    "气体1"],
+  "gas_2": [
+    "Газ 2", 
+    "Gas 2", 
+    "气体2"],
+  "gas_3": [
+    "Газ 3", 
+    "Gas 3", 
+    "气体3"],
+  "setpoint": [
+    "Задание", 
+    "Setpoint", 
+    "设定值"],
+  "value": [
+    "Значение", 
+    "Value", 
+    "数值"],
+  "pressure_unit": [
+    "мбар", 
+    "mbar", 
+    "毫巴"],
+  "power_unit": [
+    "Вт", 
+    "W", 
+    "瓦"],
+  "flow_unit": [
+    "л/ч", 
+    "l/h", 
+    "升/小时"],
+  "forward_power": [
+    "Мощность падающая", 
+    "Forward power", 
+    "顺向功率"],
+  "reflected_power": [
+    "Мощность отраженная", 
+    "Reflected power", 
+    "反射功率"],
+  
+  "during_process": [
+    "Во время\nобработки", 
+    "During\nprocess", 
+    "处理过程中"],
+  "during_process_1": [
+    "Во время\nобработки", 
+    "During process", 
+    "处理过程中"],
+  "during": [
+    "Во время", 
+    "During", 
+    "期间"],
+  "after": [
+    "После", 
+    "After", 
+    "之后"],
+  "after_process": [
+    "После\nобработки", 
+    "After\nprocess", 
+    "处理后"],
+  "purge": [
+    "Продувка", 
+    "Purge", 
+    "吹扫"],
+  "cycle_count": [
+    "Кол-во\nциклов", 
+    "Number of\ncycles", 
+    "循环次数"],
+  "cycle_count_1": [
+    "Кол-во", 
+    "Number", 
+    "数量"],
+  "and": [
+    "и", 
+    "and", 
+    "和"],
+  "no_gas_selected": [
+    "Не выбран ни один газ.", 
+    "No gas selected.", 
+    "未选择任何气体。"],
+  "vent_valve": [
+    "Клапан", 
+    "Valve", 
+    "阀门"],
+  
+  "gas_inlet_completed": [
+    "Напуск газов в камеру завершен.", 
+    "Gas inlet to chamber completed.", 
+    "气体进腔完成。"],
+  "valve": [
+    "клапан", 
+    "valve", 
+    "阀门"],
+  "valves_open": [
+    "Клапаны открыты.", 
+    "Valves are opened.", 
+    "阀门已打开。"],
+  "valves_close": [
+    "Клапаны закрыты.", 
+    "Valves are closed.", 
+    "阀门已关闭。"],
+  "plasma_on_start_process": [
+    "Плазма включена, началась обработка.", 
+    "Plasma is turned on, processing has begun.", 
+    "等离子体已开启，处理开始。"],
+  "plasma_end": [
+    "Обработка плазмой завершена.", 
+    "Plasma processing completed.", 
+    "等离子处理完成。"],
+  "plasma_end_start_venting_atm": [
+    "Обработка плазмой завершена, переход к напуску атмосферы.", 
+    "Plasma processing completed, transition to venting atm.", 
+    "等离子处理完成，进入大气进气阶段。"],
+  "success_setting_flow": [
+    "Потоки газов успешно установлены.", 
+    "Setting flow successfully.",
+    "气体流量设置成功。"],
+  "success_process": [
+    "Процесс успешно завершен!", 
+    "Process completed successfully!", 
+    "流程成功完成！"],
+  "purging_pumping_end_start_venting": [
+    "Продувка. Откачка завершена, переход к напуску газа.", 
+    "Purge. Pumping completed, transition to venting.", 
+    "吹扫：抽气完成，进入进气阶段。"],
+  "end_process": [
+    "Процесс завершен успешно!", 
+    "Process completed successfully!", 
+    "流程成功结束！"],
+  "stop_process": [
+    "Процесс остановлен.", 
+    "The process is stopped.", 
+    "流程已停止。"],
+  "emergency_stop": [
+    "Аварийная остановка.", 
+    "Emergency stop.", 
+    "急停。"],
+  "emergency_stop_completed": [
+    "Аварийная остановка завершена.", 
+    "Emergency stop is completed.", 
+    "急停完成。"],
+  "enter_valid_value": [
+    "Пожалуйста, введите допустимое значение.", 
+    "Please, enter a valid value.", 
+    "请输入有效值。"],
+  "sensor_pressure_valid": [
+    "Датчик давления исправен.", 
+    "Sensor pressure is valid.", 
+    "压力传感器正常。"],
+  
+  "set_power": [
+    "Задана мощность генератора.", 
+    "Power of PS is set.", 
+    "电源功率已设定。"],
+  "start_purging": [
+    "Запущена продувка камеры.", 
+    "Purge started.", 
+    "腔体吹扫已开始。"],
+  "valve_ve01_open": [
+    "Клапан VE01 открыт.", 
+    "Valve VE01 is opened.", 
+    "VE01 阀已打开。"],
+  "ve1_close": [
+    "Закрыт клапан VE1.", 
+    "Valve VE1 is closed.", 
+    "VE1 阀已关闭。"],
+  "ve2_close": [
+    "Закрыт клапан VE2.", 
+    "Valve VE2 is closed.", 
+    "VE2 阀已关闭。"],
+  "ve3_close": [
+    "Закрыт клапан VE3.", 
+    "Valve VE3 is closed.", 
+    "VE3 阀已关闭。"],
+  "ve01_close": [
+    "Закрыт клапан VE01.", 
+    "Valve VE01 is closed.", 
+    "VE01 阀已关闭。"],
+  "ve02_close": [
+    "Закрыт клапан VE02.", 
+    "Valve VE02 is closed.", 
+    "VE02 阀已关闭。"],
+  
+  "pump_down_time_range_text": [
+    "Предельное время ожидания откачки", 
+    "Maximum pump-down time", 
+    "最大抽气等待时间"],
+  "coefficient": [
+    "Коэффициент", 
+    "Coefficient", 
+    "系数"],
+
+  "sec": [
+    "сек", 
+    "sec", 
+    "秒"],
+  "min": [
+    "мин", 
+    "min", 
+    "分钟"],
+  "hours": [
+    "Ч", 
+    "h", 
+    "小时"],
+  "vent_time_range": [
+    "От 3 до 1000 сек", 
+    "From 3 to 1000 sec", 
+    "3 至 1000 秒"],
+  "pump_down_time_range": [
+    "От 2 до 59 мин", 
+    "From 2 to 59 min", 
+    "2 至 59 分钟"],
+  
+  "coefficient_range": [
+    "От 0.01 до 10.00", 
+    "From 0.01 to 10.00", 
+    "0.01 至 10.00"],
+  "base_pressure_range": [
+    "От 0.1 до ", 
+    "From 0.1 to ", 
+    "0.1 至 "],
+  "gas_flow_max": [
+    "От 0 до 30 л/ч", 
+    "From 0 to 30 l/h", 
+    "0 至 30 升/小时"],
+  "gas_flow": [
+    "Поток газа", 
+    "Gas flow", 
+    "气体流量"],
+  "cant_be_zero": [
+    "Не может быть 0.", 
+    "can't be 0.", 
+    "不能为 0。"],
+  "total_gas_flow": [
+    "Суммарный поток газов", 
+    "Total gas flow", 
+    "总气体流量"],
+  "validation_successful": [
+    "Валидация успешна.", 
+    "Validation successful.",
+    "验证成功。"],
+
+  "service_pump": [
+    "Требуется обслуживание вакуумного насоса.", 
+    "The vacuum pump requires service.", 
+    "需要对真空泵进行维护。"],
+  "fault": [
+    "Авария.", 
+    "Fault.", 
+    "故障。"],
+  "warning": [
+    "Внимание!", 
+    "Warning!", 
+    "警告！"],
+  "match": [
+    "соответствует заданному.", 
+    "match to the set", 
+    "符合设定值。"],
+  "not_match": [
+    "не соответствует заданному.", 
+    "does not match to the set.", 
+    "不符合设定值。"],
+  "minutes_seconds": [
+    "Минуты : Секунды", 
+    "Minutes : Seconds", 
+    "分钟 : 秒"],
+  "plasma_power": [
+    "Мощность плазмы", 
+    "Plasma power", 
+    "等离子功率"],
+  "plasma_power_range": [
+    "От 10 до ", 
+    "From 10 to ", 
+    "10 至 "],
+  "purge_count_cycles": [
+    "Продувка: Кол-во циклов", 
+    "Purging: Count of cycles", 
+    "吹扫：循环次数"],
+  "air": [
+    "Воздух (Air)",
+    "Air", 
+    "空气"],
+  "argon": [
+    "Аргон (Ar)", 
+    "Argon (Ar)", 
+    "氩气 (Ar)"],
+  "oxigen": [
+    "Кислород (O2)", 
+    "Oxigen (O2)", 
+    "氧气 (O2)"],
+  "nitrogen": [
+    "Азот (N2)", 
+    "Nitrogen (N2)", 
+    "氮气 (N2)"],
+  "custom_gas": [
+    "Свой газ",
+    "Custom gas",
+    "自定义气体"],
+  "waiting_heating_mfc": [
+    "Ожидание прогрева РРГ.", 
+    "Waiting heating MFC.", 
+    "等待质量流量控制器加热。"],
+  "need_reboot": [
+    "Перезагрузите систему. Если проблема останется, свяжитесь со службой поддержки.",
+    "Restart your system. If the problem persists, contact support.",
+    "請重啟系統。如果問題仍然存在，請聯絡技術支援。"
+  ],
+
+  "error_over_reflected_power": [
+    "Отраженная мощность больше 10 Вт.", 
+    "Reflected power greater than 10 W.", 
+    "反射功率大于 10 W。"],
+  "error_invalide_recipe": [
+    "Неверные параметры рецепта.", 
+    "Invalid recipe.", 
+    "配方参数无效。"],
+  "error_dismatch_flow_during_process": [
+    "Обнаружено несоответствие потока газа заданному значению.", 
+    "A discrepancy between the gas flow and the set value has been detected.", 
+    "检测到气体流量与设定值不一致。"],
+  "error_sensor_pressure_not_valid": [
+    "Датчик давления не исправен.", 
+    "Sensor pressure is not valid.", 
+    "压力传感器异常。"],
+  "error_water_flow_zero": [
+    "Поток воды равен нулю. Проверьте наличие воды в системе.", 
+    "Water flow is zero. Check water supply in the system.", 
+    "水流为零。请检查系统中的供水。"],
+  "error_checking_water_flow": [
+    "Ошибка проверки потока воды", 
+    "Error checking water flow", 
+    "检查水流时出错"],
+  "error_pressure_increase_during_process": [
+    "Обнаружено натекание во время процесса.", 
+    "An increase in pressure was detected during the process.", 
+    "处理过程中检测到泄漏（压力上升）。"],
+  "error_set_power": [
+    "Не удалось задать мощность генератора.", 
+    "Failed to set power.", 
+    "无法设定电源功率。"],
+  "error_init_devices": [
+    "Не удалось инициализировать устройства. Перезагрузите установку.", 
+    "Failed to initialize devices. Please restart the installation.",
+    "設備初始化失敗。請重新啟動安裝。"],
+  "error_pumpdown_time_exceeded": [
+    "Превышено время откачки.", 
+    "Exceeded pumpdown time.", 
+    "抽气时间超限。"],
+  "error_coefficient_range": [
+    "Коэффициент для РРГ должен быть в диапазоне от 0.01 до 10.00", 
+    "Coefficient for MFC must be between 0.01 and 10.00", 
+    "质量流量控制器系数必须在 0.01 至 10.00 之间"],
+  "error_heating_time_not_set": [
+    "Не задано время нагрева!", 
+    "Error: Heating time is not set!", 
+    "错误：未设置加热时间！"],
+  "error_close_valves": [
+    "Не удалось закрыть все клапаны рабочих газов.",
+    "Failed to close all working gas valves.",
+    "未能關閉所有工作燃氣閥門。"
+  ],
+  "error_turn_on_plasma": [
+    "Не удалось включить плазму.", 
+    "Failed to turn on the plasma.", 
+    "无法启动等离子体。"],
+  "error_turn_off_plasma": [
+    "Не удалось отключить плазму.", 
+    "Failed to turn off the plasma.", 
+    "无法关闭等离子体。"],
+  "error_post_heating_time_not_set": [
+    "Не задано время нагрева после обработки!", 
+    "Error: Post-process heating time is not set!", 
+    "错误：未设置处理后的加热时间！"],
+  "error_process_time_not_set": [
+    "Не задано время обработки!", 
+    "Error: Process time is not set!", 
+    "错误：未设置处理时间！"],
+  "error_forward_power_not_set": [
+    "Не задана падающая мощность!", 
+    "Error: Forward power is not set!", 
+    "错误：未设置顺向功率！"],
+  "error_all_gas_flows_zero": [
+    "Все потоки газов равны 0!", 
+    "Error: All gas flow rates are zero!", 
+    "错误：所有气体流量均为 0！"],
+  "error_purge_valve_not_set": [
+    "Не задан клапан напуска продувки!", 
+    "Error: Purge vent valve not set!", 
+    "错误：未指定吹扫进气阀！"],
+  "error_no_recipe_selected": [
+    "Не выбран рецепт!", 
+    "Error: No recipe selected!", 
+    "错误：未选择配方！"],
+  "error_waiting_temp": [
+    "Превышено предельное время ожидания нагрева.", 
+    "Heating timeout limit exceeded.", 
+    "加熱超時限制已過。"],
+  "error_pump_down_time_range": [
+    "Предельное время ожидания откачки должно быть в интервале от 2 до 59 мин", 
+    "Maximum pump-down time must be between 2 and 59 min", 
+    "抽气等待时间必须在 2 至 59 分钟之间"],
+  "error_set_valid_power": [
+    "Установите корректную мощность.", 
+    "Set a valid power value.", 
+    "请设置有效的功率值。"],
+  "error_set_valid_time": [
+    "Установите корректное время обработки.", 
+    "Set a valid timepower value.", 
+    "请设置有效的处理时间。"],
+  "error_purge_cycles_not_set": [
+    "Не задано количество циклов продувки.", 
+    "Error: purge cycle count not set.", 
+    "错误：未设置吹扫循环次数。"],
+  "error_heating_on": [
+    "Не удалось включить нагрев.", 
+    "Error: failed to turn on the heating.", 
+    "错误：无法开启加热。"],
+  "error_heating_off": [
+    "Не удалось отключить нагрев.", 
+    "Error: failed to turn off the heating.", 
+    "错误：无法关闭加热。"],
+  "error_heating_during": [
+    "Ошибка нагрева во время: ", 
+    "Error in heating during: ", 
+    "加热时发生错误："],
+  "error_set_heating_temp": [
+    "Не удалось установить температуру нагрева.", 
+    "Error: failed to set The heating temperature.", 
+    "错误：无法设置加热温度。"],
+  "error_process": [
+    "Ошибка при обработке плазмой", 
+    "Error in plasma processing.", 
+    "等离子处理时出错"],
+  "error_pumping": [
+    "Ошибка при откачке", 
+    "Error in pumping.", 
+    "抽气时发生错误"],
+  "error_venting_atm": [
+    "Ошибка при напуске атмосферы", 
+    "Error in venting atm", 
+    "通入大气时出错"],
+  "error_init": [
+    "Ошибка инициализации", 
+    "Error in initialization", 
+    "初始化错误"],
+  "error_i2c": [
+    "Ошибка i2c устройств.", 
+    "Error i2c devices.", 
+    "I2C 设备错误"],
+  "error": [
+    "Ошибка", 
+    "Error", 
+    "错误"],
+  "error_open_valve_ve01": [
+    "Не удалось открыть клапан напуска атмосферы.",
+    "Failed to open the atmosphere bleed valve.",
+    "未能打開大氣洩放閥。"
+  ],
+  "error_close_valve_ve01": [
+    "Не удалось закрыть клапан напуска атмосферы.",
+    "Failed to close the atmosphere bleed valve.",
+    "大氣排放閥關閉失敗。"
+  ],
+  "error_open_valves": [
+    "Не удалось открыть клапаны рабочих газов.",
+    "Failed to open the working gas valves.",
+    "未能打開工作燃氣閥。"
+  ],
+  "error_turn_on_pump": [
+    "Не удалось включить насос.",
+    "Failed to turn on the pump.",
+    "水泵啟動失敗。"
+  ],
+  "error_turn_off_pump": [
+    "Не удалось отключить насос.",
+    "Failed to turn off the pump.",
+    "未能關閉水泵。"
+  ],
+  "error_init_recipe": [
+    "Ошибка инициализации рецепта", 
+    "Error in initialization recipe", 
+    "配方初始化错误"],
+  "error_count_purging": [
+    "Не задано количество циклов продувки.", 
+    "Error: the number of purge cycles is not set.", 
+    "错误：未设置吹扫循环次数。"],
+  "error_valve_purging": [
+    "Не задан клапан продувки.", 
+    "Error: the valve of purge is not set.", 
+    "错误：未指定吹扫阀门。"],
+  "error_limit_time_purging": [
+    "Продувка. Превышено время откачки.", 
+    "Error: purging. Exceeded time purging.", 
+    "错误：吹扫操作——抽气时间超限。"],
+  "error_purging": [
+    "Ошибка продувки: ", 
+    "Error purging:", 
+    "吹扫错误："],
+  "error_emergency_stop": [
+    "Ошибка аварийной остановки", 
+    "Error emergency stop", 
+    "急停错误"],
+  "error_vent_time_range": [
+    "Время напуска должно быть в интервале от 3 до 1000 сек", 
+    "Chamber vent time must be between 3 and 1000 sec", 
+    "进气时间必须在 3 至 1000 秒之间"],
+  "error_pressure_range": [
+    "Заданное давление должно быть в интервале от 0.1 до ", 
+    "Setpoint pressure must be between 0.1 and ", 
+    "设定压力必须在 0.1 至 之间 "],
+  "error_gas_flow_max": [
+    "Поток газа не должен превышать 30 л/ч", 
+    "Gas flow must not exceed 30 l/h", 
+    "气体流量不得超过 30 升/小时"],
+  "error_format_flow": [
+    "Ошибка в формате данных потоков.", 
+    "Error in flow data format.", 
+    "气体流量数据格式错误。"],
+  "error_setting_flow": [
+    "Ошибка установки потока газа в РРГ.", 
+    "Error setting gas flow in MFC.", 
+    "氣體流量調節器氣體流量設定錯誤。"],
+  "error_water_flow_zero_during_plasma": [
+    "Поток воды равен нулю во время работы плазмы", 
+    "Water flow is zero during plasma operation", 
+    "等离子体运行期间水流量为零"],
+  "error_stabilizy_pressure": [
+    "Не удалось стабилилизовать давление.",
+    "Failed to stabilize pressure.",
+    "壓力穩定失敗。"
+  ],
+  "error_validation": [
+    "Ошибка валидации", 
+    "Validation error", 
+    "验证错误"],
+  "error_plasma_power_range": [
+    "Мощность плазмы должна быть в диапазоне от 10 до ", 
+    "Plasma power must be between 10 and ", 
+    "等离子功率必须在 10 至 之间"],
+  "error_heating_temperature_range": [
+    "Температура нагрева должна быть в диапазоне от 24 до 350 °C", 
+    "Heating temperature must be between 24 and 350 °C", 
+    "加热温度必须在 24 至 350 °C 之间"],
+  "error_cooling_temperature_range": [
+    "Температура охлаждения должна быть в диапазоне от 24 до 350 °C", 
+    "Cooling temperature must be between 24 and 350 °C", 
+    "冷却温度必须在 24 至 350 °C 之间"],
+  "error_heating_after": [
+    "Ошибка при нагреве после", 
+    "Error in heating after.", 
+    "后续加热时发生错误"],
+  "error_venting": [
+    "Ошибка при напуске", 
+    "Error in venting.", 
+    "进气时发生错误"],
+  "error_valve_close": [
+    "Не удалось закрыть клапаны.", 
+    "Error. Failed to close valves.", 
+    "错误：无法关闭阀门。"],
+  "error_cooling": [
+    "Ошибка при охлаждении.", 
+    "Error in cooling.", 
+    "冷却时发生错误。"],
+  "error_turn_on_ps": [
+    "Не удалось включить БП генератора.",
+    "Failed to turn on the generator power supply.",
+    "發電機電源啟動失敗。"
+  ],
+  "error_turn_off_ps": [
+    "Не удалось отключить БП генератора.",
+    "Failed to turn off generator power supply.",
+    "未能關閉發電機電源。"
+  ],
+  "error_temp_not_increase": [
+    "Температура не увеличивается.", 
+    "The temperature does not increase.", 
+    "溫度沒有升高。"]
+}

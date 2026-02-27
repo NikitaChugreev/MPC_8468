@@ -1,0 +1,2189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RecWindow</class>
+ <widget class="QDialog" name="RecWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1920</width>
+    <height>1080</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QPushButton" name="ButtonCheck">
+   <property name="geometry">
+    <rect>
+     <x>1316</x>
+     <y>42</y>
+     <width>241</width>
+     <height>103</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Выбрать</string>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>ui/Pictures13/Select.png</normaloff>ui/Pictures13/Select.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>38</width>
+     <height>38</height>
+    </size>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>66</y>
+     <width>131</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>22</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Рецепт</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="RecNumber">
+   <property name="geometry">
+    <rect>
+     <x>1030</x>
+     <y>60</y>
+     <width>73</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>22</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string>-</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ButtonSave">
+   <property name="geometry">
+    <rect>
+     <x>1030</x>
+     <y>928</y>
+     <width>289</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Копировать
+параметры</string>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>ui/Pictures13/Save.png</normaloff>ui/Pictures13/Save.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>38</width>
+     <height>38</height>
+    </size>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ButtonClear">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>928</y>
+     <width>223</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Очистить</string>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>ui/Pictures13/Clean.png</normaloff>ui/Pictures13/Clean.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>38</width>
+     <height>38</height>
+    </size>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="ComText">
+   <property name="geometry">
+    <rect>
+     <x>1020</x>
+     <y>288</y>
+     <width>537</width>
+     <height>85</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string>border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="plainText">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ButtonClose">
+   <property name="geometry">
+    <rect>
+     <x>1336</x>
+     <y>928</y>
+     <width>223</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Закрыть</string>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>ui/Pictures13/Close.png</normaloff>ui/Pictures13/Close.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>38</width>
+     <height>38</height>
+    </size>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ComButton">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>288</y>
+     <width>209</width>
+     <height>85</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Комментарий</string>
+   </property>
+  </widget>
+  <widget class="QScrollArea" name="ScrollArea">
+   <property name="geometry">
+    <rect>
+     <x>238</x>
+     <y>162</y>
+     <width>521</width>
+     <height>847</height>
+    </rect>
+   </property>
+   <property name="widgetResizable">
+    <bool>true</bool>
+   </property>
+   <widget class="QWidget" name="scrollAreaWidgetContents">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>502</width>
+      <height>3510</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="Button1">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(120, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>1.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button2">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>2.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button3">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>3.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button4">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>4.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button5">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>5.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button6">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>6.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button7">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>7.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button8">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>8.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button9">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>9.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button10">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>10.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button11">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>11.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button12">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>12.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button13">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>21</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>13.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button14">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>14.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button15">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>15.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button16">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>16.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button17">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>17.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button18">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>18.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button19">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>19.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button20">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>20.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button21">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>21.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button22">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>22.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button23">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>23.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button24">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>24.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button25">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>25.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button26">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>26.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button27">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>27.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button28">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>28.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button29">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>29.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button30">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>30.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button31">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>31.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button32">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>32.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button33">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>33.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button34">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>34.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button35">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>35.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button36">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>36.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button37">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>37.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button38">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>38.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button39">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>39.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button40">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>40.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button41">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>41.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button42">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>42.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button43">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>43.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button44">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>44.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button45">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>45.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button46">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>46.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button47">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>47.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button48">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>48.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button49">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>49.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Button50">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Lato Semibold</family>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">text-align: left;
+background-color: rgb(220, 220, 220);
+border: 1px solid rgb(120, 120, 120);
+border-radius: 2px;</string>
+         </property>
+         <property name="text">
+          <string>50.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QScrollBar" name="VerticalScrollBar">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>162</y>
+     <width>97</width>
+     <height>847</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QScrollBar:vertical
+    {
+        background-color: rgb(220, 220, 220);
+        border: 1px solid rgb(120, 120, 120);
+        border-radius: 2px
+    }
+
+QScrollBar::handle:vertical
+    {
+        background-color: rgb(130, 130, 130);
+        min-height: 100px;
+        border: 1px solid rgb(120, 120, 120);
+        border-radius: 2px;
+    }
+
+QScrollBar::sub-line:vertical
+    {
+        height: 0px;
+        width: 0px;
+        subcontrol-position: top;
+    }
+
+QScrollBar::add-line:vertical
+    {
+        height: 0px;
+        width: 0px;
+        subcontrol-position: bottom;
+    }
+
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical
+    {
+        background: none;
+    }
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
+    {
+        background: none;
+    }</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_3">
+   <property name="geometry">
+    <rect>
+     <x>172</x>
+     <y>66</y>
+     <width>221</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>22</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Рецепты:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="TitleLine">
+   <property name="geometry">
+    <rect>
+     <x>1020</x>
+     <y>186</y>
+     <width>537</width>
+     <height>85</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="TitleButton">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>186</y>
+     <width>209</width>
+     <height>85</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Название</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_5">
+   <property name="geometry">
+    <rect>
+     <x>1420</x>
+     <y>440</y>
+     <width>171</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Газ 1</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_6">
+   <property name="geometry">
+    <rect>
+     <x>1420</x>
+     <y>540</y>
+     <width>171</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Газ 2</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_7">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>630</y>
+     <width>211</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Время
+обработки</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_8">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>540</y>
+     <width>171</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Мощность</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="VE1FlowLine">
+   <property name="geometry">
+    <rect>
+     <x>1700</x>
+     <y>440</y>
+     <width>81</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string>0</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_9">
+   <property name="geometry">
+    <rect>
+     <x>1800</x>
+     <y>440</y>
+     <width>65</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>л/ч</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_10">
+   <property name="geometry">
+    <rect>
+     <x>1800</x>
+     <y>540</y>
+     <width>65</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>л/ч</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="VE2FlowLine">
+   <property name="geometry">
+    <rect>
+     <x>1700</x>
+     <y>540</y>
+     <width>81</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string>0</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_12">
+   <property name="geometry">
+    <rect>
+     <x>1120</x>
+     <y>540</y>
+     <width>57</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Вт</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="TimeLine">
+   <property name="geometry">
+    <rect>
+     <x>1020</x>
+     <y>640</y>
+     <width>81</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string>00:00</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="PowerLine">
+   <property name="geometry">
+    <rect>
+     <x>1020</x>
+     <y>540</y>
+     <width>81</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string>0</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="VE2GasLine">
+   <property name="geometry">
+    <rect>
+     <x>1590</x>
+     <y>540</y>
+     <width>81</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="VE1GasLine">
+   <property name="geometry">
+    <rect>
+     <x>1590</x>
+     <y>440</y>
+     <width>81</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_2">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>186</y>
+     <width>209</width>
+     <height>85</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Название</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_4">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>288</y>
+     <width>209</width>
+     <height>85</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Комментарий</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="PressLabel">
+   <property name="geometry">
+    <rect>
+     <x>1384</x>
+     <y>438</y>
+     <width>41</width>
+     <height>49</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>15</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelProf_16">
+   <property name="geometry">
+    <rect>
+     <x>1120</x>
+     <y>440</y>
+     <width>89</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>мбар</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="LabelText_11">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>430</y>
+     <width>211</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>20</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Остаточное
+давление</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="PressLine">
+   <property name="geometry">
+    <rect>
+     <x>1020</x>
+     <y>440</y>
+     <width>81</width>
+     <height>55</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Lato Semibold</family>
+     <pointsize>18</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 1px solid rgb(120, 120, 120);
+background-color: rgb(250, 250, 250);
+border-radius: 2px;</string>
+   </property>
+   <property name="text">
+    <string>0.1</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="Blackout">
+   <property name="geometry">
+    <rect>
+     <x>256</x>
+     <y>102</y>
+     <width>68</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="Screen">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1920</width>
+     <height>1080</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(245, 245, 245);</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>181</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>ui/Pictures13/logo(66).png</pixmap>
+   </property>
+  </widget>
+  <zorder>Screen</zorder>
+  <zorder>PressLine</zorder>
+  <zorder>ButtonCheck</zorder>
+  <zorder>LabelText</zorder>
+  <zorder>RecNumber</zorder>
+  <zorder>ButtonSave</zorder>
+  <zorder>ButtonClear</zorder>
+  <zorder>ComText</zorder>
+  <zorder>ButtonClose</zorder>
+  <zorder>ScrollArea</zorder>
+  <zorder>VerticalScrollBar</zorder>
+  <zorder>LabelText_3</zorder>
+  <zorder>TitleLine</zorder>
+  <zorder>LabelText_5</zorder>
+  <zorder>LabelText_6</zorder>
+  <zorder>LabelText_7</zorder>
+  <zorder>LabelText_8</zorder>
+  <zorder>VE1FlowLine</zorder>
+  <zorder>LabelText_9</zorder>
+  <zorder>LabelText_10</zorder>
+  <zorder>VE2FlowLine</zorder>
+  <zorder>LabelText_12</zorder>
+  <zorder>TimeLine</zorder>
+  <zorder>PowerLine</zorder>
+  <zorder>VE2GasLine</zorder>
+  <zorder>VE1GasLine</zorder>
+  <zorder>LabelText_2</zorder>
+  <zorder>LabelText_4</zorder>
+  <zorder>TitleButton</zorder>
+  <zorder>ComButton</zorder>
+  <zorder>PressLabel</zorder>
+  <zorder>LabelProf_16</zorder>
+  <zorder>LabelText_11</zorder>
+  <zorder>Blackout</zorder>
+  <zorder>label</zorder>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
