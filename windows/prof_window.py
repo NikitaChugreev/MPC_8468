@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from ui.profwindow import Ui_ProfWindow
 from windows.set_window import SetWindow
-from config.settings import settings
+from config.settings import save_settings, settings
 from utils.translator import Translator
 
 
@@ -205,5 +205,12 @@ class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
 
     def power_off(self):
         import os
+
+        self.time_work = time.time() - self.parent().time_start_work
+        last_time = settings.get('time_work', 0)
+        current_time = last_time + self.time_work
+        settings.update({'time_work': current_time})
+        save_settings(settings)
+        
         os.system("sudo shutdown -h now")
 

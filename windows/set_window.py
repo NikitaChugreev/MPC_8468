@@ -25,6 +25,7 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
         self.ClockNI.setText(str(settings['time_pump']))
         self.TimePump.setText(str(int(settings['time_pump_for_service']) // 3600))
         self.TimePumpSer.setText(str(int(settings['max_time_pump_for_service']) // 3600))
+        self.TimeMPC.setText(str(int(settings['time_work']) // 3600))
         self.userInputRrgConvCoeffPlace_1.setText(str(settings['coef_rrg1']))
         self.userInputRrgConvCoeffPlace_2.setText(str(settings['coef_rrg2']))
         self.comboBoxLang.setCurrentIndex(settings['LANG'])

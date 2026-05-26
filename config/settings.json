@@ -18,6 +18,7 @@
     "time_pump": 20,
     "time_pump_for_service": 0,
     "max_time_pump_for_service": 18000000,
+    "time_work": 0,
     "pass_technologist": "1234",
     "pass_service": "5678",
     "coef_rrg1": 1.0,

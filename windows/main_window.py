@@ -328,6 +328,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.translator = Translator()
         
+        self.time_start_work = time.time()
+
         self.controller = controller
         self.plasma_process = PlasmaAutoProcess(self.controller, self)
 
