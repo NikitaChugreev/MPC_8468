@@ -1111,8 +1111,8 @@ class PlasmaAutoProcess:
                     self.current_state = 'venting'
                     QTimer.singleShot(1000, self.process_venting)
                 else:
-                    # Форматирование давления: если < 1, то 2 знака после запятой, иначе целое число
-                    if current_pressure < 1.0:
+                    # Форматирование давления: если < 10, то 2 знака после запятой, иначе целое число
+                    if current_pressure < 10:
                         self.parent.PressZnach.setText(f"{current_pressure:.2f}")
                     else:
                         self.parent.PressZnach.setText(f"{int(current_pressure)}")

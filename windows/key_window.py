@@ -56,8 +56,8 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
             self.NumberLine.setText(getattr(self.parent(), self.label_sender).text())
             self.LabelTextPar.setText(self.translator.tr('base_pressure'))
             self.LabelTextLim.setText(self.translator.tr('base_pressure_range') + str(settings.get('ResPressure')) + " " + self.translator.tr('pressure_unit'))
-            self.max_limit = settings.get('ResPressure')
-            self.min_limit = 0.1
+            self.max_limit = 10
+            self.min_limit = settings.get('ResPressure')
             self.message = self.translator.tr('error_pressure_range') + str(settings.get('ResPressure')) + " " + self.translator.tr('pressure_unit')
 
         elif self.label_sender in ['VE1FlowZad', 'VE2FlowZad']:
@@ -68,7 +68,7 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
             self.LabelTextLim.setText(self.translator.tr('gas_flow_max'))
             self.LabelTextPar.setText(self.translator.tr('gas_flow') + ' ' + self.label_sender[2])
             self.max_limit = 30
-            self.min_limit = 0
+            self.min_limit = 0.5
             self.message = self.translator.tr('error_gas_flow_max')
 
         elif self.label_sender == 'TimeZad':
@@ -88,7 +88,7 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
             self.LabelTextPar.setText(self.translator.tr('plasma_power'))
             self.LabelTextLim.setText(self.translator.tr('plasma_power_range') + str(settings.get('MAX_POWER_BP')) + " " + self.translator.tr('power_unit'))
             self.max_limit = settings.get('MAX_POWER_BP')
-            self.min_limit = 10
+            self.min_limit = 100
             self.message = self.translator.tr('error_plasma_power_range' + str(settings.get('MAX_POWER_BP')) + " " + self.translator.tr('power_unit'))
 
         for button in [self.Button0, self.Button1, self.Button2, self.Button3, self.Button4,

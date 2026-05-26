@@ -977,7 +977,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     try:
                         pressure_value = float(pressure_raw)
                         old_pressure_text = self.PressZnach.text()
-                        if pressure_value < 1.0:
+                        if pressure_value < 10:
                             new_pressure_text = f"{pressure_value:.2f}"
                         else:
                             new_pressure_text = f"{int(pressure_value)}"
@@ -1031,7 +1031,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             pressure_value = float(values['pressure'])
             old_pressure_text = self.PressZnach.text()
             # Если значение меньше 1, отображаем с 2 знаками после запятой, иначе как целое число
-            if pressure_value < 1.0:
+            if pressure_value < 10:
                 new_pressure_text = f"{pressure_value:.2f}"
             else:
                 new_pressure_text = f"{int(pressure_value)}"
@@ -3208,8 +3208,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def update_pressure_display(self, pressure_value):
         try:
             pressure_float = float(pressure_value)
-            # Если значение меньше 1, отображаем с 2 знаками после запятой, иначе как целое число
-            if pressure_float < 1.0:
+            # Если значение меньше 10, отображаем с 2 знаками после запятой, иначе как целое число
+            if pressure_float < 10:
                 self.PressZnach.setText(f"{pressure_float:.2f}")
             else:
                 self.PressZnach.setText(f"{int(pressure_float)}")

@@ -12,7 +12,7 @@
     "ADDRESS_RF": 10,
     "BAUDRATE_RF": 57600,
     "MAX_POWER_BP": 1000,
-    "ResPressure": 1,
+    "ResPressure": 0.05,
     "use_pass_technologist": true,
     "time_venting": 60,
     "time_pump": 20,

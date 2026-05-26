@@ -43,6 +43,7 @@ class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
 
         self.ButtonNI.clicked.connect(self.pump)
         self.ButtonVE0.clicked.connect(self.venting_atm)
+        self.ButtonExit.clicked.connect(self.power_off)
 
         self.update_ui_texts()
 
@@ -201,4 +202,8 @@ class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
     def open_settings(self):
         set = SetWindow(self)
         set.show()
+
+    def power_off(self):
+        import os
+        os.system("sudo shutdown -h now")
 

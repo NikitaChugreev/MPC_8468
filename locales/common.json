@@ -1100,9 +1100,9 @@
     "Validation error", 
     "验证错误"],
   "error_plasma_power_range": [
-    "Мощность плазмы должна быть в диапазоне от 10 до ", 
-    "Plasma power must be between 10 and ", 
-    "等离子功率必须在 10 至 之间"],
+    "Мощность плазмы должна быть в диапазоне от 100 до ", 
+    "Plasma power must be between 100 and ", 
+    "等离子功率必须在 100 至 之间"],
   "error_heating_temperature_range": [
     "Температура нагрева должна быть в диапазоне от 24 до 350 °C", 
     "Heating temperature must be between 24 and 350 °C", 
