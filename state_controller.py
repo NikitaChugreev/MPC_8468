@@ -244,7 +244,7 @@ class RRG_MFC_UT:
         except Exception as e:
             logging.error(f"Error closing MFC-UT connection: {str(e)}")
 
-class RSG1000S:
+class LF_PE:
     def __init__(self, port, device_id=4):
         self.port = port
         self.address = device_id
@@ -281,7 +281,7 @@ class RSG1000S:
                 try:
                     logging.info(f"DEBUG: RF on_plasma: Attempt {attempt + 1}/{self.max_attempts}, calling write_bit...")
                     write_start = time.time()
-                    self.instrument.write_bit(registeraddress=0x0000, value=1)
+                    self.instrument.write_bit(registeraddress=0x0001, value=1)
                     write_elapsed = time.time() - write_start
                     total_elapsed = time.time() - start_time
                     logging.info(f"DEBUG: RF on_plasma: write_bit completed in {write_elapsed:.3f}s, total={total_elapsed:.3f}s")
@@ -321,7 +321,7 @@ class RSG1000S:
                 try:
                     logging.info(f"DEBUG: RF off_plasma: Attempt {attempt + 1}/{max_attempts_off}, calling write_bit...")
                     write_start = time.time()
-                    self.instrument.write_bit(registeraddress=0x0000, value=0)
+                    self.instrument.write_bit(registeraddress=0x0001, value=0)
                     write_elapsed = time.time() - write_start
                     total_elapsed = time.time() - start_time
                     logging.info(f"DEBUG: RF off_plasma: write_bit completed in {write_elapsed:.3f}s, total={total_elapsed:.3f}s")
@@ -449,7 +449,7 @@ class RSG1000S:
                 try:
                     logging.info(f"DEBUG: RF set_power: Attempt {attempt + 1}/{self.max_attempts}, calling write_register with power={power_int}...")
                     write_start = time.time()
-                    self.instrument.write_register(registeraddress=0, value=power_int, number_of_decimals=0, functioncode=6)
+                    self.instrument.write_long(registeraddress=0x0013, value=power_int, number_of_decimals=0, functioncode=4)
                     write_elapsed = time.time() - write_start
                     total_elapsed = time.time() - start_time
                     logging.info(f"DEBUG: RF set_power: write_register completed in {write_elapsed:.3f}s, total={total_elapsed:.3f}s")
@@ -486,7 +486,7 @@ class RSG1000S:
                 try:
                     logging.info(f"DEBUG: RF get_power: Attempt {attempt + 1}/{self.max_attempts}, calling read_registers...")
                     read_start = time.time()
-                    resp = self.instrument.read_registers(registeraddress=0x0000, number_of_registers=1, functioncode=3)
+                    resp = self.instrument.read_long(registeraddress=0x0013, number_of_registers=1, functioncode=3)
                     read_elapsed = time.time() - read_start
                     total_elapsed = time.time() - start_time
                     logging.info(f"DEBUG: RF get_power: read_registers completed in {read_elapsed:.3f}s, total={total_elapsed:.3f}s")
@@ -507,31 +507,359 @@ class RSG1000S:
         logging.error(f"DEBUG: RF get_power: max attempts reached after {total_elapsed:.3f}s")
         return None
 
-    def get_reflected_power(self):
-        for _ in range(self.max_attempts):
-            status = self.read_status()
-            if status:
-                return status.get('reflect_w')
+    # def get_forward_power(self):
+    #     for _ in range(self.max_attempts):
+    #         status = self.read_status()
+    #         if status:
+    #             return status.get('forward_w')
             
-        logging.error("max attempts get reflected power")
-        return None
-
-    def get_forward_power(self):
-        for _ in range(self.max_attempts):
-            status = self.read_status()
-            if status:
-                return status.get('forward_w')
-            
-        logging.error("max attempts get forward power")
-        return None
+    #     logging.error("max attempts get forward power")
+    #     return None
 
     def close(self):
         try:
             self.off_plasma()
             self.instrument.serial.close()
-            logging.info('RSG1000S successfully closed.')
+            logging.info('LF_PE successfully closed.')
         except Exception as e:
-            logging.error(f"Error in close RSG1000S: {e}")
+            logging.error(f"Error in close LF_PE: {e}")
+
+class APEL_M_1_5PDC:
+    """
+    Источник питания магнетронной распылительной системы APEL-M-1.5PDC-1000-1.
+    Интерфейс: RS-485, протокол RTU ModBus.
+
+    Регистры (FC4 — Input Registers, FC3/F6 — Holding Registers, FC1/F5 — Coils):
+      Coil_ONOFF    addr=0  Вкл./Выкл. источника
+      Coil_StTimer  addr=1  Вкл./Выкл. таймера
+      Coil_RstTimer addr=2  Сброс таймера
+      Coil_IgnOn    addr=3  Вкл./Выкл. генератора поджига
+
+      IReg_State    0x00  Состояние (0=норма, 1=заблокирован, 2=ошибка настроек)
+      IReg_Voltage  0x02  Выходное напряжение, В
+      IReg_Current  0x03  Выходной ток, мА
+      IReg_Power    0x04  Выходная мощность, Вт
+
+      HReg_StabMode 0x10  Режим стабилизации (0=U, 1=I, 2=P)
+      HReg_Voltage  0x11  Уставка напряжения, В  (100..1000)
+      HReg_Current  0x12  Уставка тока, мА       (75..1500)
+      HReg_Power    0x13  Уставка мощности, Вт   (100..1500)
+      HReg_Mode     0x14  Режим работы (0=DC, 1=импульсный)
+      HReg_Freq     0x15  Частота импульсов, кГц (1..100)
+      HReg_Tau      0x16  Коэффициент заполнения, % (10..80)
+      HReg_RemCtrl  0x1A  Блокировка ручного упр. (0=разрешено, 1=заблокировано)
+      HReg_ArcCnt   0x1B  Счётчик дуг (запись 0 — сброс)
+    """
+
+    def __init__(self, port, device_id=1):
+        self.port = port
+        self.address = device_id
+
+        self.max_attempts = 10
+        self._lock = threading.Lock()
+        self.operation_timeout = 2.0
+        self.serial_timeout = 2.0
+
+        try:
+            self.instrument = minimalmodbus.Instrument(port=self.port, slaveaddress=self.address)
+            self.instrument.serial.baudrate = settings.get('BAUDRATE_PDC')
+            self.instrument.serial.stopbits = 1
+            self.instrument.serial.bytesize = 8
+            self.instrument.serial.parity = minimalmodbus.serial.PARITY_NONE
+            self.instrument.serial.timeout = self.serial_timeout
+            logging.info("APEL_M_1_5PDC Modbus connection initialized successfully")
+
+            self.set_stab_mode(2) # Режим стабилизации по мощности
+            self.set_power(0)      # Установка нулевой мощности при инициализации для безопасности
+            self.ignition_off()     # Выключение генератора поджига при инициализации для безопасности
+
+        except Exception as e:
+            logging.error(f"Error init APEL_M_1_5PDC: {e}")
+
+    # ── Вкл./Выкл. ──────────────────────────────────────────────────────────
+
+    def on(self):
+        """Включение источника питания (Coil_ONOFF = 1)."""
+        thread_id = threading.current_thread().ident
+        logging.info(f"DEBUG: APEL on STARTED in thread {thread_id}")
+        start_time = time.time()
+
+        with self._lock:
+            for attempt in range(self.max_attempts):
+                elapsed = time.time() - start_time
+                if elapsed > self.operation_timeout:
+                    logging.warning(f"DEBUG: APEL on: operation timeout ({elapsed:.3f}s)")
+                    return False
+                try:
+                    write_start = time.time()
+                    self.instrument.write_bit(registeraddress=0x0000, value=1)
+                    logging.info(f"DEBUG: APEL on: write_bit in {time.time() - write_start:.3f}s")
+                    logging.info("APEL turned ON successfully")
+                    return True
+                except Exception as e:
+                    logging.error(f"DEBUG: APEL on: Exception on attempt {attempt + 1}: {e}")
+                    if time.time() - start_time > self.operation_timeout:
+                        return False
+                    if attempt < self.max_attempts - 1:
+                        time.sleep(0.05)
+                        continue
+                    logging.error(f"Modbus error turning ON APEL: {e}")
+
+        logging.error(f"DEBUG: APEL on: max attempts reached")
+        return False
+
+    def off(self):
+        """Выключение источника питания (Coil_ONOFF = 0). КРИТИЧЕСКИ ВАЖНО для безопасности."""
+        thread_id = threading.current_thread().ident
+        logging.info(f"DEBUG: APEL off STARTED in thread {thread_id}")
+        start_time = time.time()
+
+        max_attempts_off = max(self.max_attempts, 5)
+
+        with self._lock:
+            for attempt in range(max_attempts_off):
+                elapsed = time.time() - start_time
+                if elapsed > self.operation_timeout * 2:
+                    logging.warning(f"DEBUG: APEL off: operation timeout ({elapsed:.3f}s)")
+
+                try:
+                    write_start = time.time()
+                    self.instrument.write_bit(registeraddress=0x0000, value=0)
+                    logging.info(f"DEBUG: APEL off: write_bit in {time.time() - write_start:.3f}s")
+                    logging.info("APEL turned OFF successfully")
+                    return True
+                except Exception as e:
+                    logging.error(f"DEBUG: APEL off: Exception on attempt {attempt + 1}: {e}")
+                    if attempt < max_attempts_off - 1:
+                        delay = 0.1 * (attempt + 1)
+                        logging.warning(f"DEBUG: APEL off: Waiting {delay:.2f}s before retry...")
+                        time.sleep(delay)
+                        try:
+                            if hasattr(self.instrument, 'serial'):
+                                if hasattr(self.instrument.serial, 'reset_input_buffer'):
+                                    self.instrument.serial.reset_input_buffer()
+                                if hasattr(self.instrument.serial, 'reset_output_buffer'):
+                                    self.instrument.serial.reset_output_buffer()
+                        except Exception as clear_error:
+                            logging.debug(f"DEBUG: APEL off: Could not clear buffers: {clear_error}")
+                        continue
+                    logging.error(f"Modbus error turning OFF APEL: {e}")
+
+        logging.error(f"DEBUG: APEL off: CRITICAL - max attempts reached. PS may still be ON!")
+        return False
+
+    # ── Чтение состояния ────────────────────────────────────────────────────
+
+    def read_status(self):
+        """
+        Читает Input Registers 0x00..0x04 (FC4):
+          IReg_State, IReg_Res, IReg_Voltage(В), IReg_Current(мА), IReg_Power(Вт).
+        Возвращает dict или None при ошибке.
+        """
+        thread_id = threading.current_thread().ident
+        logging.info(f"DEBUG: APEL read_status STARTED in thread {thread_id}")
+        start_time = time.time()
+
+        with self._lock:
+            for attempt in range(self.max_attempts):
+                elapsed = time.time() - start_time
+                if elapsed > self.operation_timeout:
+                    logging.warning(f"DEBUG: APEL read_status: timeout ({elapsed:.3f}s)")
+                    return None
+                try:
+                    read_start = time.time()
+                    resp = self.instrument.read_registers(registeraddress=0x0000, number_of_registers=5, functioncode=4)
+                    logging.info(f"DEBUG: APEL read_status: completed in {time.time() - read_start:.3f}s")
+
+                    state_code = resp[0]
+                    result = {
+                        "state_code": state_code,
+                        "state_ok": state_code == 0,
+                        "blocked": state_code == 1,
+                        "settings_error": state_code == 2,
+                        "voltage_v": resp[2],
+                        "current_ma": resp[3],
+                        "power_w": resp[4],
+                    }
+                    logging.info(f"DEBUG: APEL read_status COMPLETED: {result}")
+                    return result
+                except Exception as e:
+                    logging.error(f"DEBUG: APEL read_status: Exception on attempt {attempt + 1}: {e}")
+                    if time.time() - start_time > self.operation_timeout:
+                        return None
+                    if attempt < self.max_attempts - 1:
+                        time.sleep(0.05)
+                        continue
+                    logging.error(f"Error reading APEL status: {e}")
+
+        logging.error("DEBUG: APEL read_status: max attempts reached")
+        return None
+
+    # ── Уставки ─────────────────────────────────────────────────────────────
+
+    def set_stab_mode(self, mode):
+        """Режим стабилизации: 0=напряжение, 1=ток, 2=мощность (HReg_StabMode 0x10)."""
+        if mode not in (0, 1, 2):
+            logging.error(f"APEL set_stab_mode: invalid mode={mode}")
+            return False
+        return self._write_holding_register(0x0010, int(mode), name="set_stab_mode")
+
+    def set_power(self, power_w):
+        """Уставка мощности, Вт (100..1500). HReg_Power 0x13."""
+        val = int(float(power_w))
+        if not (100 <= val <= 1500):
+            logging.error(f"APEL set_power: value {val} out of range (100..1500)")
+            return False
+        return self._write_holding_register(0x0013, val, name="set_power")
+
+    # ── Чтение выходных параметров ───────────────────────────────────────────
+
+    def get_power(self):
+        """Текущая выходная мощность, Вт (IReg_Power 0x04, FC4)."""
+        return self._read_input_register(0x0004, name="get_power")
+
+    # ── Генератор поджига ────────────────────────────────────────────────────
+
+    def ignition_on(self):
+        """Включить генератор поджигающих импульсов (Coil_IgnOn = 1)."""
+        return self._write_coil(0x0003, 1, name="ignition_on")
+
+    def ignition_off(self):
+        """Выключить генератор поджигающих импульсов (Coil_IgnOn = 0)."""
+        return self._write_coil(0x0003, 0, name="ignition_off")
+
+    # ── Счётчик дуг ─────────────────────────────────────────────────────────
+
+    def get_arc_count(self):
+        """Чтение счётчика дуг (HReg_ArcCnt 0x1B, FC3). Возвращает 0..65535 или None."""
+        return self._read_holding_register(0x001B, name="get_arc_count")
+
+    def reset_arc_count(self):
+        """Сброс счётчика дуг (HReg_ArcCnt 0x1B = 0, FC6)."""
+        return self._write_holding_register(0x001B, 0, name="reset_arc_count")
+
+    # ── Внутренние вспомогательные методы ───────────────────────────────────
+
+    def _write_coil(self, addr, value, name="write_coil"):
+        thread_id = threading.current_thread().ident
+        logging.info(f"DEBUG: APEL {name} STARTED in thread {thread_id}, addr=0x{addr:04X}, value={value}")
+        start_time = time.time()
+
+        with self._lock:
+            for attempt in range(self.max_attempts):
+                if time.time() - start_time > self.operation_timeout:
+                    logging.warning(f"DEBUG: APEL {name}: timeout")
+                    return False
+                try:
+                    self.instrument.write_bit(registeraddress=addr, value=value)
+                    logging.info(f"DEBUG: APEL {name}: OK in {time.time() - start_time:.3f}s")
+                    return True
+                except Exception as e:
+                    logging.error(f"DEBUG: APEL {name}: Exception on attempt {attempt + 1}: {e}")
+                    if time.time() - start_time > self.operation_timeout:
+                        return False
+                    if attempt < self.max_attempts - 1:
+                        time.sleep(0.05)
+                        continue
+                    logging.error(f"Modbus error APEL {name}: {e}")
+
+        logging.error(f"DEBUG: APEL {name}: max attempts reached")
+        return False
+
+    def _write_holding_register(self, addr, value, name="write_hreg"):
+        thread_id = threading.current_thread().ident
+        logging.info(f"DEBUG: APEL {name} STARTED in thread {thread_id}, addr=0x{addr:04X}, value={value}")
+        start_time = time.time()
+
+        with self._lock:
+            for attempt in range(self.max_attempts):
+                if time.time() - start_time > self.operation_timeout:
+                    logging.warning(f"DEBUG: APEL {name}: timeout")
+                    return False
+                try:
+                    self.instrument.write_register(registeraddress=addr, value=value,
+                                                   number_of_decimals=0, functioncode=6)
+                    logging.info(f"DEBUG: APEL {name}: OK in {time.time() - start_time:.3f}s")
+                    return True
+                except Exception as e:
+                    logging.error(f"DEBUG: APEL {name}: Exception on attempt {attempt + 1}: {e}")
+                    if time.time() - start_time > self.operation_timeout:
+                        return False
+                    if attempt < self.max_attempts - 1:
+                        time.sleep(0.05)
+                        continue
+                    logging.error(f"Modbus error APEL {name}: {e}")
+
+        logging.error(f"DEBUG: APEL {name}: max attempts reached")
+        return False
+
+    def _read_input_register(self, addr, name="read_ireg"):
+        thread_id = threading.current_thread().ident
+        logging.info(f"DEBUG: APEL {name} STARTED in thread {thread_id}, addr=0x{addr:04X}")
+        start_time = time.time()
+
+        with self._lock:
+            for attempt in range(self.max_attempts):
+                if time.time() - start_time > self.operation_timeout:
+                    logging.warning(f"DEBUG: APEL {name}: timeout")
+                    return None
+                try:
+                    resp = self.instrument.read_registers(registeraddress=addr,
+                                                         number_of_registers=1, functioncode=4)
+                    logging.info(f"DEBUG: APEL {name}: OK in {time.time() - start_time:.3f}s, value={resp[0]}")
+                    return resp[0] if resp else None
+                except Exception as e:
+                    logging.error(f"DEBUG: APEL {name}: Exception on attempt {attempt + 1}: {e}")
+                    if time.time() - start_time > self.operation_timeout:
+                        return None
+                    if attempt < self.max_attempts - 1:
+                        time.sleep(0.05)
+                        continue
+                    logging.error(f"Modbus error APEL {name}: {e}")
+
+        logging.error(f"DEBUG: APEL {name}: max attempts reached")
+        return None
+
+    def _read_holding_register(self, addr, name="read_hreg"):
+        thread_id = threading.current_thread().ident
+        logging.info(f"DEBUG: APEL {name} STARTED in thread {thread_id}, addr=0x{addr:04X}")
+        start_time = time.time()
+
+        with self._lock:
+            for attempt in range(self.max_attempts):
+                if time.time() - start_time > self.operation_timeout:
+                    logging.warning(f"DEBUG: APEL {name}: timeout")
+                    return None
+                try:
+                    resp = self.instrument.read_registers(registeraddress=addr,
+                                                         number_of_registers=1, functioncode=3)
+                    logging.info(f"DEBUG: APEL {name}: OK in {time.time() - start_time:.3f}s, value={resp[0]}")
+                    return resp[0] if resp else None
+                except Exception as e:
+                    logging.error(f"DEBUG: APEL {name}: Exception on attempt {attempt + 1}: {e}")
+                    if time.time() - start_time > self.operation_timeout:
+                        return None
+                    if attempt < self.max_attempts - 1:
+                        time.sleep(0.05)
+                        continue
+                    logging.error(f"Modbus error APEL {name}: {e}")
+
+        logging.error(f"DEBUG: APEL {name}: max attempts reached")
+        return None
+
+    # ── Закрытие ─────────────────────────────────────────────────────────────
+
+    def close(self):
+        try:
+            self.off()
+        except Exception as e:
+            logging.error(f"Error turning off APEL during close: {e}")
+        try:
+            self.instrument.serial.close()
+            logging.info("APEL_M_1_5PDC successfully closed.")
+        except Exception as e:
+            logging.error(f"Error closing APEL serial port: {e}")
+
 
 class SensorWater:
     def __init__(self, bus_id=1, addr=0x38, read_pins=None):
@@ -906,8 +1234,8 @@ class Controller:
                     except:
                         pass
                 
-                if settings.get('TYPE_RF') == "RSG1000S":
-                    self.rf = RSG1000S(settings.get('PORT_RF'), device_id=settings.get('ADDRESS_RF'))
+                if settings.get('TYPE_RF') == "APEL_M_1_5PDC":
+                    self.rf = APEL_M_1_5PDC(settings.get('PORT_RF'), device_id=settings.get('ADDRESS_RF'))
                     logging.info("RF reconnected")
                     return True, "OK"
                 else:
@@ -1480,9 +1808,9 @@ class Controller:
             self.fault_device_init.append('RRG')
         
         try:
-            if settings.get('TYPE_RF') == "RSG1000S":
-                self.rf = RSG1000S(settings.get('PORT_RF'), device_id=settings.get('ADDRESS_RF'))
-                self.ok_device_init.append('RSG1000S')
+            if settings.get('TYPE_RF') == "APEL_M_1_5PDC":
+                self.rf = APEL_M_1_5PDC(settings.get('PORT_RF'), device_id=settings.get('ADDRESS_RF'))
+                self.ok_device_init.append('APEL_M_1_5PDC')
         except Exception as e:
             logging.error(f"Ошибка при инициализации Генератора: {e}")
             self.init_is_successfully = False
@@ -1933,7 +2261,7 @@ class Controller:
                 if self.rf is None:
                     logging.error("on_plasma: RF generator not initialized")
                     return False
-                res = self.rf.on_plasma()
+                res = self.rf.on()
                 logging.info(logs_text[command] + str(res))
                 # Обновляем кэш статуса при включении
                 if res:
@@ -1944,7 +2272,7 @@ class Controller:
                 if self.rf is None:
                     logging.error("off_plasma: RF generator not initialized")
                     return False
-                res = self.rf.off_plasma()
+                res = self.rf.off()
                 logging.info(logs_text[command] + str(res))
                 # Обновляем кэш статуса при выключении
                 if res:
@@ -1964,18 +2292,12 @@ class Controller:
                 if self.rf is None:
                     logging.error("set_power: RF generator not initialized")
                     return False
-                res = self.rf.set_power(power=power)
+                res = self.rf.set_power(power_w=power)
                 logging.info(logs_text[command] + str(res))
                 return res
             
-            elif command == "get_power":
-                if self.rf is None:
-                    logging.error("get_power: RF generator not initialized")
-                    return None
-                res = self.rf.get_power()
-                return res
-            
             elif command == "get_reflected_power":
+                return 0
                 if self.rf is None:
                     logging.error("get_reflected_power: RF generator not initialized")
                     return None
@@ -1986,7 +2308,7 @@ class Controller:
                 if self.rf is None:
                     logging.error("get_forward_power: RF generator not initialized")
                     return None
-                res = self.rf.get_forward_power()
+                res = self.rf.get_power()
                 return res
             
             elif command == "on_bp":
