@@ -35,8 +35,8 @@ class RRG_MFC_UT:
         self.rrg_num = rrg_num  # 1 или 2 — для "свой газ" берём coef_rrg1/coef_rrg2 из настроек
         self.max_attempts = 3  # Увеличено до 3 попыток для надежности
         self._lock = threading.Lock()  # Блокировка для thread-safe доступа
-        self.operation_timeout = 4.0  # Увеличен таймаут операции до 4 секунд для медленных устройств
-        self.serial_timeout = 2.5  # Увеличен таймаут для serial порта для медленных ответов
+        self.operation_timeout = 0.3  # Увеличен таймаут операции до 4 секунд для медленных устройств
+        self.serial_timeout = 0.9  # Увеличен таймаут для serial порта для медленных ответов
 
         self.coef_gas = {
             '0': 1.001, # Air
@@ -251,8 +251,8 @@ class LF_PE:
         
         self.max_attempts = 10
         self._lock = threading.Lock()  # Блокировка для thread-safe доступа к serial порту
-        self.operation_timeout = 2.0  # Общий таймаут на операцию (секунды)
-        self.serial_timeout = 2.0  # Таймаут для serial порта
+        self.operation_timeout = 0.3  # Общий таймаут на операцию (секунды)
+        self.serial_timeout = 0.9  # Таймаут для serial порта
 
         try:
             self.instrument = minimalmodbus.Instrument(port=self.port, slaveaddress=self.address)
@@ -557,8 +557,8 @@ class APEL_M_1_5PDC:
 
         self.max_attempts = 10
         self._lock = threading.Lock()
-        self.operation_timeout = 2.0
-        self.serial_timeout = 2.0
+        self.operation_timeout = 0.3
+        self.serial_timeout = 0.9
 
         try:
             self.instrument = minimalmodbus.Instrument(port=self.port, slaveaddress=self.address)
@@ -859,7 +859,6 @@ class APEL_M_1_5PDC:
             logging.info("APEL_M_1_5PDC successfully closed.")
         except Exception as e:
             logging.error(f"Error closing APEL serial port: {e}")
-
 
 class SensorWater:
     def __init__(self, bus_id=1, addr=0x38, read_pins=None):
