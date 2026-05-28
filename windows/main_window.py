@@ -2020,189 +2020,203 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             QTimer.singleShot(500, lambda: self._stop_gas_executor.submit(read_flows_post_stop_task))
 
     def on_start_plasma_clicked(self):
+        water_ok = True
+
+        if settings.get('check_water_flow', True):
+            try:
+                water_flow = self.controller.handle_command('get_sensor_water')
+                if water_flow == 0.0:
+                    self.handle_error(self.translator.tr('error_water_flow_zero'), need_reboot=False)
+                    water_ok = False
+            except Exception as e:
+                logging.error(f"start_recipe: Error checking water flow: {e}")
+                self.handle_error(f"{self.translator.tr('error_checking_water_flow')}: {e}", need_reboot=False)
+                water_ok = False
+
         if not self.timer_plasma.isActive():
-            if self.TimeZad.text() != '00:00':
-                power = int(self.HFPowerZad.text())
-                if 10 <= power <= settings.get('MAX_POWER_BP'):
-                    
-                    # Включение плазмы - переносим в отдельный поток, чтобы не блокировать UI
-                    logging.info("START PLASMA: Starting plasma start procedure")
-                    self.update_status(self.translator.tr('turning_on_plasma'))
-                    self.HFButton.setChecked(True)  # Включаем кнопку сразу для обратной связи
-                    
-                    def start_plasma_task():
-                        """Задача включения плазмы в отдельном потоке"""
-                        logging.info("START PLASMA: Task started in background thread")
-                        start_time = time.time()
+            if water_ok:
+                if self.TimeZad.text() != '00:00':
+                    power = int(self.HFPowerZad.text())
+                    if 10 <= power <= settings.get('MAX_POWER_BP'):
                         
-                        try:
-                            # ВАЖНО: Останавливаем поток чтения RF ПЕРЕД обращением к генератору
-                            # Это предотвращает ошибки I/O при попытке включить плазму
-                            if hasattr(self, 'stop_rf_reading'):
-                                logging.info("START PLASMA: Stopping RF reading thread before on_plasma...")
-                                self.stop_rf_reading(wait=False)  # Не блокируем UI, используем wait=False
-                                # Даем время потоку остановиться асинхронно
-                                time.sleep(0.3)  # Уменьшено с 0.5 до 0.3 секунды
-                                
-                                # Проверяем, что блокировка порта освобождена
-                                if hasattr(self.controller.rf, '_lock'):
-                                    if self.controller.rf._lock.acquire(blocking=False):
-                                        self.controller.rf._lock.release()
-                                        logging.info("START PLASMA: RF port lock is available")
-                                    else:
-                                        logging.warning("START PLASMA: RF port lock is busy, waiting...")
-                                        if self.controller.rf._lock.acquire(blocking=True, timeout=2.0):
+                        # Включение плазмы - переносим в отдельный поток, чтобы не блокировать UI
+                        logging.info("START PLASMA: Starting plasma start procedure")
+                        self.update_status(self.translator.tr('turning_on_plasma'))
+                        self.HFButton.setChecked(True)  # Включаем кнопку сразу для обратной связи
+                        
+                        def start_plasma_task():
+                            """Задача включения плазмы в отдельном потоке"""
+                            logging.info("START PLASMA: Task started in background thread")
+                            start_time = time.time()
+                            
+                            try:
+                                # ВАЖНО: Останавливаем поток чтения RF ПЕРЕД обращением к генератору
+                                # Это предотвращает ошибки I/O при попытке включить плазму
+                                if hasattr(self, 'stop_rf_reading'):
+                                    logging.info("START PLASMA: Stopping RF reading thread before on_plasma...")
+                                    self.stop_rf_reading(wait=False)  # Не блокируем UI, используем wait=False
+                                    # Даем время потоку остановиться асинхронно
+                                    time.sleep(0.3)  # Уменьшено с 0.5 до 0.3 секунды
+                                    
+                                    # Проверяем, что блокировка порта освобождена
+                                    if hasattr(self.controller.rf, '_lock'):
+                                        if self.controller.rf._lock.acquire(blocking=False):
                                             self.controller.rf._lock.release()
-                                            logging.info("START PLASMA: RF port lock released after wait")
-                            
-                            # ШАГ 1: Устанавливаем мощность
-                            logging.info(f"START PLASMA: Step 1 - Setting power to {power}W")
-                            success_set_power = False
-                            for attempt in range(self.max_attempts):
-                                try:
-                                    result = self.controller.handle_command('set_power', power=str(power))
-                                    if result:
-                                        success_set_power = True
-                                        logging.info(f"START PLASMA: Power set successfully: {power}W (attempt {attempt + 1})")
-                                        break
-                                    else:
-                                        logging.warning(f"START PLASMA: set_power returned False on attempt {attempt + 1}")
-                                except Exception as e:
-                                    logging.error(f"START PLASMA: Error setting power (attempt {attempt + 1}): {e}")
+                                            logging.info("START PLASMA: RF port lock is available")
+                                        else:
+                                            logging.warning("START PLASMA: RF port lock is busy, waiting...")
+                                            if self.controller.rf._lock.acquire(blocking=True, timeout=2.0):
+                                                self.controller.rf._lock.release()
+                                                logging.info("START PLASMA: RF port lock released after wait")
                                 
-                                if attempt < self.max_attempts - 1:
-                                    time.sleep(0.3)  # Задержка между попытками
-                            
-                            if not success_set_power:
-                                logging.error("START PLASMA: Failed to set power")
-                                QtCore.QMetaObject.invokeMethod(
-                                    self,
-                                    "_on_plasma_start_error",
-                                    QtCore.Qt.QueuedConnection,
-                                    QtCore.Q_ARG(str, 'error_set_power')
-                                )
-                                return
-                            
-                            # ШАГ 2: Включаем плазму
-                            logging.info("START PLASMA: Step 2 - Turning on plasma")
-                            success = False
-                            for attempt in range(self.max_attempts):
-                                try:
-                                    result = self.controller.handle_command('on_plasma')
-                                    if not result:
-                                        logging.warning(f"START PLASMA: on_plasma command returned False on attempt {attempt + 1}")
-                                        if attempt < self.max_attempts - 1:
-                                            time.sleep(0.3)
-                                            continue
-                                    
-                                    # Задержка перед первой проверкой — генератор обновляет бит статуса с задержкой
-                                    time.sleep(1.0)
-                                    
-                                    # Проверяем статус: несколько попыток read_status (генератор может обновить бит не сразу)
+                                # ШАГ 1: Устанавливаем мощность
+                                logging.info(f"START PLASMA: Step 1 - Setting power to {power}W")
+                                success_set_power = False
+                                for attempt in range(self.max_attempts):
                                     try:
-                                        rf_status = None
-                                        rf_on = False
-                                        for status_attempt in range(3):
-                                            rf_status = self.controller.rf.read_status()
-                                            if rf_status:
-                                                rf_on = rf_status.get('rf_on', False)
-                                                logging.info(f"START PLASMA: RF status check (attempt {attempt + 1}, status_read {status_attempt + 1}/3): rf_on={rf_on}")
-                                                if rf_on:
-                                                    break
-                                            if status_attempt < 2:
-                                                time.sleep(0.5)
-                                        if rf_status and rf_on:
-                                            self.controller._cached_plasma_status = True
-                                            success = True
-                                            logging.info(f"START PLASMA: Plasma confirmed ON on attempt {attempt + 1}")
+                                        result = self.controller.handle_command('set_power', power=str(power))
+                                        if result:
+                                            success_set_power = True
+                                            logging.info(f"START PLASMA: Power set successfully: {power}W (attempt {attempt + 1})")
                                             break
-                                        if rf_status and not rf_on:
-                                            logging.warning(f"START PLASMA: Plasma status rf_on=False on attempt {attempt + 1}, retrying...")
-                                        if not rf_status:
-                                            logging.warning(f"START PLASMA: rf.read_status() returned None on attempt {attempt + 1}")
-                                            # Пытаемся переподключиться к RF генератору асинхронно
+                                        else:
+                                            logging.warning(f"START PLASMA: set_power returned False on attempt {attempt + 1}")
+                                    except Exception as e:
+                                        logging.error(f"START PLASMA: Error setting power (attempt {attempt + 1}): {e}")
+                                    
+                                    if attempt < self.max_attempts - 1:
+                                        time.sleep(0.3)  # Задержка между попытками
+                                
+                                if not success_set_power:
+                                    logging.error("START PLASMA: Failed to set power")
+                                    QtCore.QMetaObject.invokeMethod(
+                                        self,
+                                        "_on_plasma_start_error",
+                                        QtCore.Qt.QueuedConnection,
+                                        QtCore.Q_ARG(str, 'error_set_power')
+                                    )
+                                    return
+                                
+                                # ШАГ 2: Включаем плазму
+                                logging.info("START PLASMA: Step 2 - Turning on plasma")
+                                success = False
+                                for attempt in range(self.max_attempts):
+                                    try:
+                                        result = self.controller.handle_command('on_plasma')
+                                        if not result:
+                                            logging.warning(f"START PLASMA: on_plasma command returned False on attempt {attempt + 1}")
+                                            if attempt < self.max_attempts - 1:
+                                                time.sleep(0.3)
+                                                continue
+                                        
+                                        # Задержка перед первой проверкой — генератор обновляет бит статуса с задержкой
+                                        time.sleep(1.0)
+                                        
+                                        # Проверяем статус: несколько попыток read_status (генератор может обновить бит не сразу)
+                                        try:
+                                            rf_status = None
+                                            rf_on = False
+                                            for status_attempt in range(3):
+                                                rf_status = self.controller.rf.read_status()
+                                                if rf_status:
+                                                    rf_on = rf_status.get('rf_on', False)
+                                                    logging.info(f"START PLASMA: RF status check (attempt {attempt + 1}, status_read {status_attempt + 1}/3): rf_on={rf_on}")
+                                                    if rf_on:
+                                                        break
+                                                if status_attempt < 2:
+                                                    time.sleep(0.5)
+                                            if rf_status and rf_on:
+                                                self.controller._cached_plasma_status = True
+                                                success = True
+                                                logging.info(f"START PLASMA: Plasma confirmed ON on attempt {attempt + 1}")
+                                                break
+                                            if rf_status and not rf_on:
+                                                logging.warning(f"START PLASMA: Plasma status rf_on=False on attempt {attempt + 1}, retrying...")
+                                            if not rf_status:
+                                                logging.warning(f"START PLASMA: rf.read_status() returned None on attempt {attempt + 1}")
+                                                # Пытаемся переподключиться к RF генератору асинхронно
+                                                def reconnect_rf_async():
+                                                    try:
+                                                        logging.info(f"[START PLASMA] Attempting to reconnect RF generator (read_status returned None)...")
+                                                        reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
+                                                        if reconnect_success:
+                                                            logging.info(f"[START PLASMA] RF generator reconnected successfully (was None)")
+                                                        else:
+                                                            logging.warning(f"[START PLASMA] Failed to reconnect RF generator (was None): {reconnect_msg}")
+                                                    except Exception as reconnect_error:
+                                                        logging.error(f"[START PLASMA] Error reconnecting RF generator (was None): {reconnect_error}")
+                                                
+                                                if not hasattr(self, '_rf_operations_executor') or self._rf_operations_executor is None:
+                                                    from concurrent.futures import ThreadPoolExecutor
+                                                    self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
+                                                self._rf_operations_executor.submit(reconnect_rf_async)
+                                                # Нельзя считать плазму включённой без ответа от генератора — продолжаем попытки
+                                        except Exception as e:
+                                            logging.error(f"START PLASMA: Error reading RF status (attempt {attempt + 1}): {e}")
+                                            # Пытаемся переподключиться к RF генератору асинхронно при ошибке
                                             def reconnect_rf_async():
                                                 try:
-                                                    logging.info(f"[START PLASMA] Attempting to reconnect RF generator (read_status returned None)...")
+                                                    logging.info(f"[START PLASMA] Attempting to reconnect RF generator (read_status error)...")
                                                     reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
                                                     if reconnect_success:
-                                                        logging.info(f"[START PLASMA] RF generator reconnected successfully (was None)")
+                                                        logging.info(f"[START PLASMA] RF generator reconnected successfully (after error)")
                                                     else:
-                                                        logging.warning(f"[START PLASMA] Failed to reconnect RF generator (was None): {reconnect_msg}")
+                                                        logging.warning(f"[START PLASMA] Failed to reconnect RF generator (after error): {reconnect_msg}")
                                                 except Exception as reconnect_error:
-                                                    logging.error(f"[START PLASMA] Error reconnecting RF generator (was None): {reconnect_error}")
+                                                    logging.error(f"[START PLASMA] Error reconnecting RF generator (after error): {reconnect_error}")
                                             
                                             if not hasattr(self, '_rf_operations_executor') or self._rf_operations_executor is None:
                                                 from concurrent.futures import ThreadPoolExecutor
                                                 self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
                                             self._rf_operations_executor.submit(reconnect_rf_async)
-                                            # Нельзя считать плазму включённой без ответа от генератора — продолжаем попытки
+                                            # Нельзя считать плазму включённой без ответа — продолжаем попытки
                                     except Exception as e:
-                                        logging.error(f"START PLASMA: Error reading RF status (attempt {attempt + 1}): {e}")
-                                        # Пытаемся переподключиться к RF генератору асинхронно при ошибке
-                                        def reconnect_rf_async():
-                                            try:
-                                                logging.info(f"[START PLASMA] Attempting to reconnect RF generator (read_status error)...")
-                                                reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
-                                                if reconnect_success:
-                                                    logging.info(f"[START PLASMA] RF generator reconnected successfully (after error)")
-                                                else:
-                                                    logging.warning(f"[START PLASMA] Failed to reconnect RF generator (after error): {reconnect_msg}")
-                                            except Exception as reconnect_error:
-                                                logging.error(f"[START PLASMA] Error reconnecting RF generator (after error): {reconnect_error}")
-                                        
-                                        if not hasattr(self, '_rf_operations_executor') or self._rf_operations_executor is None:
-                                            from concurrent.futures import ThreadPoolExecutor
-                                            self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
-                                        self._rf_operations_executor.submit(reconnect_rf_async)
-                                        # Нельзя считать плазму включённой без ответа — продолжаем попытки
-                                except Exception as e:
-                                    logging.error(f"START PLASMA: Error turning on plasma (attempt {attempt + 1}): {e}", exc_info=True)
+                                        logging.error(f"START PLASMA: Error turning on plasma (attempt {attempt + 1}): {e}", exc_info=True)
+                                    
+                                    if attempt < self.max_attempts - 1:
+                                        time.sleep(0.4)  # Задержка между попытками
                                 
-                                if attempt < self.max_attempts - 1:
-                                    time.sleep(0.4)  # Задержка между попытками
-                            
-                            # Обновляем UI через сигнал (используем DirectConnection для немедленного выполнения)
-                            if success:
-                                logging.info("START PLASMA: Success - updating UI")
-                                # Используем QTimer.singleShot для гарантированного выполнения в главном потоке
-                                QTimer.singleShot(0, self._on_plasma_started)
-                            else:
-                                logging.warning("START PLASMA: Failed - updating UI with error")
+                                # Обновляем UI через сигнал (используем DirectConnection для немедленного выполнения)
+                                if success:
+                                    logging.info("START PLASMA: Success - updating UI")
+                                    # Используем QTimer.singleShot для гарантированного выполнения в главном потоке
+                                    QTimer.singleShot(0, self._on_plasma_started)
+                                else:
+                                    logging.warning("START PLASMA: Failed - updating UI with error")
+                                    QtCore.QMetaObject.invokeMethod(
+                                        self,
+                                        "_on_plasma_start_error",
+                                        QtCore.Qt.QueuedConnection,
+                                        QtCore.Q_ARG(str, 'error_turn_on_plasma')
+                                    )
+                                
+                                total_elapsed = time.time() - start_time
+                                logging.info(f"START PLASMA: Task completed in {total_elapsed:.3f}s")
+                                
+                            except Exception as e:
+                                elapsed = time.time() - start_time
+                                logging.error(f"START PLASMA: EXCEPTION after {elapsed:.3f}s: {e}", exc_info=True)
                                 QtCore.QMetaObject.invokeMethod(
                                     self,
                                     "_on_plasma_start_error",
                                     QtCore.Qt.QueuedConnection,
                                     QtCore.Q_ARG(str, 'error_turn_on_plasma')
                                 )
-                            
-                            total_elapsed = time.time() - start_time
-                            logging.info(f"START PLASMA: Task completed in {total_elapsed:.3f}s")
-                            
-                        except Exception as e:
-                            elapsed = time.time() - start_time
-                            logging.error(f"START PLASMA: EXCEPTION after {elapsed:.3f}s: {e}", exc_info=True)
-                            QtCore.QMetaObject.invokeMethod(
-                                self,
-                                "_on_plasma_start_error",
-                                QtCore.Qt.QueuedConnection,
-                                QtCore.Q_ARG(str, 'error_turn_on_plasma')
-                            )
-                    
-                    # Запускаем в ThreadPoolExecutor (не блокирует UI)
-                    if self._stop_gas_executor is None:
-                        self._stop_gas_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="stop_gas")
-                    self._stop_gas_executor.submit(start_plasma_task)
+                        
+                        # Запускаем в ThreadPoolExecutor (не блокирует UI)
+                        if self._stop_gas_executor is None:
+                            self._stop_gas_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="stop_gas")
+                        self._stop_gas_executor.submit(start_plasma_task)
+                    else:
+                        self.HFButton.setChecked(False)
+                        self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_set_valid_power'))
+                        self.update_status(self.translator.tr('error_set_valid_power'))
+                        QTimer.singleShot(2000, lambda: self.update_status(self.translator.tr('system_ready_tech')))
                 else:
                     self.HFButton.setChecked(False)
-                    self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_set_valid_power'))
-                    self.update_status(self.translator.tr('error_set_valid_power'))
+                    self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_set_valid_time'))
+                    self.update_status(self.translator.tr('error_set_valid_time'))
                     QTimer.singleShot(2000, lambda: self.update_status(self.translator.tr('system_ready_tech')))
-            else:
-                self.HFButton.setChecked(False)
-                self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_set_valid_time'))
-                self.update_status(self.translator.tr('error_set_valid_time'))
-                QTimer.singleShot(2000, lambda: self.update_status(self.translator.tr('system_ready_tech')))
         else:
             # Отключение плазмы - переносим в отдельный поток, чтобы не блокировать UI
             logging.info("STOP PLASMA: Starting plasma stop procedure")
