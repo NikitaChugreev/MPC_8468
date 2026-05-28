@@ -1250,7 +1250,7 @@ class PlasmaAutoProcess:
 
                 pressures = [p for t, p in self.pressure_history if p is not None]
 
-                if len(pressures) >= 2 and max(pressures) - min(pressures) <= self.pressure_stable_threshold:
+                if len(pressures) >= 10 and max(pressures) - min(pressures) <= self.pressure_stable_threshold:
                     self.attempt = 0
                     self.current_step += 1
                 else:
