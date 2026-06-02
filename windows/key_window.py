@@ -44,7 +44,7 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
             self.min_limit = 2
             self.message = self.translator.tr('error_pump_down_time_range')
 
-        elif self.label_sender in ['coef_rrg1', 'coef_rrg2']:
+        elif self.label_sender in ['coef_rrg1', 'coef_rrg2', 'coef_rrg3', 'coef_rrg4']:
             self.LabelTextPar.setText(self.translator.tr('coefficient'))
             self.LabelTextLim.setText(self.translator.tr('coefficient_range'))
             self.max_limit = 10.00
@@ -60,7 +60,7 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
             self.min_limit = settings.get('ResPressure')
             self.message = self.translator.tr('error_pressure_range') + str(settings.get('ResPressure')) + " " + self.translator.tr('pressure_unit')
 
-        elif self.label_sender in ['VE1FlowZad', 'VE2FlowZad']:
+        elif self.label_sender in ['VE1FlowZad', 'VE2FlowZad', 'VE3FlowZad', 'VE4FlowZad']:
             if getattr(self.parent(), self.label_sender).text() != '0.0':
                 self.NumberLine.setText(getattr(self.parent(), self.label_sender).text())
             else:
@@ -143,8 +143,8 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
         
         elif self.NumberLine.text() != '':
             if self.min_limit <= float(self.NumberLine.text()) <= self.max_limit:
-                if self.label_sender in ['ClockVE0', 'ClockNI', 'PressZad', 'HFPowerZad', 'VE1FlowZad', 'VE2FlowZad']:
-                    if self.label_sender in ['VE1FlowZad', 'VE2FlowZad']:
+                if self.label_sender in ['ClockVE0', 'ClockNI', 'PressZad', 'HFPowerZad', 'VE1FlowZad', 'VE2FlowZad', 'VE3FlowZad', 'VE4FlowZad']:
+                    if self.label_sender in ['VE1FlowZad', 'VE2FlowZad', 'VE3FlowZad', 'VE4FlowZad']:
                         getattr(self.parent(), self.label_sender).setText(str(float(self.NumberLine.text())))
                     elif self.label_sender == 'HFPowerZad':
                         getattr(self.parent(), self.label_sender).setText(str(int(float(self.NumberLine.text()))))
@@ -154,16 +154,24 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
                     self.parent().userInputRrgConvCoeffPlace_1.setText(self.NumberLine.text())
                 elif self.label_sender == 'coef_rrg2':
                     self.parent().userInputRrgConvCoeffPlace_2.setText(self.NumberLine.text())
+                elif self.label_sender == 'coef_rrg3':
+                    self.parent().userInputRrgConvCoeffPlace_3.setText(self.NumberLine.text())
+                elif self.label_sender == 'coef_rrg4':
+                    self.parent().userInputRrgConvCoeffPlace_4.setText(self.NumberLine.text())
             else:
                 is_valid = False
 
         if self.NumberLine.text() == '':
-            if self.label_sender in ['VE1FlowZad', 'VE2FlowZad', 'PressZad']:
+            if self.label_sender in ['VE1FlowZad', 'VE2FlowZad', 'VE3FlowZad', 'VE4FlowZad', 'PressZad']:
                 getattr(self.parent(), self.label_sender).setText('0.0')
             elif self.label_sender == 'coef_rrg1':
                 getattr(self.parent(), 'userInputRrgConvCoeffPlace_1').setText('1.0')
             elif self.label_sender == 'coef_rrg2':
                 getattr(self.parent(), 'userInputRrgConvCoeffPlace_2').setText('1.0')
+            elif self.label_sender == 'coef_rrg3':
+                getattr(self.parent(), 'userInputRrgConvCoeffPlace_3').setText('1.0')
+            elif self.label_sender == 'coef_rrg4':
+                getattr(self.parent(), 'userInputRrgConvCoeffPlace_4').setText('1.0')
             elif self.label_sender == 'TimeZad':
                 getattr(self.parent(), self.label_sender).setText('01:00')
             elif self.label_sender == 'HFPowerZad':

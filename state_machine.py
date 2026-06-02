@@ -12,9 +12,17 @@ from PyQt5.QtWidgets import QMessageBox
 from config.settings import settings
 from utils.translator import Translator
 
+number_gases = settings.get('NUMBER_GASES', 2)
 
-work_gases = ['1', '2']
-all_gases = ['1', '2', '01']
+if number_gases == 4:
+    work_gases = ['1', '2', '3', '4']
+elif number_gases == 3:
+    work_gases = ['1', '2', '3']
+elif number_gases == 2:
+    work_gases = ['1', '2']
+
+all_gases = work_gases + ['01']
+
 
 # Создаем отдельный логгер для диагностики process_processing
 process_logger = logging.getLogger('process_processing')
@@ -334,7 +342,7 @@ class PlasmaAutoProcess:
                             # Обновляем кэш
                             self.controller._cached_plasma_status = False
                             self.attempt = 0
-                            self.current_step += 1
+                            self.current_step = 3
                         else:
                             self.parent.update_status(f"{self.translator.tr('attempt')} {self.attempt} {self.translator.tr('attempt_off_plasma')}")
                             self.attempt += 1
@@ -648,6 +656,7 @@ class PlasmaAutoProcess:
 
             # Просто запускаем процесс
             start_process_logger.info(f"[START_RECIPE] start_recipe: Запуск процесса, устанавливаем состояние init_recipe")
+            self.buzzer_activated = False
             self.current_state = "init_recipe"
             self.attempt = 0
             self.current_step = 0
@@ -2124,14 +2133,11 @@ class PlasmaAutoProcess:
                 text = f"{self.translator.tr('success_process')}\n"
                 text += f"{self.translator.tr('final_pressure')}: {self.recipe_params.get('ResPressure', 0.1)} {self.translator.tr('pressure_unit')}\n"
 
-                gas1 = self.recipe_params.get('VE1', {})
-                gas2 = self.recipe_params.get('VE2', {})
+                for i in range(1, number_gases + 1):
+                    gas_i = self.recipe_params.get(f'VE{i}', {})
+                    if gas_i.get('switch', 0):
+                        text += f"{self.translator.tr(f'gas_{i}')}: {map_num_gas.get(str(gas_i.get('gas', 0)))} - {gas_i.get('flow', 0)} {self.translator.tr('flow_unit')}\n"
 
-                if gas1.get('switch', 0):
-                    text += f"{self.translator.tr('gas_1')}: {map_num_gas.get(str(gas1.get('gas', 0)))} - {gas1.get('flow', 0)} {self.translator.tr('flow_unit')}\n"
-                if gas2.get('switch', 0):
-                    text += f"{self.translator.tr('gas_2')}: {map_num_gas.get(str(gas2.get('gas', 0)))} - {gas2.get('flow', 0)} {self.translator.tr('flow_unit')}\n"
-                
                 text += f"{self.translator.tr('forward_power')}: {self.recipe_params.get('power', 0)} {self.translator.tr('power_unit')}\n"
                 text += f"{self.translator.tr('process_time')}: {self.recipe_params.get('time', '00:00')}\n"
                 
@@ -2194,6 +2200,8 @@ class PlasmaAutoProcess:
         start_process_logger.info(f"[HANDLE_ERROR] handle_error: Останавливаем таймеры проверки")
         self.check_fault_timer.stop()
         self.check_stop_timer.stop()
+        self.processing_time_timer.stop()
+        self.processing_time_check_timer.stop()
         
         # Быстро устанавливаем состояние, чтобы не блокировать event loop
         self.attempt = 0
@@ -2614,6 +2622,14 @@ class PlasmaAutoProcess:
             if valves_states.get('valve_ve2', 'open') == 'open':
                 self.controller.handle_command('close_valve_ve2')
                 self.parent.StatusLine.setText(self.translator.tr('ve2_close'))
+
+            if valves_states.get('valve_ve3', 'open') == 'open':
+                self.controller.handle_command('close_valve_ve3')
+                self.parent.StatusLine.setText(self.translator.tr('ve3_close'))
+            
+            if valves_states.get('valve_ve4', 'open') == 'open':
+                self.controller.handle_command('close_valve_ve4')
+                self.parent.StatusLine.setText(self.translator.tr('ve4_close'))
             
             if valves_states.get('valve_ve01', 'open') == 'open':
                 self.controller.handle_command('close_valve_ve01')
@@ -2632,6 +2648,8 @@ class PlasmaAutoProcess:
                     states.get('plasma', 1) == 0,
                     valves_states.get('valve_ve1', 'close') == 'close',
                     valves_states.get('valve_ve2', 'close') == 'close',
+                    valves_states.get('valve_ve3', 'close') == 'close',
+                    valves_states.get('valve_ve4', 'close') == 'close',
                     valves_states.get('valve_ve01', 'close') == 'close',
                     states.get('pump', 1) == 0,
                     ]):

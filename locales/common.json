@@ -738,6 +738,10 @@
     "Закрыт клапан VE3.", 
     "Valve VE3 is closed.", 
     "VE3 阀已关闭。"],
+  "ve4_close": [
+    "Закрыт клапан VE4.", 
+    "Valve VE4 is closed.", 
+    "VE4 阀已关闭。"],
   "ve01_close": [
     "Закрыт клапан VE01.", 
     "Valve VE01 is closed.", 

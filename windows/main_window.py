@@ -16,7 +16,7 @@ import logging
 
 import fun
 from state_controller import controller
-from state_machine import PlasmaAutoProcess
+from state_machine import PlasmaAutoProcess, process_logger
 from ui.mainwindow import Ui_MainWindow
 
 from windows.prof_window import ProfWindow
@@ -28,8 +28,16 @@ from config.settings import settings
 from utils.translator import Translator
 
 
-work_gases = ['1', '2']
-all_gases = ['1', '2', '01']
+number_gases = settings.get('NUMBER_GASES', 2)
+
+if number_gases == 4:
+    work_gases = ['1', '2', '3', '4']
+elif number_gases == 3:
+    work_gases = ['1', '2', '3']
+elif number_gases == 2:
+    work_gases = ['1', '2']
+
+all_gases = work_gases + ['01']
 
 # Создаем отдельный логгер для диагностики on_venting_clicked
 venting_logger = logging.getLogger('on_venting_clicked')
@@ -116,7 +124,8 @@ class ReadFlowsWorker(QObject):
                     
                 try:
                     # Всегда передаём (int, float): номер РРГ 1/2 и значение потока
-                    rrg_id = int(num_rrg) if str(num_rrg).strip() in ('1', '2') else num_rrg
+
+                    rrg_id = int(num_rrg) if str(num_rrg).strip() in ('1', '2', '3', '4') else num_rrg
                     self.flowRead.emit(rrg_id, float(value))
                 except RuntimeError as e:
                     # Объект уже уничтожен
@@ -164,7 +173,6 @@ class ReadRFWorker(QObject):
     @QtCore.pyqtSlot()
     def run(self):
         """Чтение данных генератора"""
-        from state_machine import process_logger
         process_logger.info("[ReadRFWorker] Thread started")
         read_count = 0
         try:
@@ -365,6 +373,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.last_values = {
             'flow_rrg1': 0,
             'flow_rrg2': 0,
+            'flow_rrg3': 0,
+            'flow_rrg4': 0,
         }
 
         self.timer_update_time = QTimer()
@@ -397,37 +407,29 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         buttons_commands = {
             'PressZad': self.PressZad,
-            'VE1FlowZad': self.VE1FlowZad, 'VE2FlowZad': self.VE2FlowZad,
             'TimeZad': self.TimeZad,
             'HFPowerZad': self.HFPowerZad
         }
 
+        for i in range(1, number_gases + 1):
+            buttons_commands[f'VE{i}FlowZad'] = getattr(self, f'VE{i}FlowZad')
+
         for key, button in buttons_commands.items():
             button.clicked.connect(lambda checked, k=key: self.open_key(k))
         
-        self.labels_service = [self.label_26,  self.PressLableSADC, self.label_14, self.PressLableSZnachU, self.label_16,
-                               self.label_35, self.WLabelS, self.label_36,
-                               self.label_28, self.label_30, self.BPButtonS,
-                               self.label_30, self.label_31, self.title_address_rrg1,
-                               self.title_address_rrg2, self.title_address_rf,
-                               self.button_rrg_1, self.button_rrg_2,
-                               self.label_3, self.label_4, self.label_5,
-                               self.label_6, self.label_7, self.label_8, self.label_9, self.label_11,
-                               self.label_13, self.label_17,
-                               self.led_start_value,
-                               self.led_stop_value,
-                               self.led_vacuum_value,
-                               self.pump_value,
-                               self.ps_value,
-                               self.valve_ve1_value, self.valve_ve2_value, self.valve_ve01_value,
-                               self.buzz_value, self.plasma_value, self.label_29, self.label_2, self.button_rf
-                               ]
+        self.labels_service = [
+            self.label_2, self.label_3, self.label_4, self.label_5, self.label_6, self.label_7, self.label_8, self.label_9, 
+            self.label_11, self.label_13, self.label_14, self.label_16, self.label_17,
+            self.label_26, self.label_28, self.label_29, self.label_30, self.label_31, self.label_35, self.label_36,
+            self.PressLableSADC, self.PressLableSZnachU, self.WLabelS, self.BPButtonS,
+            self.title_address_rf, self.led_start_value, self.led_stop_value,
+            self.led_vacuum_value, self.pump_value, self.ps_value,
+            self.valve_ve01_value, self.buzz_value, self.plasma_value, self.button_rf
+        ]
         
         self.buttons_service = [
             self.DoorButtonS, self.StartButtonS, self.StopButtonS, self.DoorLightS, self.StartLightS, self.StopLightS, 
-            self.VE1ButtonS, self.VE2ButtonS, self.VE01ButtonS, 
-            self.NIButtonS, self.HFButtonS, self.BuzzButtonS,
-            self.ButtonClose
+            self.VE01ButtonS, self.NIButtonS, self.HFButtonS, self.BuzzButtonS, self.ButtonClose
         ]
 
         for btn in self.buttons_service:
@@ -435,14 +437,29 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.labels_not_enabled_operator = [
             self.NIButton, self.VEButton, self.HFButton, self.VE0Button, 
-            self.VE1Button, self.VE2Button, self.VE1ComboBox, self.VE2ComboBox, 
-            self.VE1FlowZad, self.VE2FlowZad, self.PressZad, self.HFPowerZad, self.TimeZad, self.ButtonClose]
+            self.PressZad, self.HFPowerZad, self.TimeZad, self.ButtonClose]
+
+        for i in range(1, number_gases + 1):
+            self.labels_service.append([
+                getattr(self, f'button_rrg_{i}'),
+                getattr(self, f'valve_ve{i}_value'),
+                getattr(self, f'title_address_rrg{i}')
+            ])
+            
+            self.labels_not_enabled_operator.append([
+                getattr(self, f'VE{i}Button'),
+                getattr(self, f'VE{i}ComboBox'),
+                getattr(self, f'VE{i}FlowZad')
+            ])
+
+            self.buttons_service.append([getattr(self, f'VE{i}ButtonS')])
 
         self.PressProgress.hide()
         self.TimeProgress.hide()
-        self.VE1Progress.hide()
-        self.VE2Progress.hide()
         self.HFProgress.hide()
+
+        for i in range(1, number_gases + 1):
+            getattr(self, f'VE{i}Progress').hide()
 
         if self.controller.init_is_successfully:
             self.timer_update_time.start(1000)
@@ -843,8 +860,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self._flow_thread_busy = False
 
     def on_flow_read(self, num_rrg, value):
-        num_rrg = int(num_rrg) if num_rrg in (1, 2, '1', '2', 1.0, 2.0) else num_rrg
-        if num_rrg not in (1, 2):
+        num_rrg = int(num_rrg) if num_rrg in (1, 2, 3, 4, '1', '2', '3', '4', 1.0, 2.0, 3.0, 4.0) else num_rrg
+        if num_rrg not in (1, 2, 3, 4):
             return
         key = str(num_rrg)
         self.last_values[f'flow_rrg{key}'] = float(value)
@@ -1121,41 +1138,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             self.VEButton.setEnabled(True)
                     except (ValueError, TypeError) as e:
                         logging.error(f"Error checking pressure for VEButton enable in update_values: {e}, PressZnach: {self.PressZnach.text()}, PressZad: {self.PressZad.text()}")
-
-            # Обновление progressbar для потоков газов с ограничением значений
-            if self.VE1FlowZad.text() != '0.0':
-                try:
-                    max_val = int(float(self.VE1FlowZad.text()))
-                    self.VE1Progress.setMaximum(max_val)
-                    value = int(float(self.VE1FlowZnach.text()))
-                    # Ограничиваем значение от 0 до maximum
-                    value = max(0, min(max_val, value))
-                    self.VE1Progress.setValue(value)
-                except (ValueError, TypeError) as e:
-                    logging.error(f"Error updating VE1Progress: {e}")
-
-            if self.VE2FlowZad.text() != '0.0':
-                try:
-                    max_val = int(float(self.VE2FlowZad.text()))
-                    self.VE2Progress.setMaximum(max_val)
-                    value = int(float(self.VE2FlowZnach.text()))
-                    # Ограничиваем значение от 0 до maximum
-                    value = max(0, min(max_val, value))
-                    self.VE2Progress.setValue(value)
-                except (ValueError, TypeError) as e:
-                    logging.error(f"Error updating VE2Progress: {e}")
-            
-            # Обновление progressbar для мощности плазмы с ограничением значений
-            if self.HFPowerZad.text() != '0':
-                try:
-                    max_val = int(float(self.HFPowerZad.text()))
-                    self.HFProgress.setMaximum(max_val)
-                    value = int(float(self.HFPowerZnach.text()))
-                    # Ограничиваем значение от 0 до maximum
-                    value = max(0, min(max_val, value))
-                    self.HFProgress.setValue(value)
-                except (ValueError, TypeError) as e:
-                    logging.error(f"Error updating HFProgress: {e}")
         
         # Обновление значений состояний устройств
         states = None  # Инициализируем переменную для использования ниже
@@ -1211,8 +1193,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.VEButton.setText(self.translator.tr('start_venting_gas'))
         self.HFButton.setText(self.translator.tr('turn_on_plasma'))
         self.VE0Button.setText(self.translator.tr('start_venting'))
-        self.VE1Button.setText(self.translator.tr('gas_1'))
-        self.VE2Button.setText(self.translator.tr('gas_2'))
+
+        for i in range(1, number_gases + 1):
+            getattr(self, f'VE{i}Button').setText(self.translator.tr(f'gas_{i}'))
+
         self.LabelProf_2.setText(self.translator.tr('final_pressure'))
         self.LabelProf_6.setText(self.translator.tr('forward_power'))
         self.LabelProf_18.setText(self.translator.tr('reflected_power'))
@@ -1229,21 +1213,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.LabelProf_11.setText(self.translator.tr('power_unit'))
         # self.LabelProf_18.setText(self.translator.tr('power_unit'))
         
-        self.VE1ComboBox.setItemText(0, self.translator.tr('air'))
-        self.VE1ComboBox.setItemText(1, self.translator.tr('argon'))
-        self.VE1ComboBox.setItemText(2, self.translator.tr('oxigen'))
-        self.VE1ComboBox.setItemText(3, self.translator.tr('nitrogen'))
-        if self.VE1ComboBox.count() < 5:
-            self.VE1ComboBox.addItem("")
-        self.VE1ComboBox.setItemText(4, self.translator.tr('custom_gas'))
-
-        self.VE2ComboBox.setItemText(0, self.translator.tr('air'))
-        self.VE2ComboBox.setItemText(1, self.translator.tr('argon'))
-        self.VE2ComboBox.setItemText(2, self.translator.tr('oxigen'))
-        self.VE2ComboBox.setItemText(3, self.translator.tr('nitrogen'))
-        if self.VE2ComboBox.count() < 5:
-            self.VE2ComboBox.addItem("")
-        self.VE2ComboBox.setItemText(4, self.translator.tr('custom_gas'))
+        for i in work_gases:
+            getattr(self, 'fVE{i}ComboBox').setItemText(0, self.translator.tr('air'))
+            getattr(self, 'fVE{i}ComboBox').setItemText(1, self.translator.tr('argon'))
+            getattr(self, 'fVE{i}ComboBox').setItemText(2, self.translator.tr('oxigen'))
+            getattr(self, 'fVE{i}ComboBox').setItemText(3, self.translator.tr('nitrogen'))
+            if getattr(self, 'fVE{i}ComboBox').count() < 5:
+                getattr(self, 'fVE{i}ComboBox').addItem("")
+            getattr(self, 'fVE{i}ComboBox').setItemText(4, self.translator.tr('custom_gas'))
 
     def init_system(self):
         self.update_status(self.translator.tr('init'))
@@ -1305,12 +1282,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         QTimer.singleShot(1000, lambda: self.update_status(self.translator.tr('system_ready_oper')))
                     else:
                         QTimer.singleShot(1000, lambda: self.update_status(self.translator.tr('system_ready_tech')))
-                elif float(self.VE1FlowZad.text()) == 0 and float(self.VE2FlowZad.text()) == 0:
-                    self.update_status(self.translator.tr('error_all_gas_flows_zero'))
-                    if self.user_mode == 'Operator':
-                        QTimer.singleShot(1000, lambda: self.update_status(self.translator.tr('system_ready_oper')))
-                    else:
-                        QTimer.singleShot(1000, lambda: self.update_status(self.translator.tr('system_ready_tech')))
+                elif all(float(getattr(self, f'VE{i}FlowZad').text()) == 0 for i in range(1, number_gases + 1)):
+                        self.update_status(self.translator.tr('error_all_gas_flows_zero'))
+                        if self.user_mode == 'Operator':
+                            QTimer.singleShot(1000, lambda: self.update_status(self.translator.tr('system_ready_oper')))
+                        else:
+                            QTimer.singleShot(1000, lambda: self.update_status(self.translator.tr('system_ready_tech')))
                 else:
                     if self.user_mode == "Operator":
                         if self.RecName.text() == '':
@@ -1350,8 +1327,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         self.TimeZnach.setText('00:00')
                         self.DisplayTime.setText('00:00')
 
-                        self.VE1Progress.setValue(0)
-                        self.VE2Progress.setValue(0)
                         self.HFProgress.setValue(0)
                         self.TimeProgress.setValue(0)
 
@@ -2989,8 +2964,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def start_rf_reading(self):
         """Запуск чтения данных генератора RF в отдельном потоке"""
         start_time = time.time()
-        # Используем process_logger из state_machine
-        from state_machine import process_logger
         process_logger.info(f"[start_rf_reading] CALLED at {start_time:.3f}")
         
         with self._rf_thread_lock:
@@ -3038,7 +3011,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     
     def stop_rf_reading(self, wait=False):
         """Остановка чтения данных генератора RF (не блокирует UI)"""
-        from state_machine import process_logger
         logging.info(f"STOP RF READING: Called, wait={wait}")
         process_logger.info(f"[stop_rf_reading] Called, wait={wait}")
         try:
@@ -3109,13 +3081,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.rf_thread = None
             
             self._rf_thread_busy = False
-            logging.debug("RF reading thread finished and cleaned up")
     
     def on_rf_data_read(self, status):
-        """Обработка прочитанных данных генератора (вызывается из главного потока)"""
         rf_data_start = time.time()
-        # Используем process_logger из state_machine
-        from state_machine import process_logger
         
         if status is None:
             process_logger.debug(f"[on_rf_data_read] Received None status")
@@ -3126,7 +3094,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             reflected_power = status.get('reflect_w', 0)
             rf_on = status.get('rf_on', False)
             
-            # Обновляем кэш статуса плазмы в контроллере
             self.controller._cached_plasma_status = rf_on
             
             # Обновляем UI только если плазма включена (проверяем реальное состояние, а не только текст кнопки)
@@ -3190,26 +3157,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             
     def validate_gas_selection(self):
         try:
-            valves_active = [
-                self.VE1Button.isChecked(),
-                self.VE2Button.isChecked()
-            ]
+            valves_active = []
+            for i in work_gases:
+                valves_active.append(1 if getattr(self, f'VE{i}Button').isChecked() else 0)
             
             if not any(valves_active):
                 return False, self.translator.tr('no_gas_selected')
             
             flows = []
-            if self.VE1Button.isChecked():
-                flow1 = float(self.VE1FlowZad.text() or 0)
-                if flow1 <= 0:
-                    return False, f"{self.translator.tr('gas_flow')} 1 {self.translator.tr('cant_be_zero')}"
-                flows.append(flow1)
-                
-            if self.VE2Button.isChecked():
-                flow2 = float(self.VE2FlowZad.text() or 0)
-                if flow2 <= 0:
-                    return False, f"{self.translator.tr('gas_flow')} 2 {self.translator.tr('cant_be_zero')}"
-                flows.append(flow2)
+
+            for i in work_gases:
+                if getattr(self, f'VE{i}Button').isChecked():
+                    flow = float(getattr(self, f'VE{i}FlowZad').text() or 0)
+                    if flow <= 0:
+                        return False, f"{self.translator.tr('gas_flow')} {i} {self.translator.tr('cant_be_zero')}"
+                    flows.append(flow)
             
             if sum(flows) <= 0:
                 return False, f"{self.translator.tr('total_gas_flow')} {self.translator.tr('cant_be_zero')}"
@@ -3258,17 +3220,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.NIButton.setEnabled(True)
         self.VEButton.setEnabled(True)
         self.HFButton.setEnabled(True)
-        self.VE0Button.setEnabled(True)
-        self.VE1Button.setEnabled(True)
-        self.VE2Button.setEnabled(True)
-        self.VE1ComboBox.setEnabled(True)
-        self.VE2ComboBox.setEnabled(True)
         self.PressZad.setEnabled(True)
-        self.VE1FlowZad.setEnabled(True)
-        self.VE2FlowZad.setEnabled(True)
         self.HFPowerZad.setEnabled(True)
         self.TimeZad.setEnabled(True)
-        
+
+        for i in work_gases:
+            getattr(self, f'VE{i}Button').setEnabled(False)
+            getattr(self, f'VE{i}ComboBox').setEnabled(True)
+            getattr(self, f'VE{i}FlowZad').setEnabled(True)
 
         self.NIButton.setStyleSheet('background-color:')
 
@@ -3277,32 +3236,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.NIButton.setEnabled(False)
             self.VEButton.setEnabled(False)
             self.HFButton.setEnabled(False)
-            self.VE0Button.setEnabled(False)
-            self.VE1Button.setEnabled(False)
-            self.VE2Button.setEnabled(False)
-            self.VE1ComboBox.setEnabled(False)
-            self.VE2ComboBox.setEnabled(False)
             self.PressZad.setEnabled(False)
-            self.VE1FlowZad.setEnabled(False)
-            self.VE2FlowZad.setEnabled(False)
             self.HFPowerZad.setEnabled(False)
             self.TimeZad.setEnabled(False)
-            
+
+            for i in work_gases:
+                getattr(self, f'VE{i}Button').setEnabled(False)
+                getattr(self, f'VE{i}ComboBox').setEnabled(False)
+                getattr(self, f'VE{i}FlowZad').setEnabled(False)   
 
         if self.user_mode == 'Operator':
             self.NIButton.setEnabled(False)
             self.VEButton.setEnabled(False)
             self.HFButton.setEnabled(False)
-            self.VE0Button.setEnabled(False)
-            self.VE1Button.setEnabled(False)
-            self.VE2Button.setEnabled(False)
-            self.VE1ComboBox.setEnabled(False)
-            self.VE2ComboBox.setEnabled(False)
             self.PressZad.setEnabled(False)
-            self.VE1FlowZad.setEnabled(False)
-            self.VE2FlowZad.setEnabled(False)
             self.HFPowerZad.setEnabled(False)
             self.TimeZad.setEnabled(False)
+
+            for i in work_gases:
+                getattr(self, f'VE{i}Button').setEnabled(False)
+                getattr(self, f'VE{i}ComboBox').setEnabled(False)
+                getattr(self, f'VE{i}FlowZad').setEnabled(False)
 
             if self.current_recipe is None:
                 self.ButtonStart.setEnabled(False)
@@ -3315,17 +3269,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.VE0Button.setEnabled(False)
 
         # Запрет на включение плазмы при закрытых клапанах раб. газов
-        if all([not self.VE1Button.isChecked(), not self.VE2Button.isChecked()]) and not self.HFButton.isChecked() and self.user_mode != 'Service':
-            self.HFButton.setEnabled(False)
+        if not self.HFButton.isChecked() and self.user_mode != 'Service':
+            all_gases_off = all(not getattr(self, f'VE{i}Button').isChecked() for i in range(1, number_gases + 1))
+            if all_gases_off:
+                self.HFButton.setEnabled(False)
 
         # Запрет на включение плазмы при отсутствии напуска газов
         if not self.VEButton.isChecked() and not self.HFButton.isChecked() and self.user_mode != 'Service':
             self.HFButton.setEnabled(False)
 
         # Запрет на включение плазмы при невыставленных потоках раб. газов
-        if all([float(self.VE1FlowZnach.text()) == 0,
-                float(self.VE2FlowZnach.text()) == 0]) and not self.HFButton.isChecked() and self.user_mode != 'Service':
-            self.HFButton.setEnabled(False)
+        if not self.HFButton.isChecked() and self.user_mode != 'Service':
+            all_flows_zero = True
+            for i in range(1, number_gases + 1):
+                if float(getattr(self, f'VE{i}FlowZnach').text()) != 0:
+                    all_flows_zero = False
+                    break
+            if all_flows_zero:
+                self.HFButton.setEnabled(False)
 
         # Запрет на запуск авт. режима при ручном управлении какого-либо устройства
         if any([self.NIButton.isChecked(), self.VEButton.isChecked(), 
@@ -3342,43 +3303,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Проверка выполняется ПОСЛЕ всех других установок, чтобы иметь приоритет
         if self.user_mode == 'Technologist':
             if (self.plasma_process.current_state in ['idle', 'fault'] and not self.HFButton.isChecked()):  # Плазма не должна быть включена
-                # Если кнопка нажата и текст = "остановить напуск газа", она должна быть доступна
                 button_text_is_stop = self.VEButton.text() == self.translator.tr('stop_venting_gas')
                 if self.VEButton.isChecked() and button_text_is_stop:
                     self.VEButton.setEnabled(True)
-                    logging.debug(f"check_permissions: VEButton enabled for Technologist (button is checked and text is 'stop_venting_gas')")
                 else:
                     try:
                         press_znach = float(self.PressZnach.text())
                         press_zad = float(self.PressZad.text())
-                        # Если давление >= целевого, отключаем кнопку напуска газа
                         if press_znach >= press_zad:
                             self.VEButton.setEnabled(False)
-                            logging.debug(f"check_permissions: VEButton disabled for Technologist (pressure {press_znach} >= {press_zad})")
-                        # Если давление < целевого, кнопка уже включена выше (строка 3445)
-                        else:
-                            logging.debug(f"check_permissions: VEButton enabled for Technologist (pressure {press_znach} < {press_zad})")
                     except (ValueError, TypeError) as e:
                         logging.error(f"Error checking pressure for VEButton enable in check_permissions: {e}, PressZnach: {self.PressZnach.text()}, PressZad: {self.PressZad.text()}")
-                        # При ошибке оставляем кнопку включенной (безопаснее)
 
         if settings['time_pump_for_service'] > settings['max_time_pump_for_service']:
             self.NIButton.setStyleSheet('background-color: red')
 
         if self.user_mode == "Service":
-            # НЕ меняем текст кнопки здесь - он управляется в on_start_button_clicked() и stop_process()
-            # Если процесс запущен (текст = "stop"), не меняем его на "start"
             button_text = self.ButtonStart.text()
             if button_text == self.translator.tr('stop'):
-                # Процесс запущен - не меняем текст кнопки
                 self.ButtonStart.setEnabled(True)
             elif button_text != self.translator.tr('start'):
-                # Текст кнопки не "start" и не "stop" - устанавливаем "start"
                 self.ButtonStart.setText(self.translator.tr('start'))
                 self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
                 self.ButtonStart.setEnabled(True)
             else:
-                # Текст уже "start" - просто включаем кнопку
                 self.ButtonStart.setEnabled(True)
 
             self.NIButton.setEnabled(True)
@@ -3386,30 +3334,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.HFButton.setEnabled(True)
             self.VE0Button.setEnabled(True)
         
-        # Синхронизируем светодиод кнопки старт: горит только если текст кнопки "start" и она активна
         try:
             states = self.controller.handle_command('get_states')
             if states and isinstance(states, dict):
-                # LED старт: горит только если кнопка активна И текст = "start"
                 current_led_start_state = states.get('led_start', False)
                 button_enabled = self.ButtonStart.isEnabled()
                 button_text_is_start = self.ButtonStart.text() == self.translator.tr('start')
                 
                 should_led_start_be_on = button_enabled and button_text_is_start
                 
-                # Обновляем светодиод только если состояние не совпадает
                 if should_led_start_be_on and not current_led_start_state:
                     self.controller.handle_command('on_led_start')
                 elif not should_led_start_be_on and current_led_start_state:
                     self.controller.handle_command('off_led_start')
                 
-                # LED стоп: горит только если кнопка активна И текст = "stop"
                 current_led_stop_state = states.get('led_stop', False)
                 button_text_is_stop = self.ButtonStart.text() == self.translator.tr('stop')
                 
                 should_led_stop_be_on = button_enabled and button_text_is_stop
                 
-                # Обновляем светодиод только если состояние не совпадает
                 if should_led_stop_be_on and not current_led_stop_state:
                     self.controller.handle_command('on_led_stop')
                 elif not should_led_stop_be_on and current_led_stop_state:
@@ -3419,14 +3362,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
         if not self.ButtonStart.isEnabled() and self.user_mode != 'Operator':
             self.PressZad.setEnabled(True)
-            self.VE1FlowZad.setEnabled(True)
-            self.VE2FlowZad.setEnabled(True)
             self.HFPowerZad.setEnabled(True)
             self.TimeZad.setEnabled(True)
-            self.VE1Button.setEnabled(True)
-            self.VE2Button.setEnabled(True)
-            self.VE1ComboBox.setEnabled(True)
-            self.VE2ComboBox.setEnabled(True)
+
+            for i in work_gases:
+                getattr(self, f'VE{i}FlowZad').setEnabled(True)
+                getattr(self, f'VE{i}Button').setEnabled(True)
+                getattr(self, f'VE{i}ComboBox').setEnabled(True)
 
     def update_status(self, status_message):
         self.StatusLine.setText(status_message)
@@ -3508,13 +3450,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         combo.addItem("")
                     combo.setItemText(4, self.translator.tr('custom_gas'))
                     combo.setCurrentIndex(gas_idx)
-                elif gas_val is not None:
-                    logging.error(f"Error in update_recipe: recipes {num_recipe} VE {i} gas: {gas_val}")
-            
+
     def get_current_recipe(self):
         # 0 - Air, 1 - Ar, 2 - O2, 3 - N2, 4 - Свой газ (custom)
         try:
-            # Безопасное чтение значений с обработкой ошибок
             def safe_float(value, default=0.0):
                 try:
                     if value is None or value == '':
@@ -3536,7 +3475,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     return default
                 return str(value) if str(value).strip() else default
 
-            # ResPressure должен быть числом (как в JSON), но сохраняем как float для совместимости
             press_text = self.PressZad.text().strip()
             res_pressure = safe_float(press_text, 0.0)
 
@@ -3544,41 +3482,47 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 "title": '',
                 "com": '',
                 "ResPressure": res_pressure,  # Число, как в JSON
-                "VE1": {
-                    "switch": 1 if self.VE1Button.isChecked() else 0,
-                    "gas": self.VE1ComboBox.currentIndex() if self.VE1Button.isChecked() else None,  # None для неактивных (совместимость с JSON)
-                    "flow": safe_float(self.VE1FlowZad.text()) if self.VE1Button.isChecked() else 0.0
-                },
-                "VE2": {
-                    "switch": 1 if self.VE2Button.isChecked() else 0,
-                    "gas": self.VE2ComboBox.currentIndex() if self.VE2Button.isChecked() else None,
-                    "flow": safe_float(self.VE2FlowZad.text()) if self.VE2Button.isChecked() else 0.0
-                },
                 "power": safe_int(self.HFPowerZad.text(), 0),
                 "time": safe_str(self.TimeZad.text(), '00:00')
             }
+            for i in range(1, number_gases + 1):
+                data_for_recipe[f'VE{i}'] = {
+                    "switch": 1 if getattr(self, f'VE{i}Button').isChecked() else 0,
+                    "gas": getattr(self, f'VE{i}ComboBox').currentIndex() if getattr(self, f'VE{i}Button').isChecked() else None,
+                    "flow": safe_float(getattr(self, f'VE{i}FlowZad').text()) if getattr(self, f'VE{i}Button').isChecked() else 0.0
+                }
             return data_for_recipe
+        
         except Exception as e:
             logging.error(f"Error in get_current_recipe: {e}", exc_info=True)
-            # Возвращаем рецепт с значениями по умолчанию при ошибке
-            return {
+            data = {
                 "title": '',
                 "com": '',
                 "ResPressure": 0.0,  # Число
-                "VE1": {"switch": 0, "gas": None, "flow": 0.0},  # None вместо -1
-                "VE2": {"switch": 0, "gas": None, "flow": 0.0},
                 "power": 0,
                 "time": "00:00",
             }
+
+            # Возвращаем рецепт с значениями по умолчанию при ошибке
+            for i in range(1, number_gases + 1):
+                data[f'VE{i}'] = {"switch": 0, "gas": None, "flow": 0.0}
+
+            return data
+            
     
     def handle_commands(self, sender):
         logs_text = {
             "open_valve_ve1": 'VE1 ОТКРЫТ ⭢ ЗАКРЫТ',
             "open_valve_ve2": 'VE2 ОТКРЫТ ⭢ ЗАКРЫТ',
+            "open_valve_ve3": 'VE3 ОТКРЫТ ⭢ ЗАКРЫТ',
+            "open_valve_ve4": 'VE4 ОТКРЫТ ⭢ ЗАКРЫТ',
             "open_valve_ve01": 'VE01 ОТКРЫТ ⭢ ЗАКРЫТ',
             "close_valve_ve1": 'VE1 ЗАКРЫТ ⭢ ОТКРЫТ',
             "close_valve_ve2": 'VE2 ЗАКРЫТ ⭢ ОТКРЫТ',
+            "close_valve_ve3": 'VE3 ЗАКРЫТ ⭢ ОТКРЫТ',
+            "close_valve_ve4": 'VE4 ЗАКРЫТ ⭢ ОТКРЫТ',
             "close_valve_ve01": 'VE01 ЗАКРЫТ ⭢ ОТКРЫТ',
+            "close_valve_ve02": 'VE01 ЗАКРЫТ ⭢ ОТКРЫТ',
             'on_pump': 'Насос ОТКЛЮЧЕН ⭢ ВКЛЮЧЕН',
             'off_pump': 'Насос ВКЛЮЧЕН ⭢ ОТКЛЮЧЕН',
             'on_ps': 'БП ОТКЛЮЧЕН ⭢ ВКЛЮЧЕН',
@@ -3590,134 +3534,80 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         }
 
         try:
+            command = None
+
             if sender == 'VE1ButtonS':
                 command = 'open_valve_ve1' if getattr(self, sender).isChecked() else 'close_valve_ve1'
-                logging.info(logs_text[command])                        
-                self.controller.handle_command(command=command)
             if sender == 'VE2ButtonS':
                 command = 'open_valve_ve2' if getattr(self, sender).isChecked() else 'close_valve_ve2'
-                logging.info(logs_text[command])        
-                self.controller.handle_command(command=command)
+            if sender == 'VE3ButtonS':
+                command = 'open_valve_ve3' if getattr(self, sender).isChecked() else 'close_valve_ve3'
+            if sender == 'VE4ButtonS':
+                command = 'open_valve_ve4' if getattr(self, sender).isChecked() else 'close_valve_ve4'
             if sender == 'VE01ButtonS':
                 command = 'open_valve_ve01' if getattr(self, sender).isChecked() else 'close_valve_ve01'
-                logging.info(logs_text[command]) 
-                self.controller.handle_command(command=command)
             if sender == 'NIButtonS':
                 command = 'on_pump' if getattr(self, sender).isChecked() else 'off_pump'
-                logging.info(logs_text[command]) 
-                self.controller.handle_command(command=command)
             if sender == 'BuzzButtonS':
                 command = 'on_buzz' if getattr(self, sender).isChecked() else 'off_buzz'
-                logging.info(logs_text[command])
-                self.controller.handle_command(command=command)
             if sender == 'HFButtonS':
                 command = 'on_plasma' if getattr(self, sender).isChecked() else 'off_plasma'
-                logging.info(logs_text[command])
-                self.controller.handle_command(command=command)
+
+            logging.info(logs_text[command])
+            self.controller.handle_command(command=command)
 
         except Exception as e:
             logging.error(str(sender) + ':' + str(e))
             
     def closeEvent(self, event):
-        # Останавливаем executor для напуска газов
         if self._venting_executor is not None:
             self._venting_executor.shutdown(wait=False)
             self._venting_executor = None
         
-        step = 0
+        self.controller.handle_command('off_plasma')
+                
+        for i in all_gases:
+            self.controller.handle_command(f"close_valve_ve{i}")
+                
+        self.controller.handle_command('off_pump')
+            
+        self.timer_read_flows.stop()
+        self.timer_stop_gases.stop()
+        self.timer_plasma.stop()
         
-        while step == 0:
-            self.controller.handle_command('off_bp')
-
-            states = self.controller.handle_command('get_states', {})
-            if not isinstance(states, dict):
-                states = {}
-            if states.get('plasma', 1):
-                self.controller.handle_command('off_plasma')
-                time.sleep(0.1)
-            else:
-                step += 1
-                logging.info('closeEvent: off plasma completed.')
-                
-        while step == 1:
-            states = self.controller.handle_command('get_states', {})
-            if not isinstance(states, dict):
-                states = {}
-            is_valid = True
-            
-            for i in all_gases:
-                if states.get(f"valve_ve{i}", 'open'):
-                    self.controller.handle_command(f"close_valve_ve{i}")
-                    
-            time.sleep(0.1)
-            
-            for i in all_gases:
-                if states.get(f"valve_ve{i}", 'open') == 'open':
-                    is_valid = False
-            
-            if is_valid:
-                step += 1
-                logging.info('closeEvent: valves closed.')
-                
-        while step == 3:
-            states = self.controller.handle_command('get_states', {})
-            if not isinstance(states, dict):
-                states = {}
-            if states.get('pump', 1):
-                self.controller.handle_command('off_pump')
-                time.sleep(0.1)
-            else:
-                step += 1
-                logging.info('closeEvent: off pump completed.')
-
-            # Останавливаем все таймеры
-            self.timer_read_flows.stop()
-            self.timer_stop_gases.stop()
-            self.timer_plasma.stop()
-            
-            # Останавливаем процесс остановки напуска газов, если он активен
-            self._stopping_gases = False
-            
-            # Закрываем executor для остановки напуска газов
-            if self._stop_gas_executor:
-                try:
-                    self._stop_gas_executor.shutdown(wait=False)  # Не ждем завершения
-                except:
-                    pass
-                self._stop_gas_executor = None
-            
-            # Закрываем executor для операций с RF генератором
-            if hasattr(self, '_rf_operations_executor') and self._rf_operations_executor:
-                try:
-                    self._rf_operations_executor.shutdown(wait=False)  # Не ждем завершения
-                except:
-                    pass
-                self._rf_operations_executor = None
-            
-            # Останавливаем поток чтения данных генератора
+        self._stopping_gases = False
+        
+        if self._stop_gas_executor:
             try:
-                self.stop_rf_reading(wait=True)
+                self._stop_gas_executor.shutdown(wait=False)  # Не ждем завершения
+            except:
+                pass
+            self._stop_gas_executor = None
+        
+        if hasattr(self, '_rf_operations_executor') and self._rf_operations_executor:
+            try:
+                self._rf_operations_executor.shutdown(wait=False)  # Не ждем завершения
+            except:
+                pass
+            self._rf_operations_executor = None
+        
+        try:
+            self.stop_rf_reading(wait=True)
+        except Exception as e:
+            logging.error(f"Error stopping RF reading thread: {e}")
+        
+        def stop_flow_final():
+            try:
+                with self._flow_thread_lock:
+                    if self.flow_thread is not None and self.flow_thread.isRunning():
+                        self.stop_flow_thread(wait=True)
             except Exception as e:
-                logging.error(f"Error stopping RF reading thread: {e}")
-            
-            # Останавливаем поток чтения потоков (не блокируя)
-            def stop_flow_final():
-                try:
-                    with self._flow_thread_lock:
-                        if self.flow_thread is not None and self.flow_thread.isRunning():
-                            logging.info("Stopping flow thread before closing")
-                            self.stop_flow_thread(wait=True)  # При закрытии ждем
-                except Exception as e:
-                    logging.error(f"Error stopping flow thread: {e}")
-            
-            # Запускаем остановку в отдельном потоке с таймаутом
-            if self._flow_thread_lock.acquire(blocking=False):
-                try:
-                    stop_flow_final()
-                finally:
-                    self._flow_thread_lock.release()
-            else:
-                # Если блокировка занята, просто продолжаем
-                logging.warning("Flow thread lock is busy, continuing with close")
-            
-            event.accept()
+                logging.error(f"Error stopping flow thread: {e}")
+        
+        if self._flow_thread_lock.acquire(blocking=False):
+            try:
+                stop_flow_final()
+            finally:
+                self._flow_thread_lock.release()
+        
+        event.accept()

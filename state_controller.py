@@ -166,74 +166,41 @@ class RRG_MFC_UT:
         logging.info(f"DEBUG: RRG {self.device_id} set_flow STARTED in thread {thread_id}, flow_value={flow_value}, type_gas={type_gas}")
         start_time = time.time()
         
-        # Проверяем, что type_gas не None и валиден
         if type_gas is None:
             logging.error(f"RRG {self.device_id} set_flow: type_gas is None")
             return False
         
-        # Обрабатываем случай, когда type_gas < 0 (например, -1 означает "не выбран")
-        # В этом случае используем значение по умолчанию 0
         if int(type_gas) < 0:
-            logging.warning(f"RRG {self.device_id} set_flow: type_gas={type_gas} is negative, using default type_gas=0")
             type_gas = 0
         
-        # Преобразуем в строку для поиска в словаре (ключи - строки: '0', '1', '2', '3', '4'=свой газ)
-        type_gas_str = str(int(type_gas))  # Сначала int для обработки float, потом str
+        type_gas_str = str(int(type_gas))
         if type_gas_str == '4' and self.rrg_num is not None:
             coef = float(settings.get(f'coef_rrg{self.rrg_num}', 1.0))
         else:
             coef = self.coef_gas.get(type_gas_str)
         if coef is None:
-            logging.error(f"RRG {self.device_id} set_flow: Unknown type_gas={type_gas} (str={type_gas_str}), available keys: {list(self.coef_gas.keys())}, using default coef=1.0")
-            coef = 1.0  # Используем коэффициент по умолчанию
-        else:
-            logging.debug(f"RRG {self.device_id} set_flow: type_gas={type_gas} (str={type_gas_str}), coef={coef}")
+            coef = 1.0
         
         flow_value = flow_value * 1000 / 60 # перевод в sccm
         flow_raw = int(flow_value * 100 / coef)
         logging.info(f"DEBUG: RRG {self.device_id} set_flow: flow_raw={flow_raw}, coef={coef}")
         
-        logging.info(f"DEBUG: RRG {self.device_id} set_flow: Attempting to acquire lock...")
-        lock_acquired_time = time.time()
-        with self._lock:  # Thread-safe доступ к serial порту
-            lock_acquired_elapsed = time.time() - lock_acquired_time
-            if lock_acquired_elapsed > 0.1:
-                logging.warning(f"DEBUG: RRG {self.device_id} set_flow: Lock acquired after {lock_acquired_elapsed:.3f}s (was waiting!)")
-            else:
-                logging.info(f"DEBUG: RRG {self.device_id} set_flow: Lock acquired immediately")
-            
+        with self._lock:
             for attempt in range(self.max_attempts):
-                # Проверяем общий таймаут операции
                 elapsed = time.time() - start_time
                 if elapsed > self.operation_timeout:
-                    logging.warning(f"DEBUG: RRG {self.device_id} set_flow: operation timeout ({elapsed:.3f}s > {self.operation_timeout}s)")
                     return False
-                
                 try:
-                    logging.info(f"DEBUG: RRG {self.device_id} set_flow: Attempt {attempt + 1}/{self.max_attempts}, calling write_long...")
-                    write_start = time.time()
                     resp = self.instrument.write_long(registeraddress=0x0022, value=flow_raw, signed=False)
-                    write_elapsed = time.time() - write_start
-                    logging.info(f"DEBUG: RRG {self.device_id} set_flow: write_long completed in {write_elapsed:.3f}s, resp={resp}")
-                    total_elapsed = time.time() - start_time
-                    logging.info(f"DEBUG: RRG {self.device_id} set_flow COMPLETED successfully in {total_elapsed:.3f}s")
                     return True
                 except Exception as e:
                     elapsed = time.time() - start_time
-                    logging.error(f"DEBUG: RRG {self.device_id} set_flow: Exception on attempt {attempt + 1}: {e}")
                     if elapsed > self.operation_timeout:
-                        logging.warning(f"DEBUG: RRG {self.device_id} set_flow: timeout after {elapsed:.3f}s")
                         return False
                     if attempt < self.max_attempts - 1:
-                        # Прогрессивная задержка: увеличиваем время между попытками, если устройство не отвечает
-                        delay = 0.3 * (attempt + 1)  # 0.3s, 0.6s, 0.9s... (увеличено для более надежной работы)
-                        logging.debug(f"DEBUG: RRG {self.device_id} set_flow: attempt {attempt + 1} failed, waiting {delay:.2f}s before retry")
-                        time.sleep(delay)
+                        delay = 0.3 * (attempt + 1)
                         continue
-                    logging.error(f"Modbus error set_flow RRG_MFC_UT device {self.device_id}: {e}")
 
-        total_elapsed = time.time() - start_time
-        logging.warning(f"DEBUG: RRG {self.device_id} set_flow: max attempts reached after {total_elapsed:.3f}s, no response")
         return False
         
     def close(self):
@@ -1138,6 +1105,8 @@ class Controller:
         self.pin_pump = dict_pins['pump']
         self.pin_valve_ve1 = dict_pins['ve1']
         self.pin_valve_ve2 = dict_pins['ve2']
+        self.pin_valve_ve3 = dict_pins['ve3']
+        self.pin_valve_ve4 = dict_pins['ve4']
         self.pin_valve_ve01 = dict_pins['ve01']
     
         self.pin_buzz = dict_pins['buzz']
@@ -1156,6 +1125,8 @@ class Controller:
         self.pump = None
         self.valve_ve1 = None
         self.valve_ve2 = None
+        self.valve_ve3 = None
+        self.valve_ve4 = None
         self.valve_ve01 = None
         
         self.buzz = None
@@ -1164,6 +1135,8 @@ class Controller:
 
         self.rrg_1 = None
         self.rrg_2 = None
+        self.rrg_3 = None
+        self.rrg_4 = None
 
         self.rf = None
         self.bp = None
@@ -1782,6 +1755,8 @@ class Controller:
             self.pump = DigitalOutputDevice(self.pin_pump)
             self.valve_ve1 = DigitalOutputDevice(self.pin_valve_ve1)
             self.valve_ve2 = DigitalOutputDevice(self.pin_valve_ve2)
+            self.valve_ve3 = DigitalOutputDevice(self.pin_valve_ve3)
+            self.valve_ve4 = DigitalOutputDevice(self.pin_valve_ve4)
             self.valve_ve01 = DigitalOutputDevice(self.pin_valve_ve01)
             self.buzz = DigitalOutputDevice(self.pin_buzz)
             self.bp = DigitalOutputDevice(self.pin_bp)
@@ -1793,14 +1768,20 @@ class Controller:
             self.fault_device_init.append('GPIO')
             
         try:
-            if settings.get('NUMBER_GASES') == 2:
-                if settings.get('TYPE_RRG1') == 'MFC_UT':
-                    self.rrg_1 = RRG_MFC_UT(settings.get('PORT_RRG'), device_id=settings.get('ADDRESS_RRG1'), rrg_num=1)
+            if settings.get('TYPE_RRG1') == 'MFC_UT':
+                self.rrg_1 = RRG_MFC_UT(settings.get('PORT_RRG'), device_id=settings.get('ADDRESS_RRG1'), rrg_num=1)
 
-                if settings.get('TYPE_RRG2') == 'MFC_UT':
-                    self.rrg_2 = RRG_MFC_UT(settings.get('PORT_RRG'), device_id=settings.get('ADDRESS_RRG2'), rrg_num=2)
-                    
+            if settings.get('TYPE_RRG2') == 'MFC_UT':
+                self.rrg_2 = RRG_MFC_UT(settings.get('PORT_RRG'), device_id=settings.get('ADDRESS_RRG2'), rrg_num=2)
+
+            if settings.get('TYPE_RRG3') == 'MFC_UT':
+                self.rrg_3 = RRG_MFC_UT(settings.get('PORT_RRG'), device_id=settings.get('ADDRESS_RRG3'), rrg_num=3)
+
+            if settings.get('TYPE_RRG4') == 'MFC_UT':
+                self.rrg_4 = RRG_MFC_UT(settings.get('PORT_RRG'), device_id=settings.get('ADDRESS_RRG4'), rrg_num=4)
+
             self.ok_device_init.append('RRG')
+
         except Exception as e:
             logging.error(f"Ошибка при инициализации РРГ: {e}")
             self.init_is_successfully = False
@@ -1847,9 +1828,13 @@ class Controller:
             # Клапаны
             "open_valve_ve1": 'Открыть VE1: ',
             "open_valve_ve2": 'Открыть VE2: ',
-            "open_valve_ve01": 'Открыть VE01: ',
+            "open_valve_ve3": 'Открыть VE3: ',
+            "open_valve_ve4": 'Открыть VE4: ',
             "close_valve_ve1": 'Закрыть VE1: ',
             "close_valve_ve2": 'Закрыть VE2: ',
+            "close_valve_ve3": 'Закрыть VE3: ',
+            "close_valve_ve4": 'Закрыть VE4: ',
+            "open_valve_ve01": 'Открыть VE01: ',
             "close_valve_ve01": 'Закрыть VE01: ',
             
             # Насос
@@ -1954,6 +1939,30 @@ class Controller:
             elif command == "close_valve_ve2":
                 self.valve_ve2.off()
                 res = (self.valve_ve2.value == False)
+                logging.info(logs_text[command] + str(res))
+                return res
+
+            elif command == "open_valve_ve3":
+                self.valve_ve3.on()
+                res = (self.valve_ve3.value == True)
+                logging.info(logs_text[command] + str(res))
+                return res
+
+            elif command == "close_valve_ve3":
+                self.valve_ve3.off()
+                res = (self.valve_ve3.value == False)
+                logging.info(logs_text[command] + str(res))
+                return res
+            
+            elif command == "open_valve_ve4":
+                self.valve_ve4.on()
+                res = (self.valve_ve4.value == True)
+                logging.info(logs_text[command] + str(res))
+                return res
+
+            elif command == "close_valve_ve4":
+                self.valve_ve4.off()
+                res = (self.valve_ve4.value == False)
                 logging.info(logs_text[command] + str(res))
                 return res
 
@@ -2328,6 +2337,8 @@ class Controller:
                     'pump': bool(self.pump.value),
                     'valve_ve1': 'open' if self.valve_ve1.value else 'close',
                     'valve_ve2': 'open' if self.valve_ve2.value else 'close',
+                    'valve_ve3': 'open' if self.valve_ve3.value else 'close',
+                    'valve_ve4': 'open' if self.valve_ve4.value else 'close',
                     'valve_ve01': 'open' if self.valve_ve01.value else 'close',
                     'led_vacuum': bool(self.led_vacuum.value),
                     'led_start': bool(self.led_start.value),
@@ -2345,6 +2356,8 @@ class Controller:
                     valves_states = {
                         'valve_ve1': 'open' if self.valve_ve1.value else 'close',
                         'valve_ve2': 'open' if self.valve_ve2.value else 'close',
+                        'valve_ve3': 'open' if self.valve_ve3.value else 'close',
+                        'valve_ve4': 'open' if self.valve_ve4.value else 'close',
                         'valve_ve01': 'open' if self.valve_ve01.value else 'close'
                     }
                     return valves_states

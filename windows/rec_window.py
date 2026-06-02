@@ -13,7 +13,7 @@ from recipes.recipes import recipes, save_recipes
 from config.settings import settings, save_settings
 from utils.translator import Translator
 
-
+number_gases = settings.get('NUMBER_GASES')
 
 class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
     def __init__(self, parent=None):
@@ -143,12 +143,13 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         self.TitleLine.setText(recipe['title'])
         self.ComText.setPlainText(recipe['com'])
         self.PressLine.setText(str(recipe['ResPressure']))
-        self.VE1GasLine.setText(self.map_num_gas.get(str(recipe['VE1']['gas'])))
-        self.VE2GasLine.setText(self.map_num_gas.get(str(recipe['VE2']['gas'])))
-        self.VE1FlowLine.setText(str(recipe['VE1']['flow']))
-        self.VE2FlowLine.setText(str(recipe['VE2']['flow']))
         self.PowerLine.setText(str(recipe['power']))
         self.TimeLine.setText(recipe['time'])
+
+        for i in range(1, number_gases + 1):
+            getattr(self, f'VE{i}GasLine').setText(self.map_num_gas.get(str(recipe[f'VE{i}']['gas'])))
+            getattr(self, f'VE{i}FlowLine').setText(str(recipe[f'VE{i}']['flow']))
+        
 
     def change_for_technologist(self):
         self.ButtonSave.show()
@@ -158,12 +159,13 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         self.TitleLine.setReadOnly(False)
         self.ComText.setReadOnly(False)
         self.PressLine.setReadOnly(False)
-        self.VE1GasLine.setReadOnly(False)
-        self.VE2GasLine.setReadOnly(False)
-        self.VE1FlowLine.setReadOnly(False)
-        self.VE2FlowLine.setReadOnly(False)
         self.PowerLine.setReadOnly(False)
         self.TimeLine.setReadOnly(False)
+
+        for i in range(1, number_gases + 1):
+            getattr(self, f'VE{i}GasLine').setReadOnly(False)
+            getattr(self, f'VE{i}FlowLine').setReadOnly(False)
+        
 
     def change_for_operator(self):
         self.ButtonSave.hide()
@@ -173,12 +175,13 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         self.TitleLine.setReadOnly(True)
         self.ComText.setReadOnly(True)
         self.PressLine.setReadOnly(True)
-        self.VE1GasLine.setReadOnly(True)
-        self.VE2GasLine.setReadOnly(True)
-        self.VE1FlowLine.setReadOnly(True)
-        self.VE2FlowLine.setReadOnly(True)
         self.PowerLine.setReadOnly(True)
         self.TimeLine.setReadOnly(True)
+
+        for i in range(1, number_gases + 1):
+            getattr(self, f'VE{i}GasLine').setReadOnly(True)
+            getattr(self, f'VE{i}FlowLine').setReadOnly(True)
+        
 
     def init_title_buttons(self):
         for i, btn in enumerate(self.buttons):
@@ -202,14 +205,12 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         self.TitleLine.setText(recipe['title'])
         self.ComText.setPlainText(recipe['com'])
         self.PressLine.setText(str(recipe['ResPressure']))
-
-        self.VE1GasLine.setText(self.map_num_gas.get(str(recipe['VE1']['gas'])))
-        self.VE2GasLine.setText(self.map_num_gas.get(str(recipe['VE2']['gas'])))
-
-        self.VE1FlowLine.setText(str(recipe['VE1']['flow']))
-        self.VE2FlowLine.setText(str(recipe['VE2']['flow']))
         self.PowerLine.setText(str(recipe['power']))
         self.TimeLine.setText(recipe['time'])
+
+        for i in range(1, number_gases + 1):
+            getattr(self, f'VE{i}GasLine').setText(self.map_num_gas.get(str(recipe[f'VE{i}']['gas'])))
+            getattr(self, f'VE{i}FlowLine').setText(str(recipe[f'VE{i}']['flow']))
 
     def check(self):
         if self.data_for_copy is not None:
@@ -218,17 +219,13 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
 
         recipes[str(self.RecNumber.text())]['title'] = self.TitleLine.text()
         recipes[str(self.RecNumber.text())]['com'] = self.ComText.toPlainText()
-
         recipes[str(self.RecNumber.text())]['ResPressure'] = float(self.PressLine.text())
-
-        recipes[str(self.RecNumber.text())]['VE1']['gas'] = self.map_gas_num.get(self.VE1GasLine.text())
-        recipes[str(self.RecNumber.text())]['VE2']['gas'] = self.map_gas_num.get(self.VE2GasLine.text())
-
-        recipes[str(self.RecNumber.text())]['VE1']['flow'] = float(self.VE1FlowLine.text())
-        recipes[str(self.RecNumber.text())]['VE2']['flow'] = float(self.VE2FlowLine.text())
-
         recipes[str(self.RecNumber.text())]['power'] = int(self.PowerLine.text())
         recipes[str(self.RecNumber.text())]['time'] = self.TimeLine.text()
+
+        for i in range(1, number_gases + 1):
+            recipes[str(self.RecNumber.text())][f'VE{i}']['gas'] = self.map_gas_num.get(getattr(self, f'VE{i}GasLine').text())
+            recipes[str(self.RecNumber.text())][f'VE{i}']['flow'] = float(getattr(self, f'VE{i}FlowLine').text())
         
         save_recipes(recipes)
         
@@ -251,12 +248,13 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         self.TitleLine.setText('')
         self.ComText.setPlainText('')
         self.PressLine.setText('0.0')
-        self.VE1GasLine.setText('')
-        self.VE2GasLine.setText('')
-        self.VE1FlowLine.setText('0.0')
-        self.VE2FlowLine.setText('0.0')
         self.PowerLine.setText('0')
         self.TimeLine.setText('00:00')
+
+        for i in range(1, number_gases + 1):
+            getattr(self, f'VE{i}GasLine').setText('')
+            getattr(self, f'VE{i}FlowLine').setText('0.0')
+        
 
     def copy_recipe(self):
         try:
@@ -266,7 +264,6 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
                 logging.error("copy_recipe: get_current_recipe returned None")
                 return
             
-            # Безопасное получение значений с проверкой на наличие ключей
             def safe_get(data, *keys, default=''):
                 try:
                     result = data
@@ -279,31 +276,21 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
                 except (KeyError, TypeError, AttributeError):
                     return default
             
-            # Копирование всех полей с обработкой ошибок
-            # ResPressure может быть числом или строкой
             res_pressure = safe_get(self.data_for_copy, 'ResPressure', default=0.0)
             self.PressLine.setText(str(res_pressure))
 
-            ve1_gas = safe_get(self.data_for_copy, 'VE1', 'gas', default=None)
-            ve2_gas = safe_get(self.data_for_copy, 'VE2', 'gas', default=None)
-            
-            # Обработка None и -1 для обратной совместимости
-            ve1_gas_str = str(ve1_gas) if ve1_gas is not None and ve1_gas != -1 else '0'
-            ve2_gas_str = str(ve2_gas) if ve2_gas is not None and ve2_gas != -1 else '0'
-            
-            self.VE1GasLine.setText(self.map_num_gas.get(ve1_gas_str, self.translator.tr('air')))
-            self.VE2GasLine.setText(self.map_num_gas.get(ve2_gas_str, self.translator.tr('air')))
-            
-            self.VE1FlowLine.setText(str(safe_get(self.data_for_copy, 'VE1', 'flow', default=0.0)))
-            self.VE2FlowLine.setText(str(safe_get(self.data_for_copy, 'VE2', 'flow', default=0.0)))
-
             self.PowerLine.setText(str(safe_get(self.data_for_copy, 'power', default=0)))
             self.TimeLine.setText(str(safe_get(self.data_for_copy, 'time', default='00:00')))
-    
-            logging.info("copy_recipe: Recipe copied successfully")
+
+            for i in range(1, number_gases + 1):
+                ve_i_gas = safe_get(self.data_for_copy, f'VE{i}', 'gas', default=None)
+                ve_i_gas_str = str(ve_i_gas) if ve_i_gas is not None and ve_i_gas != -1 else '0'
+                getattr(self, f'VE{i}GasLine').setText(self.map_num_gas.get(ve_i_gas_str, self.translator.tr('air')))
+                getattr(self, f'VE{i}FlowLine').setText(str(safe_get(self.data_for_copy, f'VE{i}', 'flow', default=0.0)))
+        
         except Exception as e:
             logging.error(f"Error in copy_recipe: {e}", exc_info=True)
-            # Показываем сообщение об ошибке пользователю
+
             from PyQt5.QtWidgets import QMessageBox
             QMessageBox.warning(self, "Ошибка", f"Ошибка при копировании рецепта: {e}")
 

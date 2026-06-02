@@ -28,6 +28,8 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
         self.TimeMPC.setText(str(int(settings['time_work']) // 3600))
         self.userInputRrgConvCoeffPlace_1.setText(str(settings['coef_rrg1']))
         self.userInputRrgConvCoeffPlace_2.setText(str(settings['coef_rrg2']))
+        self.userInputRrgConvCoeffPlace_3.setText(str(settings['coef_rrg3']))
+        self.userInputRrgConvCoeffPlace_4.setText(str(settings['coef_rrg4']))
         self.comboBoxLang.setCurrentIndex(settings['LANG'])
         # Инициализация кнопки бузера из настроек
         self.ButtonBuzzer.setText(self.translator.tr('yes') if settings.get('enable_sound', True) else self.translator.tr('no'))
@@ -43,6 +45,8 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
         self.ClockNI.clicked.connect(lambda: self.open_key(sender='ClockNI'))
         self.userInputRrgConvCoeffPlace_1.clicked.connect(lambda: self.open_key(sender='coef_rrg1'))
         self.userInputRrgConvCoeffPlace_2.clicked.connect(lambda: self.open_key(sender='coef_rrg2'))
+        self.userInputRrgConvCoeffPlace_3.clicked.connect(lambda: self.open_key(sender='coef_rrg3'))
+        self.userInputRrgConvCoeffPlace_4.clicked.connect(lambda: self.open_key(sender='coef_rrg4'))
 
         self.update_ui_texts()
 
@@ -96,6 +100,8 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
             'time_pump': int(self.ClockNI.text()),
             'coef_rrg1': float(self.userInputRrgConvCoeffPlace_1.text()),
             'coef_rrg2': float(self.userInputRrgConvCoeffPlace_2.text()),
+            'coef_rrg3': float(self.userInputRrgConvCoeffPlace_3.text()),
+            'coef_rrg4': float(self.userInputRrgConvCoeffPlace_4.text()),
             'LANG': self.comboBoxLang.currentIndex(),
             'enable_sound': True if self.ButtonBuzzer.text() == self.translator.tr('yes') else False
         })
