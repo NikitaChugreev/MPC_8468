@@ -1,14 +1,15 @@
-import os
-import json
 import time
 
 from PyQt5 import QtCore, QtWidgets
 
-from ui.profwindow import Ui_ProfWindow
 from windows.set_window import SetWindow
-from config.settings import save_settings, settings
-from utils.translator import Translator
+from config.settings import settings, save_settings
+from utils.translator import Translator 
 
+if settings.get('NUMBER_GASES') == 3:
+    from ui.ui_ser.ui_3 import Ui_ProfWindow
+elif settings.get('NUMBER_GASES') == 2:
+    from ui.ui_ser.ui_2 import Ui_ProfWindow
 
 
 class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):

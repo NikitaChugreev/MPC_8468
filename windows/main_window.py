@@ -1,6 +1,4 @@
-import json
 import math
-import os
 import time
 import threading
 from datetime import datetime, timedelta
@@ -9,7 +7,6 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QTimer, Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QMessageBox
 from concurrent.futures import ThreadPoolExecutor
-import functools
 
 from logging.handlers import RotatingFileHandler
 import logging
@@ -17,14 +14,19 @@ import logging
 import fun
 from state_controller import controller
 from state_machine import PlasmaAutoProcess, process_logger
-from ui.mainwindow import Ui_MainWindow
+
+from config.settings import settings
+
+if settings.get('NUMBER_GASES') == 3:
+    from ui.ui_ser.ui_3 import Ui_MainWindow
+elif settings.get('NUMBER_GASES') == 2:
+    from ui.ui_ser.ui_2 import Ui_MainWindow
 
 from windows.prof_window import ProfWindow
 from windows.rec_window import RecWindow
 from windows.key_window import KeyWindow
 
 from recipes.recipes import recipes
-from config.settings import settings
 from utils.translator import Translator
 
 

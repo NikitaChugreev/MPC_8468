@@ -1,6 +1,4 @@
-import os
 import time
-import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from logging.handlers import RotatingFileHandler

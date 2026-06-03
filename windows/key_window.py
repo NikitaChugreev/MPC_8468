@@ -1,11 +1,14 @@
-import json
-import os
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import Qt
-from ui.keywindow import Ui_KeyWindow
 
 from config.settings import settings, save_settings
+
+if settings.get('NUMBER_GASES') == 3:
+    from ui.ui_ser.ui_3 import Ui_KeyWindow
+elif settings.get('NUMBER_GASES') == 2:
+    from ui.ui_ser.ui_2 import Ui_KeyWindow
+
 from utils.translator import Translator
 
 class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):

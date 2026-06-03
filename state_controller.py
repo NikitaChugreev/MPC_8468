@@ -1,11 +1,8 @@
-import json
 import time
-import struct
 import threading
 import minimalmodbus
 import board
 import busio
-import smbus2
 from concurrent.futures import ThreadPoolExecutor
 
 from gpiozero import Button, DigitalOutputDevice

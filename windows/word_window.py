@@ -1,7 +1,12 @@
 from PyQt5 import QtCore, QtWidgets
 
-from ui.wordwindow import Ui_WordWindow
+from config.settings import settings
 from recipes.recipes import recipes, save_recipes
+
+if settings.get('NUMBER_GASES') == 3:
+    from ui.ui_ser.ui_3 import Ui_WordWindow
+elif settings.get('NUMBER_GASES') == 2:
+    from ui.ui_ser.ui_2 import Ui_WordWindow
 
 class WordWindow(QtWidgets.QMainWindow, Ui_WordWindow):
     def __init__(self, parent=None, label_sender=None, recipe_number=None):

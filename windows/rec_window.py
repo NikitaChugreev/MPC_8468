@@ -1,17 +1,18 @@
-import json
-import os
 import logging
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
-from ui.recwindow import Ui_RecWindow
 
 from windows.word_window import WordWindow
 from windows.key_window import KeyWindow
 
 from recipes.recipes import recipes, save_recipes
-from config.settings import settings, save_settings
+from config.settings import settings
 from utils.translator import Translator
+
+if settings.get('NUMBER_GASES') == 3:
+    from ui.ui_ser.ui_3 import Ui_RecWindow
+elif settings.get('NUMBER_GASES') == 2:
+    from ui.ui_ser.ui_2 import Ui_RecWindow
 
 number_gases = settings.get('NUMBER_GASES')
 
