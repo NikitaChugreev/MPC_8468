@@ -734,7 +734,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             except Exception as e:
                                 venting_logger.debug(f"[stop_flow_thread] Error deleting worker: {e}")
                         
-                        # Удаляем поток из главного потока Qt через QMetaObject.invokeMethod
                         if thread_to_delete:
                             try:
                                 QtCore.QMetaObject.invokeMethod(
@@ -2095,6 +2094,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_set_valid_time'))
                     self.update_status(self.translator.tr('error_set_valid_time'))
                     QTimer.singleShot(2000, lambda: self.update_status(self.translator.tr('system_ready_tech')))
+            else:
+                self.HFButton.setChecked(False)
+                self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_set_valid_time'))
+                self.update_status(self.translator.tr('error_water_flow_zero'))
+                QTimer.singleShot(2000, lambda: self.update_status(self.translator.tr('system_ready_tech')))
         else:
             # Отключение плазмы - переносим в отдельный поток, чтобы не блокировать UI
             logging.info("STOP PLASMA: Starting plasma stop procedure")
