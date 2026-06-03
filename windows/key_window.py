@@ -91,7 +91,7 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
             self.LabelTextPar.setText(self.translator.tr('plasma_power'))
             self.LabelTextLim.setText(self.translator.tr('plasma_power_range') + str(settings.get('MAX_POWER_BP')) + " " + self.translator.tr('power_unit'))
             self.max_limit = settings.get('MAX_POWER_BP')
-            self.min_limit = 100
+            self.min_limit = settings.get('MIN_POWER_BP', 10)
             self.message = self.translator.tr('error_plasma_power_range' + str(settings.get('MAX_POWER_BP')) + " " + self.translator.tr('power_unit'))
 
         for button in [self.Button0, self.Button1, self.Button2, self.Button3, self.Button4,

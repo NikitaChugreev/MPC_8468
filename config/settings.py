@@ -19,6 +19,7 @@ DEFAULT_SETTINGS = {
     "PORT_RF": "/dev/serial/by-path/platform-3f980000.usb-usb-0:1.1.3:1.0-port0",
     "ADDRESS_RF": 10,
     "BAUDRATE_RF": 57600,
+    "MIN_POWER_BP": 10,
     "MAX_POWER_BP": 1000,
     "ResPressure": 0.05,
     "use_pass_technologist": True,

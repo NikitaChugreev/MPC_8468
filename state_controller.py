@@ -549,6 +549,17 @@ class APEL_M_1_5PDC:
         except Exception as e:
             logging.error(f"Error init APEL_M_1_5PDC: {e}")
 
+    def read_status(self):
+        raw = self._read_status()
+        if raw is None:
+            return None
+
+        return {
+            'forward_w': raw.get('power_w', 0),
+            'reflect_w': 0,  # APEL не предоставляет отражённую мощность
+            'rf_on': raw.get('state_code') == 0 and raw.get('power_w', 0) > 0,
+        }
+
     # ── Вкл./Выкл. ──────────────────────────────────────────────────────────
 
     def on(self):
@@ -623,7 +634,7 @@ class APEL_M_1_5PDC:
 
     # ── Чтение состояния ────────────────────────────────────────────────────
 
-    def read_status(self):
+    def _read_status(self):
         """
         Читает Input Registers 0x00..0x04 (FC4):
           IReg_State, IReg_Res, IReg_Voltage(В), IReg_Current(мА), IReg_Power(Вт).

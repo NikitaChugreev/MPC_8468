@@ -751,9 +751,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     venting_logger.info("[stop_flow_thread] Skipping cleanup (will be done in _on_flow_thread_finished)")
             
             if wait:
-                venting_logger.info("[stop_flow_thread] Clearing flow thread references...")
-                # Очищаем ссылки только после того, как deleteLater() был вызван
-                # Используем QMetaObject.invokeMethod для отложенной очистки из главного потока Qt
                 def clear_references():
                     try:
                         with self._flow_thread_lock:
@@ -764,15 +761,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     except Exception as e:
                         venting_logger.error(f"[stop_flow_thread] Error clearing references: {e}")
                 
-                # Вызываем очистку из главного потока Qt через QMetaObject.invokeMethod
-                # Используем QTimer только если мы в главном потоке Qt
                 try:
-                    # Проверяем, находимся ли мы в главном потоке Qt
                     if QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread():
-                        # Мы в главном потоке, можем использовать QTimer
                         QTimer.singleShot(200, clear_references)
                     else:
-                        # Мы не в главном потоке, используем QMetaObject.invokeMethod
+
                         QtCore.QMetaObject.invokeMethod(
                             self,
                             "_clear_flow_thread_references",
@@ -780,7 +773,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         )
                 except Exception as e:
                     venting_logger.error(f"[stop_flow_thread] Error scheduling reference cleanup: {e}")
-                    # В случае ошибки просто очищаем ссылки сразу (не идеально, но безопасно)
                     try:
                         with self._flow_thread_lock:
                             self.flow_worker = None
@@ -788,25 +780,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             self._flow_thread_busy = False
                     except:
                         pass
-            
-            thread_time = time.time() - thread_start
-            venting_logger.info(f"[stop_flow_thread] Completed in {thread_time:.3f}s")
+
         finally:
             self._flow_thread_lock.release()
-            venting_logger.debug("[stop_flow_thread] Lock released")
 
 
     def read_flows_async(self):
-        """Асинхронное чтение потоков РРГ"""
-        # Проверяем, не занят ли уже поток
         with self._flow_thread_lock:
             if self._flow_thread_busy:
-                logging.debug("Flow thread is busy, skipping this call")
                 return
             
-            # Если поток еще работает, не создаем новый
             if self.flow_thread is not None and self.flow_thread.isRunning():
-                logging.debug("Previous flow thread still running, skipping")
                 return
 
         active_rrgs = []
@@ -818,19 +802,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 gas_types[i] = getattr(self, f"VE{i}ComboBox").currentIndex()
 
         if not active_rrgs:
-            # Если нет активных газов, останавливаем поток, если он работает
             with self._flow_thread_lock:
                 if self.flow_thread is not None and self.flow_thread.isRunning():
                     self.stop_flow_thread()
             return
 
-        # Создаем новый поток только если предыдущий полностью завершен
         with self._flow_thread_lock:
             if self.flow_thread is not None:
-                logging.debug("Previous flow thread not cleaned up yet, skipping")
                 return
             
-            # Устанавливаем флаг занятости
             self._flow_thread_busy = True
 
         try:
@@ -847,7 +827,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             flow_worker.finished.connect(flow_thread.quit)
             flow_thread.finished.connect(self._on_flow_thread_finished)
 
-            # Сохраняем ссылки только после успешного создания
             with self._flow_thread_lock:
                 self.flow_thread = flow_thread
                 self.flow_worker = flow_worker
@@ -876,7 +855,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     
     @QtCore.pyqtSlot(int, float)
     def update_flow_display(self, num_rrg, value):
-        """Безопасное обновление отображения потока из любого потока"""
         try:
             self.on_flow_read(num_rrg, value)
         except Exception as e:
@@ -884,48 +862,28 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     
     @QtCore.pyqtSlot()
     def _update_ui_after_stop(self):
-        """Обновление UI после подтверждения остановки напуска газов"""
         thread_id = threading.current_thread().ident
-        logging.info("=" * 80)
-        logging.info(f"DEBUG: _update_ui_after_stop CALLED in thread {thread_id}")
-        logging.info(f"DEBUG: Is main thread: {threading.current_thread() is threading.main_thread()}")
         try:
-            logging.info("DEBUG: Updating button text...")
             self.VEButton.setText(self.translator.tr('start_venting_gas'))
-            logging.info("DEBUG: Button text updated")
-            
-            logging.info("DEBUG: Updating button checked state...")
             self.VEButton.setChecked(False)
-            logging.info("DEBUG: Button checked state updated")
             
             if settings.get('LANG') == 0:
-                logging.info("DEBUG: Updating button style...")
                 self.VEButton.setStyleSheet('font-size: 20px')
-                logging.info("DEBUG: Button style updated")
             
-            logging.info("DEBUG: Updating status...")
             self.update_status(self.translator.tr('gas_inlet_completed'))
-            logging.info("DEBUG: Status updated")
-            
-            logging.info("DEBUG: _update_ui_after_stop COMPLETED successfully")
-            logging.info("=" * 80)
         except Exception as e:
             logging.error(f"DEBUG: ERROR in _update_ui_after_stop: {e}", exc_info=True)
             logging.info("=" * 80)
 
     def update_values(self):
-        # Логирование для диагностики обновления давления и воды во время работы плазмы
         current_state = getattr(self.plasma_process, 'current_state', 'unknown')
         plasma_on = getattr(self.controller, '_cached_plasma_status', False)
         timer_active = self.timer_update_values.isActive() if hasattr(self, 'timer_update_values') else False
 
-        # Инициализируем переменные для использования в любом случае
         values = {'pressure': 0.0, 'water': 0.0}
         
         try:
             values_adc = self.controller.get_values_adc()
-            
-            # Проверяем, что get_values_adc вернул словарь (не None)
             if values_adc is None:
                 logging.warning(f"update_values: get_values_adc returned None - state={current_state}, plasma_on={plasma_on}")
                 values_adc = {'P': None, 'T': None}
@@ -934,7 +892,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                self.PressLableSADC.setText(str(values_adc['P']))
                self.PressLableSZnachU.setText(str(fun.bit_u(float(values_adc['P']))))
 
-            # Main - чтение значений с обработкой ошибок
             try:
                 pressure_raw = self.controller.handle_command('get_sensor_pressure')
                 water_raw = self.controller.handle_command('get_sensor_water')
@@ -944,7 +901,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     'water': water_raw,
                 }
                 
-                # Обработка None значений
                 if values['pressure'] is None:
                     logging.warning(f"update_values: pressure is None, setting to 0.0 - state={current_state}, plasma_on={plasma_on}")
                     values['pressure'] = 0.0
@@ -955,15 +911,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 logging.error(f"Error reading sensor values: {e}, state={current_state}, plasma_on={plasma_on}", exc_info=True)
                 values = {'pressure': 0.0, 'water': 0.0}
         except Exception as e:
-            # Обработка ошибок на верхнем уровне (например, если get_values_adc упал)
             error_msg = str(e)
             error_code = getattr(e, 'errno', None)
             logging.error(f"update_values: CRITICAL ERROR in outer try block: {e}, errno={error_code}, state={current_state}, plasma_on={plasma_on}", exc_info=True)
             
-            # Если это ошибка I/O (121 - Remote I/O error), пытаемся переподключиться к датчикам
             if error_code == 121 or 'I/O error' in error_msg or 'Remote I/O' in error_msg:
-                logging.warning(f"update_values: I/O error detected, attempting to reconnect sensors...")
-                # Переподключаемся асинхронно, чтобы не блокировать UI
                 try:
                     def reconnect_task():
                         try:
@@ -971,40 +923,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             self.controller.reconnect_device('sensor_water')
                         except Exception as reconnect_error:
                             logging.error(f"update_values: Error during sensor reconnection: {reconnect_error}")
-                    # Используем ThreadPoolExecutor из контроллера для асинхронного переподключения
                     if hasattr(self.controller, '_sensor_reconnect_executor'):
                         self.controller._sensor_reconnect_executor.submit(reconnect_task)
                     else:
-                        # Fallback: выполняем синхронно, если executor недоступен
                         reconnect_task()
                 except Exception as reconnect_error:
                     logging.error(f"update_values: Error scheduling sensor reconnection: {reconnect_error}")
             
-            # Пытаемся все равно прочитать давление и воду, даже если ADC не работает
             try:
-                logging.warning(f"update_values: Attempting to read pressure and water despite ADC error...")
                 pressure_raw = self.controller.handle_command('get_sensor_pressure')
                 water_raw = self.controller.handle_command('get_sensor_water')
-                logging.info(f"update_values: Successfully read pressure={pressure_raw}, water={water_raw} despite ADC error")
-                
-                # Создаем словарь values для продолжения выполнения
+            
                 values = {
                     'pressure': pressure_raw if pressure_raw is not None else 0.0,
                     'water': water_raw if water_raw is not None else 0.0
                 }
                 
-                # Обновляем давление и воду, если удалось их прочитать
                 if pressure_raw is not None:
                     try:
                         pressure_value = float(pressure_raw)
-                        old_pressure_text = self.PressZnach.text()
                         if pressure_value < 10:
                             new_pressure_text = f"{pressure_value:.2f}"
                         else:
                             new_pressure_text = f"{int(pressure_value)}"
                         self.PressZnach.setText(new_pressure_text)
-                        if old_pressure_text != new_pressure_text:
-                            logging.info(f"update_values: Pressure UPDATED (despite ADC error) - {old_pressure_text} -> {new_pressure_text}")
                     except Exception as pe:
                         logging.error(f"update_values: Error updating pressure display: {pe}")
                         values['pressure'] = 0.0
@@ -1014,24 +956,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         old_water_text = self.WLabelS.text()
                         new_water_text = f"{water_raw:.3f}"
                         self.WLabelS.setText(new_water_text)
-                        if old_water_text != new_water_text:
-                            logging.info(f"update_values: Water UPDATED (despite ADC error) - {old_water_text} -> {new_water_text}")
                     except Exception as we:
                         logging.error(f"update_values: Error updating water display: {we}")
                         values['water'] = 0.0
             except Exception as fallback_error:
-                logging.error(f"update_values: Even fallback pressure/water read failed: {fallback_error}")
-                # Создаем значения по умолчанию для продолжения выполнения
                 values = {'pressure': 0.0, 'water': 0.0}
         
-        # Управление LED вакуума: горит если значение давления в вольтах меньше 4.4
-        # Этот код выполняется ВСЕГДА, независимо от ошибок выше
         try:
             states = self.controller.handle_command('get_states')
             if states and isinstance(states, dict):
                 led_vacuum = states.get('led_vacuum', False)
                 
-                # Получаем значение давления в вольтах
                 try:
                     adc_values = self.controller.get_values_adc()
                     if adc_values and adc_values.get('P') is not None:
@@ -1046,37 +981,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         except Exception as e:
             logging.error(f"Error managing LED vacuum: {e}")
 
-        # Убеждаемся, что в PressZnach всегда число, даже при ошибке
-        # Этот код выполняется ВСЕГДА, независимо от ошибок выше
         try:
             pressure_value = float(values['pressure'])
             old_pressure_text = self.PressZnach.text()
-            # Если значение меньше 1, отображаем с 2 знаками после запятой, иначе как целое число
             if pressure_value < 10:
                 new_pressure_text = f"{pressure_value:.2f}"
             else:
                 new_pressure_text = f"{int(pressure_value)}"
             
             self.PressZnach.setText(new_pressure_text)
-            
-            # Логирование обновления давления
-            if old_pressure_text != new_pressure_text:
-                logging.info(f"update_values: Pressure UPDATED - {old_pressure_text} -> {new_pressure_text}, state={current_state}, plasma_on={plasma_on}")
+        
         except (ValueError, TypeError) as e:
             logging.error(f"Error converting pressure to float: {e}, value: {values.get('pressure')}, state={current_state}, plasma_on={plasma_on}")
-            self.PressZnach.setText("0.00")  # Устанавливаем безопасное значение по умолчанию
+            self.PressZnach.setText("0.00")
 
-
-        # Отображение потока воды с форматированием
         try:
-            old_water_text = self.WLabelS.text()
             if values['water'] is not None:
                 new_water_text = f"{values['water']:.3f}"
                 self.WLabelS.setText(new_water_text)
-                
-                # Логирование обновления воды
-                if old_water_text != new_water_text:
-                    logging.info(f"update_values: Water UPDATED - {old_water_text} -> {new_water_text}, state={current_state}, plasma_on={plasma_on}")
             else:
                 self.WLabelS.setText("0.000")
                 logging.warning(f"update_values: Water is None, setting to 0.000 - state={current_state}, plasma_on={plasma_on}")
@@ -1089,43 +1011,29 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             press_znach = float(self.PressZnach.text())
             press_zad = float(self.PressZad.text())
             
-            # Если давление ниже заданного - цель достигнута (100%)
             if press_znach <= press_zad:
                 self.PressProgress.setValue(100)
             else:
-                # Используем логарифмическую шкалу для плавного отображения
-                # Диапазон: от press_zad до 1000 мбар
-                logZnach = math.log10(max(0.001, press_znach))  # Защита от log10(0)
+                logZnach = math.log10(max(0.001, press_znach))
                 logZad = math.log10(max(0.001, press_zad))
                 logMax = math.log10(1000.0)
                 
                 if logMax != logZad and logMax > logZad:
-                    # Формула: чем ближе к заданному давлению, тем выше прогресс
-                    # Когда press_znach = press_zad: progress = 100%
-                    # Когда press_znach = 1000: progress = 0%
                     progressPressure = 100.0 - ((logZnach - logZad) / (logMax - logZad)) * 100.0
-                    # Ограничиваем значение от 0 до 100
                     progressPressure = max(0.0, min(100.0, progressPressure))
-                    # Используем округление вместо int() для более плавного изменения
                     self.PressProgress.setValue(round(progressPressure))
                 else:
-                    # Если logMax == logZad или logMax <= logZad, используем линейную формулу
                     if press_zad > 0 and press_zad < 1000:
                         progressPressure = 100.0 - ((press_znach - press_zad) / (1000.0 - press_zad)) * 100.0
                         progressPressure = max(0.0, min(100.0, progressPressure))
                         self.PressProgress.setValue(round(progressPressure))
                     else:
-                        # Если press_zad >= 1000, всегда показываем 0%
                         self.PressProgress.setValue(0)
         except (ValueError, TypeError) as e:
             logging.error(f"Error calculating pressure progress: {e}, PressZnach: {self.PressZnach.text()}, PressZad: {self.PressZad.text()}")
-            # Не обновляем прогресс при ошибке
         
-        # Для технолога кнопка "напустить газ" недоступна, пока давление не станет ниже целевого
-        # НО если кнопка уже нажата и текст = "остановить напуск газа", она должна быть доступна
         if self.user_mode == 'Technologist':
-            if (self.plasma_process.current_state in ['idle', 'fault'] and not self.HFButton.isChecked()):  # Плазма не должна быть включена
-                # Если кнопка нажата и текст = "остановить напуск газа", она должна быть доступна
+            if (self.plasma_process.current_state in ['idle', 'fault'] and not self.HFButton.isChecked()):
                 button_text_is_stop = self.VEButton.text() == self.translator.tr('stop_venting_gas')
                 if self.VEButton.isChecked() and button_text_is_stop:
                     self.VEButton.setEnabled(True)
@@ -1133,7 +1041,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     try:
                         press_znach = float(self.PressZnach.text())
                         press_zad = float(self.PressZad.text())
-                        # Если давление >= целевого, отключаем кнопку напуска газа
                         if press_znach >= press_zad:
                             self.VEButton.setEnabled(False)
                         else:
@@ -1141,20 +1048,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     except (ValueError, TypeError) as e:
                         logging.error(f"Error checking pressure for VEButton enable in update_values: {e}, PressZnach: {self.PressZnach.text()}, PressZad: {self.PressZad.text()}")
         
-        # Обновление значений состояний устройств
-        states = None  # Инициализируем переменную для использования ниже
+        states = None
         try:
             states = self.controller.handle_command('get_states')
             if states is None:
                 logging.warning("update_values: get_states returned None")
-                states = {}  # Используем пустой словарь для безопасности
+                states = {}
 
         except Exception as e:
-            states = {}  # Устанавливаем пустой словарь для использования ниже
+            states = {}
         
-        # Синхронизируем светодиоды кнопки старт/стоп: горит только если кнопка активна и на нее можно нажать
         try:
-            # LED старт: горит только если кнопка активна И текст = "start"
             if states is None:
                 states = {}
             current_led_start_state = states.get('led_start', False)
@@ -1163,19 +1067,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             
             should_led_start_be_on = button_enabled and button_text_is_start
             
-            # Обновляем светодиод только если состояние не совпадает
             if should_led_start_be_on and not current_led_start_state:
                 self.controller.handle_command('on_led_start')
             elif not should_led_start_be_on and current_led_start_state:
                 self.controller.handle_command('off_led_start')
             
-            # LED стоп: горит только если кнопка активна И текст = "stop"
             current_led_stop_state = states.get('led_stop', False)
             button_text_is_stop = self.ButtonStart.text() == self.translator.tr('stop')
             
             should_led_stop_be_on = button_enabled and button_text_is_stop
             
-            # Обновляем светодиод только если состояние не совпадает
             if should_led_stop_be_on and not current_led_stop_state:
                 self.controller.handle_command('on_led_stop')
             elif not should_led_stop_be_on and current_led_stop_state:
@@ -3562,6 +3463,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             logging.error(str(sender) + ':' + str(e))
             
     def closeEvent(self, event):
+        self.plasma_process.cleanup()
+        
         if self._venting_executor is not None:
             self._venting_executor.shutdown(wait=False)
             self._venting_executor = None

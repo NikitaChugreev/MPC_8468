@@ -22,13 +22,10 @@ elif number_gases == 2:
 all_gases = work_gases + ['01']
 
 
-# Создаем отдельный логгер для диагностики process_processing
 process_logger = logging.getLogger('process_processing')
 process_logger.setLevel(logging.DEBUG)
-# Отключаем распространение на корневой логгер
 process_logger.propagate = False
 
-# Создаем отдельный handler для файла process_processing.log
 process_handler = RotatingFileHandler(
     filename="process_processing.log",
     maxBytes=10*1024*1024,  # 10MB
@@ -40,13 +37,9 @@ process_handler.setFormatter(
 )
 process_logger.addHandler(process_handler)
 
-# Создаем отдельный логгер для диагностики операций с кнопкой старт и процесса запуска
 start_process_logger = logging.getLogger('start_process')
 start_process_logger.setLevel(logging.DEBUG)
-# Отключаем распространение на корневой логгер
 start_process_logger.propagate = False
-
-# Создаем отдельный handler для файла start_process.log
 start_process_handler = RotatingFileHandler(
     filename="start_process.log",
     maxBytes=10*1024*1024,  # 10MB
@@ -68,7 +61,7 @@ class PlasmaAutoProcess:
         
         self.current_state = "idle"
         self.recipe_params = None
-        self.buzzer_activated = False  # Флаг для однократного включения бузера
+        self.buzzer_activated = False
         
         # ИЗМЕНЯЕМЫЕ
         self.pressure_history = []
@@ -97,41 +90,30 @@ class PlasmaAutoProcess:
         self.check_stop_timer = QTimer()
         self.check_stop_timer.timeout.connect(self.check_stop_button)
         
-        # Таймер для обновления времени обработки (работает независимо от основного цикла)
         self.processing_time_timer = QTimer()
         self.processing_time_timer.timeout.connect(self._update_processing_time)
         self.processing_time_timer.setSingleShot(False)
         
-        # Отдельный таймер для точной проверки окончания времени (не блокируется другими операциями)
         self.processing_time_check_timer = QTimer()
         self.processing_time_check_timer.timeout.connect(self._check_processing_time_expired)
         self.processing_time_check_timer.setSingleShot(False)
         
-        # ThreadPoolExecutor для асинхронного выключения плазмы при ошибках
         self._stop_plasma_executor = None
-        # ThreadPoolExecutor для асинхронной проверки отраженной мощности (чтобы не блокировать основной цикл)
         self._reflected_power_executor = None
         self._reflected_power_checking = False
-        # ThreadPoolExecutor для асинхронной проверки потоков (чтобы не блокировать основной цикл)
         self._flow_check_executor = None
         self._flow_checking = False
-        # Отдельный executor для чтения RRG с таймаутом (чтобы не зависнуть если RRG не отвечает)
         self._rrg_read_executor = None
-        # Отдельный executor для операций с RF генератором (переподключение и т.д.)
         self._rf_operations_executor = None
         
-        # Прямой доступ к кнопке СТОП для немедленной реакции через gpiozero callback
         self._stop_button = None
         self._stop_button_callback_set = False
         if hasattr(self.controller, 'button_stop') and self.controller.button_stop is not None:
             self._stop_button = self.controller.button_stop
-            # Устанавливаем callback для немедленной реакции на нажатие
             try:
                 def stop_button_handler():
-                    # Используем threading для гарантии выполнения даже если event loop заблокирован
                     import threading
                     def call_stop():
-                        # Вызываем stop_process через QTimer для выполнения в главном потоке Qt
                         QTimer.singleShot(0, self._on_stop_button_pressed)
                     thread = threading.Thread(target=call_stop, daemon=True)
                     thread.start()
@@ -145,13 +127,28 @@ class PlasmaAutoProcess:
         else:
             logging.warning("button_stop не доступен в controller, callback не установлен")
     
+    def cleanup(self):
+        for executor in [self._stop_plasma_executor, self._reflected_power_executor,
+                        self._flow_check_executor, self._rrg_read_executor,
+                        self._rf_operations_executor]:
+            if executor is not None:
+                try:
+                    executor.shutdown(wait=False)
+                except Exception as e:
+                    logging.error(f"Error shutting down executor: {e}")
+        self._stop_plasma_executor = None
+        self._reflected_power_executor = None
+        self._flow_check_executor = None
+        self._rrg_read_executor = None
+        self._rf_operations_executor = None
+        self._reflected_power_checking = False
+        self._flow_checking = False
+
     def _on_stop_button_pressed(self):
-        """Callback для немедленной реакции на нажатие физической кнопки СТОП"""
         current_state = self.current_state
-        
+
         logging.info(f'_on_stop_button_pressed вызван: state={current_state}')
-        
-        # Простая логика: если процесс не в idle или fault - останавливаем
+    
         if current_state not in ['idle', 'fault']:
             logging.info(f'Нажата физическая кнопка СТОП - остановка процесса (state={current_state})')
             self.parent.update_status(self.translator.tr('emergency_stop'))
@@ -160,7 +157,6 @@ class PlasmaAutoProcess:
             logging.debug(f'_on_stop_button_pressed: процесс в состоянии {current_state}, игнорируем')
     
     def safe_get_states(self, default=None):
-        """Безопасное получение состояний с проверкой на None"""
         states = self.controller.handle_command('get_states')
         if states is None:
             logging.warning("safe_get_states: get_states returned None, using empty dict")
@@ -168,7 +164,6 @@ class PlasmaAutoProcess:
         return states
     
     def safe_get_valves_states(self, default=None):
-        """Безопасное получение состояний клапанов с проверкой на None"""
         valves_states = self.controller.handle_command('get_valves_states')
         if valves_states is None:
             logging.warning("safe_get_valves_states: get_valves_states returned None, using empty dict")
@@ -185,54 +180,34 @@ class PlasmaAutoProcess:
             expected_states = [expected_states]
             
         if self.current_state not in expected_states:
-            # Если состояние idle, а ожидалось init_recipe или init - это может быть нормально
-            # (процесс вернулся в idle из-за ранней ошибки инициализации)
-            # Логируем как warning, а не error
-            if self.current_state == 'idle' and any(state in ['init_recipe', 'init'] for state in expected_states):
-                logging.debug(f"ensure_state: Процесс вернулся в idle (ожидалось: {expected_states}), это нормально при ранней ошибке инициализации")
-            else:
-                logging.error(f"Недопустимое состояние: {self.current_state}, ожидалось: {expected_states}")
             return False
         return True
 
     def check_fault(self):
         start_process_logger.debug(f"[CHECK_FAULT] check_fault: current_state={self.current_state}")
         if self.current_state == 'fault':
-            start_process_logger.info(f"[CHECK_FAULT] check_fault: Процесс в состоянии fault, останавливаем таймер и вызываем process_fault через 1 секунду")
             self.check_fault_timer.stop()
             QTimer.singleShot(1000, self.process_fault)
     
     def check_stop_button(self):
-        """Резервная проверка кнопки через таймер (используется только если callback не работает)"""
         current_state = self.current_state
         
-        # Проверяем кнопку напрямую через gpiozero
         button_pressed = False
         if self._stop_button is not None:
             try:
                 button_pressed = self._stop_button.is_pressed
             except Exception as e:
-                start_process_logger.error(f"[CHECK_STOP_BUTTON] check_stop_button: Error reading stop button directly from gpiozero: {e}")
                 return False
         else:
-            # Если кнопка не инициализирована, таймер не должен работать
-            start_process_logger.warning("[CHECK_STOP_BUTTON] check_stop_button: _stop_button is None, stopping timer")
             self.check_stop_timer.stop()
             return False
 
-        start_process_logger.debug(f"[CHECK_STOP_BUTTON] check_stop_button: button_pressed={button_pressed}, current_state={current_state}")
-
-        # Простая логика: если кнопка нажата и процесс не в idle или fault - останавливаем
         if button_pressed and current_state not in ['idle', 'fault']:
-            start_process_logger.warning(f'[CHECK_STOP_BUTTON] check_stop_button: Нажата кнопка СТОП (через таймер) - остановка процесса (state={current_state})')
             self.parent.update_status(self.translator.tr('emergency_stop'))
             self.stop_process()
             return True
         
-        # Если кнопка стоп нажата, но процесс в idle - это означает, что кнопка осталась нажатой после остановки
-        # Игнорируем это, чтобы не блокировать следующий запуск
         if button_pressed and current_state == 'idle':
-            start_process_logger.debug(f'[CHECK_STOP_BUTTON] check_stop_button: кнопка стоп нажата, но процесс в idle - игнорируем (кнопка осталась нажатой после остановки)')
             return False
         
         return False
@@ -255,25 +230,18 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_fault)
 
             elif self.current_step == 1:
-                # ВАЖНО: Останавливаем поток чтения RF ПЕРЕД обращением к генератору
-                # Это предотвращает ошибки I/O при попытке выключить плазму
                 if hasattr(self.parent, 'stop_rf_reading'):
                     logging.info("[process_fault] STEP 1: Stopping RF reading thread before off_plasma...")
-                    self.parent.stop_rf_reading(wait=True)  # Ждем завершения, чтобы порт точно освободился
-                    time.sleep(1.0)  # Задержка для гарантии полного освобождения порта
-                    
-                    # Проверяем, что блокировка порта освобождена
+                    self.parent.stop_rf_reading(wait=True)
+                    time.sleep(1.0)
+
                     if self.controller.rf is not None and hasattr(self.controller.rf, '_lock'):
                         if self.controller.rf._lock.acquire(blocking=False):
                             self.controller.rf._lock.release()
-                            logging.info("[process_fault] STEP 1: RF port lock is available")
                         else:
-                            logging.warning("[process_fault] STEP 1: RF port lock is busy, waiting...")
                             if self.controller.rf._lock.acquire(blocking=True, timeout=2.0):
                                 self.controller.rf._lock.release()
-                                logging.info("[process_fault] STEP 1: RF port lock released after wait")
                 
-                # Проверяем реальный статус плазмы напрямую из генератора
                 try:
                     rf_status = self.controller.rf.read_status() if self.controller.rf is not None else None
                 except Exception:
@@ -282,16 +250,13 @@ class PlasmaAutoProcess:
                     if rf_status:
                         rf_on = rf_status.get('rf_on', False)
                         if rf_on:
-                            # Плазма включена - выключаем
                             self.controller.handle_command('off_plasma')
                             logging.info(self.translator.tr('plasma_off'))
                             self.parent.update_status(self.translator.tr('plasma_off'))
-                            time.sleep(0.5)  # Задержка перед проверкой
+                            time.sleep(0.5)
                     else:
-                        # Не удалось прочитать статус - пытаемся переподключиться
                         def reconnect_rf_async():
                             try:
-                                logging.info("[process_fault] Attempting to reconnect RF generator (read_status returned None)...")
                                 reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
                                 if reconnect_success:
                                     logging.info("[process_fault] RF generator reconnected successfully")
@@ -304,17 +269,14 @@ class PlasmaAutoProcess:
                             self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
                         self._rf_operations_executor.submit(reconnect_rf_async)
                         
-                        # Пытаемся выключить на всякий случай
                         self.controller.handle_command('off_plasma')
                         logging.info(self.translator.tr('plasma_off'))
                         self.parent.update_status(self.translator.tr('plasma_off'))
                         time.sleep(0.5)
                 except Exception as e:
                     logging.error(f"Error reading RF status in process_fault step 1: {e}")
-                    # Пытаемся переподключиться при ошибке
                     def reconnect_rf_async():
                         try:
-                            logging.info("[process_fault] Attempting to reconnect RF generator (read_status error)...")
                             reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
                             if reconnect_success:
                                 logging.info("[process_fault] RF generator reconnected successfully after error")
@@ -327,15 +289,13 @@ class PlasmaAutoProcess:
                         self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
                     self._rf_operations_executor.submit(reconnect_rf_async)
                     
-                    # При ошибке пытаемся выключить на всякий случай
                     self.controller.handle_command('off_plasma')
                     time.sleep(0.5)
 
-                # Проверяем статус после выключения
                 try:
                     rf_status = self.controller.rf.read_status() if self.controller.rf is not None else None
                     if rf_status:
-                        rf_on = rf_status.get('rf_on', True)  # По умолчанию True, если не удалось прочитать
+                        rf_on = rf_status.get('rf_on', True)
                         if not rf_on:
                             # Обновляем кэш
                             self.controller._cached_plasma_status = False
@@ -345,10 +305,8 @@ class PlasmaAutoProcess:
                             self.parent.update_status(f"{self.translator.tr('attempt')} {self.attempt} {self.translator.tr('attempt_off_plasma')}")
                             self.attempt += 1
                     else:
-                        # Не удалось прочитать статус — нельзя считать плазму выключенной
                         def reconnect_rf_async():
                             try:
-                                logging.info("[process_fault] Attempting to reconnect RF generator (status check returned None)...")
                                 reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
                                 if reconnect_success:
                                     logging.info("[process_fault] RF generator reconnected successfully (status check)")
@@ -365,7 +323,6 @@ class PlasmaAutoProcess:
                         self.attempt += 1
                 except Exception as e:
                     logging.error(f"Error checking RF status after off_plasma in process_fault step 1: {e}")
-                    # При ошибке чтения статуса нельзя считать плазму выключенной — повторяем попытку
                     self.parent.update_status(f"{self.translator.tr('attempt')} {self.attempt} {self.translator.tr('attempt_off_plasma')}")
                     self.attempt += 1
 
@@ -432,25 +389,14 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_fault)
 
             elif self.current_step == 5:
-                # Устанавливаем текст кнопки на "start" только если процесс действительно остановлен
-                # Проверяем, что процесс прошел все шаги остановки (current_step == 7)
-                # Если процесс только что запустился и сразу перешел в fault, то current_step будет 0
-                # и мы не должны менять текст кнопки, чтобы пользователь мог остановить процесс
                 button_text = self.parent.ButtonStart.text()
                 
-                # Меняем текст только если процесс прошел все шаги остановки (current_step == 7)
-                # и текст кнопки уже "stop" (значит процесс был запущен)
                 if button_text == self.translator.tr('stop'):
-                    # Процесс был запущен и остановлен, можно менять текст
                     self.parent.ButtonStart.setText(self.translator.tr('start'))
                     self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
                     self.parent.ButtonStart.setEnabled(True)
                     self.parent.RecName.deselect()
-                    # LED будет включен в update_values() если кнопка активна и текст = "start"
-                    logging.info(f"process_fault step 7: Changed button text to 'start' (process was running)")
                 else:
-                    # Текст кнопки уже "start" или что-то другое - не меняем
-                    # Это может быть, если процесс только что запустился и сразу перешел в fault
                     logging.warning(f"process_fault step 7: Not changing button text, button_text='{button_text}' (process may have just started)")
 
                 logging.info(self.translator.tr('emergency_stop_completed'))
@@ -461,6 +407,11 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_fault)
             
             elif self.current_step == 6:
+                self.check_fault_timer.stop()
+                self.check_stop_timer.stop()
+                self.processing_time_timer.stop()
+                self.processing_time_check_timer.stop()
+                
                 self.current_state = "idle"
                 self.attempt = 0
                 self.current_step = 0
@@ -475,19 +426,14 @@ class PlasmaAutoProcess:
 
     def start_process(self):
         if self.current_state == "idle":
-            # Проверка потока воды перед запуском процесса (можно отключить в настройках check_water_flow: false)
             if settings.get('check_water_flow', True):
                 try:
                     water_flow = self.controller.handle_command('get_sensor_water')
-                    # Если None - датчик еще не выполнил первое измерение, пропускаем проверку
-                    # Если 0.0 - поток действительно равен нулю, это ошибка
                     if water_flow is None:
                         logging.info(f"start_process: Water sensor not ready yet (first measurement in progress), skipping check")
                     elif water_flow == 0.0:
                         self.handle_error(self.translator.tr('error_water_flow_zero'), need_reboot=False)
                         logging.error(f"start_process: Water flow is zero (flow={water_flow}). Process cannot start.")
-                        # Явно возвращаем состояние в idle после ошибки проверки потока,
-                        # чтобы можно было повторить попытку запуска после включения воды
                         self.current_state = "idle"
                         return False
                     else:
@@ -495,18 +441,15 @@ class PlasmaAutoProcess:
                 except Exception as e:
                     logging.error(f"start_process: Error checking water flow: {e}")
                     self.handle_error(f"{self.translator.tr('error_checking_water_flow')}: {e}", need_reboot=False)
-                    # Явно возвращаем состояние в idle после ошибки проверки потока
                     self.current_state = "idle"
                     return False
 
-            # Просто запускаем процесс
             logging.info("start_process: Запуск процесса")
             self.current_state = "init"
             self.attempt = 0
             self.current_step = 0
-            self.buzzer_activated = False  # Сбрасываем флаг при старте нового процесса
+            self.buzzer_activated = False
             self.process_init()
-            # НЕ включаем LED здесь - он будет включен в update_values() если кнопка активна и текст = "start"
             return True
         else:
             logging.warning(f"start_process: current_state is not 'idle', it is '{self.current_state}'")
@@ -602,45 +545,33 @@ class PlasmaAutoProcess:
 
     def start_recipe(self):
         if self.current_state == "idle":
-            # ВАЖНО: Проверяем кнопку стоп САМЫМ ПЕРВЫМ, до всех проверок и установки времени
-            # Это защита от физического замыкания кнопки стоп при нажатии кнопки старт
             if self._stop_button is not None:
                 try:
-                    # Проверяем несколько раз подряд, чтобы убедиться, что кнопка действительно не нажата
-                    # (защита от дребезга контактов)
                     check_count = 0
                     max_checks = 5
                     for i in range(max_checks):
                         if self._stop_button.is_pressed:
                             check_count += 1
-                        time.sleep(0.05)  # Небольшая задержка между проверками
+                        time.sleep(0.05)
                     
                     if check_count > 0:
                         logging.warning(f"start_recipe: Кнопка СТОП обнаружена как нажатая ({check_count}/{max_checks} проверок), ожидаем отпускания...")
-                        # Ждем отпускания кнопки стоп (максимум 2 секунды)
                         wait_start = time.time()
                         while self._stop_button.is_pressed and (time.time() - wait_start) < 2.0:
                             time.sleep(0.1)
                         if self._stop_button.is_pressed:
-                            logging.error("start_recipe: Кнопка СТОП все еще нажата после ожидания, отменяем запуск")
                             return False
-                        logging.info(f"start_recipe: Кнопка СТОП отпущена после {time.time() - wait_start:.3f}s ожидания, продолжаем запуск")
                 except Exception as e:
                     logging.warning(f"start_recipe: Не удалось проверить состояние кнопки СТОП: {e}")
             
-            # Проверка потока воды перед запуском процесса (можно отключить в настройках check_water_flow: false)
             if settings.get('check_water_flow', True):
                 try:
                     water_flow = self.controller.handle_command('get_sensor_water')
-                    # Если None - датчик еще не выполнил первое измерение, пропускаем проверку
-                    # Если 0.0 - поток действительно равен нулю, это ошибка
                     if water_flow is None:
                         logging.info(f"start_recipe: Water sensor not ready yet (first measurement in progress), skipping check")
                     elif water_flow == 0.0:
                         self.handle_error(self.translator.tr('error_water_flow_zero'), need_reboot=False)
                         logging.error(f"start_recipe: Water flow is zero (flow={water_flow}). Process cannot start.")
-                        # Явно возвращаем состояние в idle после ошибки проверки потока,
-                        # чтобы можно было повторить попытку запуска после включения воды
                         self.current_state = "idle"
                         return False
                     else:
@@ -648,11 +579,9 @@ class PlasmaAutoProcess:
                 except Exception as e:
                     logging.error(f"start_recipe: Error checking water flow: {e}")
                     self.handle_error(f"{self.translator.tr('error_checking_water_flow')}: {e}", need_reboot=False)
-                    # Явно возвращаем состояние в idle после ошибки проверки потока
                     self.current_state = "idle"
                     return False
 
-            # Просто запускаем процесс
             start_process_logger.info(f"[START_RECIPE] start_recipe: Запуск процесса, устанавливаем состояние init_recipe")
             self.buzzer_activated = False
             self.current_state = "init_recipe"
@@ -660,17 +589,12 @@ class PlasmaAutoProcess:
             self.current_step = 0
             start_process_logger.info(f"[START_RECIPE] start_recipe: current_state={self.current_state}, current_step={self.current_step}, attempt={self.attempt}")
             self.check_fault_timer.start(500)
-            # Запускаем таймер проверки кнопки стоп сразу при старте процесса
+
             if not self.check_stop_timer.isActive():
                 if not self._stop_button_callback_set:
-                    self.check_stop_timer.start(200)  # Более частая проверка если нет callback
-                    logging.warning("check_stop_timer started in start_recipe (callback not set)")
+                    self.check_stop_timer.start(200)
                 else:
-                    self.check_stop_timer.start(2000)  # Резервная проверка каждые 2 секунды
-                    logging.info("check_stop_timer started in start_recipe (callback is set)")
-
-            # LED будет синхронизирован в main_window.check_permissions() или update_values()
-            # на основе состояния кнопки (enabled и текст)
+                    self.check_stop_timer.start(2000)
 
             start_process_logger.info(f"[START_RECIPE] start_recipe: Вызываем process_init_recipe()")
             self.process_init_recipe()
@@ -702,11 +626,9 @@ class PlasmaAutoProcess:
                                             self.recipe_params.get('time', '00:00') == '00:00'])
                     
                 if conditions_error:
-                    start_process_logger.error(f"[PROCESS_INIT_RECIPE] process_init_recipe step 0: Ошибка валидации рецепта, вызываем handle_error")
                     self.handle_error(self.translator.tr('error_invalide_recipe'))
                     return
 
-                start_process_logger.info(f"[PROCESS_INIT_RECIPE] process_init_recipe step 0: Рецепт валиден, переходим к шагу 1 через 1 секунду")
                 self.attempt = 0
                 self.current_step += 1
                 QTimer.singleShot(1000, self.process_init_recipe)
@@ -714,9 +636,7 @@ class PlasmaAutoProcess:
             elif self.current_step == 1:
                 states = self.controller.handle_command('get_states')
                 
-                # Проверяем, что states не None
                 if states is None:
-                    logging.error("process_init_recipe: get_states returned None")
                     states = {}
 
                 if states.get('pump', 1):
@@ -727,12 +647,10 @@ class PlasmaAutoProcess:
                     if valves_states.get(f"valve_ve{i}", 'open') == 'open':
                         self.controller.handle_command(f"close_valve_ve{i}")
 
-                # ВАЖНО: Останавливаем поток чтения RF ПЕРЕД обращением к генератору (если он запущен)
-                # Это предотвращает ошибки I/O при попытке выключить плазму
                 if hasattr(self.parent, 'stop_rf_reading'):
                     logging.info("[process_init_recipe] Stopping RF reading thread before off_plasma (if running)...")
-                    self.parent.stop_rf_reading(wait=True)  # Ждем завершения, чтобы порт точно освободился
-                    time.sleep(0.5)  # Небольшая задержка для гарантии освобождения порта
+                    self.parent.stop_rf_reading(wait=True)
+                    time.sleep(0.5)
                 
                 if states.get('plasma', 1):
                     self.controller.handle_command('off_plasma')
@@ -741,7 +659,6 @@ class PlasmaAutoProcess:
                 fault_devices = []
                 states = self.controller.handle_command('get_states')
                 
-                # Проверяем, что states не None
                 if states is None:
                     logging.error("process_init_recipe: get_states returned None (second call)")
                     states = {}
@@ -780,16 +697,12 @@ class PlasmaAutoProcess:
 
                 if self.attempt > self.max_attempts:
                     self.attempt = 0
-                    start_process_logger.error(f"[PROCESS_INIT_RECIPE] process_init_recipe step 1: Превышено максимальное количество попыток, fault_devices={fault_devices}, вызываем handle_error")
                     self.handle_error(self.translator.tr('error_init_devices'), need_reboot=True)
                     return
                 
-                start_process_logger.info(f"[PROCESS_INIT_RECIPE] process_init_recipe step 1: Продолжаем, attempt={self.attempt}, is_valid={is_valid}, "
-                           f"переходим к следующему шагу через 1 секунду")
                 QTimer.singleShot(1000, self.process_init_recipe)
 
             elif self.current_step == 2:
-                # Открываем клапаны выбранных рабочих газов для прогрева РРГ
                 is_valid = True
 
                 for i in work_gases:
@@ -822,12 +735,10 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_init_recipe)
 
             elif self.current_step == 3:
-                # Выставляем макс поток для прогрева РРГ
                 is_valid = True
 
                 for i in work_gases:
                     recipe_gas = self.recipe_params.get(f"VE{i}", {})
-                    # Обрабатываем None: если gas = None, используем 0 (Air)
                     type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
                     if recipe_gas.get('switch', 0):
                         self.controller.handle_command('set_flow', 
@@ -839,14 +750,13 @@ class PlasmaAutoProcess:
                                                        num_rrg=i, 
                                                        flow_lh=0, 
                                                        type_gas=type_gas)
-                    time.sleep(0.05)  # Небольшая задержка между операциями для предотвращения перегрузки serial порта
+                    time.sleep(0.05)
 
-                time.sleep(0.1)  # Задержка перед чтением для стабилизации
+                time.sleep(0.1)
 
                 for i in work_gases:
                     recipe_gas = self.recipe_params.get(f"VE{i}", {})
                     if recipe_gas.get('switch', 0):
-                        # Обрабатываем None: если gas = None, используем 0 (Air)
                         type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
                         set_flow = self.controller.handle_command('read_set_flow', num_rrg=i, type_gas=type_gas)
                         if set_flow is None:
@@ -855,7 +765,7 @@ class PlasmaAutoProcess:
                         max_flow = float(settings.get('MAX_FLOW_RRG', 0))
                         if abs(float(set_flow) - max_flow) > self.FLOW_TOLERANCE:
                             is_valid = False
-                    time.sleep(0.05)  # Небольшая задержка между операциями
+                    time.sleep(0.05)
 
                 if is_valid:
                     QTimer.singleShot(1000, lambda: self.parent.update_status(self.translator.tr('waiting_heating_mfc')))
@@ -873,13 +783,11 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_init_recipe)
 
             elif self.current_step == 4:
-                # Ожидание прогрева РРГ
                 self.attempt = 0
                 self.current_step += 1
                 QTimer.singleShot(self.waiting_heating_rrg_sec * 1000, self.process_init_recipe)
 
             elif self.current_step == 5:
-                # Закрываем все клапаны рабочих газов
                 is_valid = True
 
                 for i in work_gases:
@@ -894,17 +802,11 @@ class PlasmaAutoProcess:
                     self.parent.update_status(self.translator.tr('valves_close'))
                     self.attempt = 0
                     self.current_step += 1
-                    # Запускаем таймер проверки кнопки стоп только как резервный механизм,
-                    # если callback через gpiozero не установлен
                     if not self.check_stop_timer.isActive():
                         if not self._stop_button_callback_set:
-                            # Если callback не установлен, используем таймер как основной механизм
-                            self.check_stop_timer.start(200)  # Более частая проверка если нет callback
-                            logging.warning("check_stop_timer started as primary mechanism (callback not set)")
+                            self.check_stop_timer.start(200)
                         else:
-                            # Если callback установлен, запускаем таймер с большим интервалом как резерв
-                            self.check_stop_timer.start(2000)  # Резервная проверка каждые 2 секунды
-                            logging.info("check_stop_timer started as backup mechanism (callback is set)")
+                            self.check_stop_timer.start(2000)
                 else:
                     self.parent.update_status(f"{self.translator.tr('attempt')} {self.attempt} {self.translator.tr('attempt_close_valves')}")
                     self.attempt += 1
@@ -917,44 +819,37 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_init_recipe)
 
             elif self.current_step == 6:
-                # Установка потока в РРГ и проверка
                 is_valid = True
                 self.parent.update_status(self.translator.tr('waiting_setting_flow'))
 
-                # Сначала устанавливаем потоки для всех РРГ с проверкой успешности
                 set_flow_success = True
                 for i in work_gases:
                     recipe_gas = self.recipe_params.get(f"VE{i}", {})
                     if recipe_gas.get('switch', 0):
                         flow_value = float(recipe_gas.get('flow', 0))
-                        # Обрабатываем None: если gas = None, используем 0 (Air)
                         type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
                         result = self.controller.handle_command('set_flow', num_rrg=i, flow_lh=flow_value, type_gas=type_gas)
                         if not result:
                             logging.warning(f"Ошибка установки потока для РРГ {i}: set_flow вернул False")
                             set_flow_success = False
                     else:
-                        # Обрабатываем None: если gas = None, используем 0 (Air)
                         type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
                         result = self.controller.handle_command('set_flow', num_rrg=i, flow_lh=0, type_gas=type_gas)
                         if not result:
                             logging.warning(f"Ошибка установки потока 0 для РРГ {i}: set_flow вернул False")
                             set_flow_success = False
-                    time.sleep(0.1)  # Увеличена задержка между операциями для предотвращения перегрузки serial порта
-                
+                    time.sleep(0.1)
+
                 if not set_flow_success:
                     is_valid = False
                     logging.error("Ошибка: не удалось установить потоки в РРГ")
                 else:
-                    # Увеличена задержка перед чтением для стабилизации
                     time.sleep(0.3)
                     
-                    # Проверяем установленные потоки
                     for i in work_gases:
                         recipe_gas = self.recipe_params.get(f"VE{i}", {})
                         recipe_flow = float(recipe_gas.get('flow', 0))
                         
-                        # Обрабатываем None: если gas = None, используем 0 (Air)
                         type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
                         rrg_set_flow = self.controller.handle_command('read_set_flow', num_rrg=i, type_gas=type_gas)
                         
@@ -986,11 +881,9 @@ class PlasmaAutoProcess:
                     self.attempt = 0
                     self.current_step += 1
                     self.parent.update_status(self.translator.tr('success_setting_flow'))
-                    logging.info("Успешно установлены потоки в РРГ")
                 else:
                     self.parent.update_status(f"{self.translator.tr('attempt')} {self.attempt} {self.translator.tr('attempt_set_flow')}")
                     self.attempt += 1
-                    logging.warning(f"Попытка {self.attempt} установки потока не удалась")
 
                 if self.attempt > self.max_attempts:
                     self.attempt = 0
@@ -1001,13 +894,10 @@ class PlasmaAutoProcess:
                 
             elif self.current_step == 7:
                 recipe_power = self.recipe_params.get('power', 0)
-                logging.info(f"Setting power: recipe_power={recipe_power}, type={type(recipe_power)}")
                 
-                # Проверяем, что мощность валидна
                 try:
                     power_value = int(float(recipe_power))
-                    if power_value < 10 or power_value > settings.get('MAX_POWER_BP', 1000):
-                        logging.error(f"Power value {power_value} is out of valid range (10-{settings.get('MAX_POWER_BP', 1000)})")
+                    if power_value < settings.get('MIN_POWER_BP', 10) or power_value > settings.get('MAX_POWER_BP', 1000):
                         self.handle_error(self.translator.tr('error_set_power'), need_reboot=True)
                         return
                 except (ValueError, TypeError) as e:
@@ -1015,7 +905,6 @@ class PlasmaAutoProcess:
                     self.handle_error(self.translator.tr('error_set_power'), need_reboot=True)
                     return
                 
-                # Пытаемся установить мощность с проверкой успешности
                 success = False
                 for attempt in range(3):
                     result = self.controller.handle_command('set_power', power=power_value)
@@ -1035,7 +924,6 @@ class PlasmaAutoProcess:
 
                 self.parent.update_status(self.translator.tr('set_power'))
                 self.attempt = 0
-
                 
                 self.current_step += 1
 
@@ -1066,7 +954,6 @@ class PlasmaAutoProcess:
         try:
             logging.info(f"Выполнение process_pumping: Current_state: {self.current_state}, current_step: {self.current_step}, attempt: {self.attempt}")
 
-            # Переход из init_recipe (step 9): сбрасываем шаг для логики pumping (0 = насос, 1 = ждать давление)
             if self.current_step not in (0, 1):
                 self.current_step = 0
 
@@ -1107,7 +994,6 @@ class PlasmaAutoProcess:
                     self.handle_error(self.translator.tr('error_pumpdown_time_exceeded'))
                     return
                 if current_pressure is None:
-                    logging.warning("process_pumping: get_sensor_pressure returned None, retrying")
                     QTimer.singleShot(1000, self.process_pumping)
                     return
                 if current_pressure <= target_pressure:
@@ -1118,7 +1004,6 @@ class PlasmaAutoProcess:
                     self.current_state = 'venting'
                     QTimer.singleShot(1000, self.process_venting)
                 else:
-                    # Форматирование давления: если < 10, то 2 знака после запятой, иначе целое число
                     if current_pressure < 10:
                         self.parent.PressZnach.setText(f"{current_pressure:.2f}")
                     else:
@@ -1145,7 +1030,6 @@ class PlasmaAutoProcess:
             return
 
         try:
-            logging.info(f"Выполнение process_venting: Current_state: {self.current_state}, current_step: {self.current_step}, attempt: {self.attempt}")
 
             if self.current_step == 0:
                 for i in work_gases:
@@ -1207,7 +1091,6 @@ class PlasmaAutoProcess:
                     recipe_gas = self.recipe_params.get(f"VE{i}", {})
                     
                     try:
-                        # Обрабатываем None: если gas = None, используем 0 (Air)
                         type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
                         flow_rrg = self.controller.handle_command('read_flow', num_rrg=i, type_gas=type_gas)
                         if flow_rrg is None:
@@ -1230,7 +1113,7 @@ class PlasmaAutoProcess:
                     else:
                         if abs(flow_rrg - 0.0) > self.FLOW_TOLERANCE:
                             is_valid = False
-                    time.sleep(0.05)  # Небольшая задержка между операциями
+                    time.sleep(0.05)
 
                 if is_valid:
                     self.parent.update_status(self.translator.tr('success_setting_flow'))
@@ -1293,8 +1176,6 @@ class PlasmaAutoProcess:
 
         step_start_time = time.time()
         try:
-            process_logger.debug(f"[process_processing] ENTRY: state={self.current_state}, step={self.current_step}, attempt={self.attempt}")
-            logging.info(f"Выполнение process_processing: Current_state: {self.current_state}, current_step: {self.current_step}, attempt: {self.attempt}")
 
             time_str = self.recipe_params.get('time', '00:00')
             if not isinstance(time_str, str) or ':' not in time_str:
@@ -1310,15 +1191,10 @@ class PlasmaAutoProcess:
                 return
             
             if self.current_step == 0:
-                # Используем ту же логику, что и в main_window.py
-                # ВАЖНО: Останавливаем поток чтения RF ПЕРЕД обращением к генератору
-                # Это предотвращает ошибки I/O при попытке включить плазму
                 if hasattr(self.parent, 'stop_rf_reading'):
-                    logging.info("[process_processing] STEP 0: Stopping RF reading thread before on_plasma...")
-                    self.parent.stop_rf_reading(wait=True)  # Ждем завершения, чтобы порт точно освободился
-                    time.sleep(0.5)  # Задержка для гарантии освобождения порта
-                    
-                    # Проверяем, что блокировка порта освобождена
+                    self.parent.stop_rf_reading(wait=True)
+                    time.sleep(0.5)
+
                     if self.controller.rf is not None and hasattr(self.controller.rf, '_lock'):
                         if self.controller.rf._lock.acquire(blocking=False):
                             self.controller.rf._lock.release()
@@ -1339,26 +1215,19 @@ class PlasmaAutoProcess:
                                 time.sleep(0.3)
                                 continue
                         
-                        # Задержка перед проверкой - генератор может включаться с задержкой
                         time.sleep(0.5)
                         
-                        # Проверяем статус напрямую из генератора
                         try:
                             rf_status = self.controller.rf.read_status()
                             if rf_status:
                                 rf_on = rf_status.get('rf_on', False)
-                                logging.info(f"process_processing: RF status check (attempt {attempt + 1}): rf_on={rf_on}")
                                 if rf_on:
-                                    # Обновляем кэш
                                     self.controller._cached_plasma_status = True
                                     success = True
-                                    logging.info(f"process_processing: Plasma confirmed ON on attempt {attempt + 1}")
                                     break
                                 else:
                                     logging.warning(f"process_processing: Plasma status is False on attempt {attempt + 1}, retrying...")
                             else:
-                                logging.warning(f"process_processing: rf.read_status() returned None on attempt {attempt + 1}")
-                                # Пытаемся переподключиться к RF генератору асинхронно
                                 def reconnect_rf_async():
                                     try:
                                         logging.info(f"[process_processing] STEP 0: Attempting to reconnect RF generator (read_status returned None)...")
@@ -1370,14 +1239,12 @@ class PlasmaAutoProcess:
                                     except Exception as reconnect_error:
                                         logging.error(f"[process_processing] STEP 0: Error reconnecting RF generator (was None): {reconnect_error}")
                                 
-                                # Запускаем переподключение асинхронно
                                 if self._rf_operations_executor is None:
                                     self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
                                 self._rf_operations_executor.submit(reconnect_rf_async)
-                                # Нельзя считать плазму включённой без ответа от генератора — продолжаем попытки
                         except Exception as e:
                             logging.error(f"process_processing: Error reading RF status (attempt {attempt + 1}): {e}")
-                            # Пытаемся переподключиться к RF генератору асинхронно при ошибке
+                            
                             def reconnect_rf_async():
                                 try:
                                     logging.info(f"[process_processing] STEP 0: Attempting to reconnect RF generator (read_status error)...")
@@ -1389,27 +1256,22 @@ class PlasmaAutoProcess:
                                 except Exception as reconnect_error:
                                     logging.error(f"[process_processing] STEP 0: Error reconnecting RF generator (after error): {reconnect_error}")
                             
-                            # Запускаем переподключение асинхронно
                             if self._rf_operations_executor is None:
                                 self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
                             self._rf_operations_executor.submit(reconnect_rf_async)
-                            # Нельзя считать плазму включённой без ответа — продолжаем попытки
                     except Exception as e:
                         logging.error(f"process_processing: Error turning on plasma (attempt {attempt + 1}): {e}", exc_info=True)
                     
                     if attempt < self.max_attempts - 1:
-                        time.sleep(0.4)  # Задержка между попытками (как в ручном режиме)
+                        time.sleep(0.4)
                 
                 if success:
-                    process_logger.info(f"[process_processing] STEP 0 SUCCESS: Plasma turned ON")
                     self.parent.update_status(self.translator.tr('plasma_on_start_process'))
                     self.processing_start_time = time.time()
                     process_logger.info(f"[process_processing] processing_start_time={self.processing_start_time}")
                     self.attempt = 0
                     self.current_step += 1
-                    # Устанавливаем состояние processing
                     self.current_state = 'processing'
-                    # Кэшируем recipe_time для быстрого доступа в таймере
                     try:
                         time_str = self.recipe_params.get('time', '00:00')
                         if ':' in time_str:
@@ -1420,7 +1282,6 @@ class PlasmaAutoProcess:
                     except Exception:
                         self._cached_recipe_time = 0
                     process_logger.info(f"[process_processing] _cached_recipe_time={self._cached_recipe_time}s")
-                    # Запускаем чтение данных генератора RF для отображения мощности
                     rf_start_time = time.time()
                     if hasattr(self.parent, 'start_rf_reading'):
                         process_logger.info("[process_processing] Starting RF reading thread...")
@@ -1428,10 +1289,9 @@ class PlasmaAutoProcess:
                         process_logger.info(f"[process_processing] RF reading thread started in {time.time() - rf_start_time:.3f}s")
                     else:
                         process_logger.warning("[process_processing] start_rf_reading method not found in parent")
-                    # Запускаем таймеры для обновления времени обработки СРАЗУ после включения плазмы
                     timer_start_time = time.time()
-                    self.processing_time_timer.start(1000)  # Обновление UI каждую секунду
-                    self.processing_time_check_timer.start(100)  # Проверка окончания времени каждые 100ms для точности
+                    self.processing_time_timer.start(1000)
+                    self.processing_time_check_timer.start(100)
                     process_logger.info(f"[process_processing] Timers started: UI_timer={self.processing_time_timer.isActive()}, check_timer={self.processing_time_check_timer.isActive()}, took {time.time() - timer_start_time:.3f}s")
                     logging.info(f"Processing time timers started immediately after plasma ON, state={self.current_state}, step={self.current_step}, start_time={self.processing_start_time}")
                     QTimer.singleShot(1000, self.process_processing)
@@ -1456,13 +1316,11 @@ class PlasmaAutoProcess:
                     QTimer.singleShot(1000, self.process_processing)
                     return
                 
-                # Убеждаемся, что current_state установлен правильно
                 if self.current_state != 'processing':
                     process_logger.warning(f"[process_processing] STEP 1: current_state='{self.current_state}', expected 'processing'. Setting it now.")
                     logging.warning(f"process_processing step 1: current_state is '{self.current_state}', expected 'processing'. Setting it now.")
                     self.current_state = 'processing'
                 
-                # Убеждаемся, что таймеры запущены (перезапускаем если остановлены)
                 timer_check_start = time.time()
                 if not self.processing_time_timer.isActive():
                     self.processing_time_timer.start(1000)
@@ -1476,10 +1334,6 @@ class PlasmaAutoProcess:
                 if timer_check_time > 0.001:
                     process_logger.warning(f"[process_processing] STEP 1: Timer check took {timer_check_time:.3f}s")
 
-                # Проверка времени теперь происходит в отдельном таймере _check_processing_time_expired
-                # Здесь только проверки безопасности и продолжение процесса
-                
-                # Вычисляем elapsed_time для проверок безопасности (не для проверки окончания времени)
                 elapsed_time = time.time() - self.processing_start_time
                 elapsed_time_int = int(elapsed_time)
                 process_logger.debug(f"[process_processing] STEP 1: elapsed_time={elapsed_time:.3f}s ({elapsed_time_int}s), recipe_time={recipe_time}s, remaining={recipe_time - elapsed_time:.3f}s")
@@ -1513,8 +1367,10 @@ class PlasmaAutoProcess:
                         self._flow_checking = True
                         process_logger.debug(f"[process_processing] STEP 1: Scheduling async flow check at {elapsed_time_int}s...")
                         
-                        # Запускаем проверку асинхронно, чтобы не блокировать основной цикл
                         def check_flows_async():
+                            if self.current_state != 'processing':
+                                return
+
                             try:
                                 flow_check_start = time.time()
                                 is_flow_valid = True
@@ -1522,15 +1378,11 @@ class PlasmaAutoProcess:
                                 for i in work_gases:
                                     flow_read_start = time.time()
                                     recipe_gas = self.recipe_params.get(f"VE{i}", {})
-                                    flow_rrg = 0  # Значение по умолчанию
+                                    flow_rrg = 0
                                     try:
-                                        # Используем таймаут для чтения RRG, чтобы не зависнуть если устройство не отвечает
-                                        # Максимум 1.5 секунды на чтение одного RRG, чтобы не блокировать процесс слишком долго
-                                        # Создаем отдельный executor для чтения RRG, если его еще нет
                                         if self._rrg_read_executor is None:
                                             self._rrg_read_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="RRGRead")
                                         
-                                        # Обрабатываем None: если gas = None, используем 0 (Air)
                                         type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
                                         future = self._rrg_read_executor.submit(
                                             self.controller.handle_command,
@@ -1539,20 +1391,19 @@ class PlasmaAutoProcess:
                                             type_gas=type_gas
                                         )
                                         try:
-                                            flow_rrg = future.result(timeout=1.5)  # Таймаут 1.5 секунды
+                                            flow_rrg = future.result(timeout=1.5)
                                             flow_read_time = time.time() - flow_read_start
                                             process_logger.debug(f"[process_processing] STEP 1: read_flow RRG{i} (async) took {flow_read_time:.3f}s, result={flow_rrg}")
                                             if flow_rrg is None:
                                                 flow_rrg = 0
                                                 process_logger.warning(f"[process_processing] STEP 1: RRG{i} returned None, using 0")
-                                                # Пытаемся переподключиться к RRG асинхронно, если вернулся None
+
                                                 def reconnect_rrg_async(rrg_num):
                                                     try:
                                                         process_logger.info(f"[process_processing] STEP 1: Attempting to reconnect RRG{rrg_num} (returned None)...")
                                                         reconnect_success, reconnect_msg = self.controller.reconnect_device(f'rrg_{rrg_num}')
                                                         if reconnect_success:
                                                             process_logger.info(f"[process_processing] STEP 1: RRG{rrg_num} reconnected successfully (was None)")
-                                                            logging.info(f"RRG {rrg_num} успешно переподключен (вернул None) во время process_processing")
                                                         else:
                                                             process_logger.warning(f"[process_processing] STEP 1: Failed to reconnect RRG{rrg_num} (was None): {reconnect_msg}")
                                                             logging.warning(f"Не удалось переподключить RRG {rrg_num} (вернул None) во время process_processing: {reconnect_msg}")
@@ -1560,7 +1411,6 @@ class PlasmaAutoProcess:
                                                         process_logger.error(f"[process_processing] STEP 1: Error reconnecting RRG{rrg_num} (was None): {reconnect_error}")
                                                         logging.error(f"Ошибка при переподключении RRG {rrg_num} (вернул None) во время process_processing: {reconnect_error}")
                                                 
-                                                # Запускаем переподключение асинхронно в отдельном потоке
                                                 if self._rrg_read_executor is not None:
                                                     self._rrg_read_executor.submit(reconnect_rrg_async, i)
                                             else:
@@ -1570,7 +1420,7 @@ class PlasmaAutoProcess:
                                             flow_rrg = 0
                                             process_logger.warning(f"[process_processing] STEP 1: RRG{i} read timeout after {flow_read_time:.3f}s, using 0 to continue process")
                                             logging.warning(f"RRG {i} не ответил в течение 1.5s в process_processing, используем значение 0 для продолжения процесса")
-                                            # Пытаемся переподключиться к RRG асинхронно, чтобы не блокировать процесс
+
                                             def reconnect_rrg_async(rrg_num):
                                                 try:
                                                     process_logger.info(f"[process_processing] STEP 1: Attempting to reconnect RRG{rrg_num}...")
@@ -1585,14 +1435,12 @@ class PlasmaAutoProcess:
                                                     process_logger.error(f"[process_processing] STEP 1: Error reconnecting RRG{rrg_num}: {e}")
                                                     logging.error(f"Ошибка при переподключении RRG {rrg_num} во время process_processing: {e}")
                                             
-                                            # Запускаем переподключение асинхронно в отдельном потоке
                                             if self._rrg_read_executor is not None:
                                                 self._rrg_read_executor.submit(reconnect_rrg_async, i)
                                         except Exception as e:
                                             flow_rrg = 0
                                             process_logger.error(f"[process_processing] STEP 1: Exception reading flow RRG{i}: {e}")
                                             logging.error(f"Исключение при чтении потока РРГ {i} в process_processing: {e}")
-                                            # Пытаемся переподключиться к RRG асинхронно при ошибке
                                             def reconnect_rrg_async(rrg_num):
                                                 try:
                                                     process_logger.info(f"[process_processing] STEP 1: Attempting to reconnect RRG{rrg_num} after error...")
@@ -1607,14 +1455,13 @@ class PlasmaAutoProcess:
                                                     process_logger.error(f"[process_processing] STEP 1: Error reconnecting RRG{rrg_num} after error: {reconnect_error}")
                                                     logging.error(f"Ошибка при переподключении RRG {rrg_num} после ошибки во время process_processing: {reconnect_error}")
                                             
-                                            # Запускаем переподключение асинхронно в отдельном потоке
                                             if self._rrg_read_executor is not None:
                                                 self._rrg_read_executor.submit(reconnect_rrg_async, i)
                                     except (ValueError, TypeError, Exception) as e:
                                         flow_rrg = 0
                                         process_logger.error(f"[process_processing] STEP 1: Error reading flow RRG{i}: {e}")
                                         logging.error(f"Ошибка чтения потока РРГ {i} в process_processing: {e}")
-                                        # Пытаемся переподключиться к RRG асинхронно при ошибке чтения
+
                                         def reconnect_rrg_async(rrg_num):
                                             try:
                                                 process_logger.info(f"[process_processing] STEP 1: Attempting to reconnect RRG{rrg_num} after read error...")
@@ -1629,7 +1476,6 @@ class PlasmaAutoProcess:
                                                 process_logger.error(f"[process_processing] STEP 1: Error reconnecting RRG{rrg_num} after read error: {reconnect_error}")
                                                 logging.error(f"Ошибка при переподключении RRG {rrg_num} после ошибки чтения во время process_processing: {reconnect_error}")
                                         
-                                        # Запускаем переподключение асинхронно в отдельном потоке
                                         if self._rrg_read_executor is not None:
                                             self._rrg_read_executor.submit(reconnect_rrg_async, i)
                                     flow_recipe = float(recipe_gas.get('flow', 0))
@@ -1648,8 +1494,6 @@ class PlasmaAutoProcess:
                                     process_logger.warning(f"[process_processing] STEP 1: SLOW flow check: {flow_check_time:.3f}s > 1s")
                                 
                                 if not is_flow_valid:
-                                    process_logger.error(f"[process_processing] STEP 1: Flow mismatch detected!")
-                                    # Вызываем handle_error через QTimer с небольшой задержкой, чтобы не блокировать event loop
                                     error_msg = self.translator.tr('error_dismatch_flow_during_process')
                                     QTimer.singleShot(10, lambda msg=error_msg: self.handle_error(msg))
                                     return
@@ -1658,35 +1502,20 @@ class PlasmaAutoProcess:
                             finally:
                                 self._flow_checking = False
                         
-                        # Запускаем в отдельном потоке через ThreadPoolExecutor
                         if self._flow_check_executor is None:
                             self._flow_check_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="FlowCheck")
                         self._flow_check_executor.submit(check_flows_async)
                 
-                # Продолжаем процесс
                 step1_total_time = time.time() - step1_entry_time
                 process_logger.debug(f"[process_processing] STEP 1 EXIT: total_time={step1_total_time:.3f}s, scheduling next call in 500ms")
-                # Используем более короткий интервал (500ms) для более точной проверки времени
-                # Это позволяет быстрее реагировать на окончание времени, даже если есть блокирующие операции
                 QTimer.singleShot(500, self.process_processing)
 
             elif self.current_step == 2:
-                step2_start = time.time()
-                process_logger.info(f"[process_processing] STEP 2 ENTRY: Turning off plasma")
-                # Останавливаем таймеры обновления времени обработки
-                timer_stop_start = time.time()
                 if self.processing_time_timer.isActive():
                     self.processing_time_timer.stop()
-                    process_logger.info("[process_processing] STEP 2: UI timer stopped")
-                    logging.info("Processing time timer stopped in step 2")
                 if self.processing_time_check_timer.isActive():
                     self.processing_time_check_timer.stop()
-                    process_logger.info("[process_processing] STEP 2: Check timer stopped")
-                    logging.info("Processing time check timer stopped in step 2")
-                timer_stop_time = time.time() - timer_stop_start
-                
-                # ВАЖНО: Останавливаем поток чтения RF ПЕРЕД выключением плазмы, чтобы освободить порт
-                # Это предотвращает ошибки I/O при попытке выключить плазму
+
                 if hasattr(self.parent, 'stop_rf_reading'):
                     rf_stop_start = time.time()
                     process_logger.info("[process_processing] STEP 2: Stopping RF reading thread before off_plasma...")
@@ -1694,32 +1523,22 @@ class PlasmaAutoProcess:
                     rf_stop_time = time.time() - rf_stop_start
                     process_logger.info(f"[process_processing] STEP 2: RF reading thread stopped in {rf_stop_time:.3f}s")
                     
-                    # Увеличиваем задержку для гарантии полного освобождения порта и блокировки
-                    time.sleep(1.0)  # Увеличено с 0.2 до 1.0 секунды
+                    time.sleep(1.0)
                     
-                    # ВАЖНО: Проверяем, что блокировка порта освобождена перед попыткой выключить плазму
-                    # Если поток еще держит блокировку, ждем ее освобождения
                     lock_acquired = False
                     if self.controller.rf is not None and hasattr(self.controller.rf, '_lock'):
                         lock_check_start = time.time()
-                        process_logger.info("[process_processing] STEP 2: Checking if RF port lock is available...")
-                        # Пытаемся получить блокировку с таймаутом, чтобы убедиться, что она свободна
                         if self.controller.rf._lock.acquire(blocking=False):
-                            # Блокировка свободна - сразу освобождаем
                             self.controller.rf._lock.release()
                             lock_acquired = True
                             process_logger.info(f"[process_processing] STEP 2: RF port lock is available (checked in {time.time() - lock_check_start:.3f}s)")
                         else:
-                            # Блокировка занята - ждем с таймаутом
-                            process_logger.warning("[process_processing] STEP 2: RF port lock is busy, waiting for release...")
+
                             if self.controller.rf._lock.acquire(blocking=True, timeout=2.0):
                                 self.controller.rf._lock.release()
                                 lock_acquired = True
                                 process_logger.info(f"[process_processing] STEP 2: RF port lock released after wait (waited {time.time() - lock_check_start:.3f}s)")
-                            else:
-                                process_logger.error("[process_processing] STEP 2: RF port lock timeout - lock still busy after 2s")
                     
-                    # Пытаемся очистить буфер порта, если это возможно
                     try:
                         if hasattr(self.controller.rf, 'instrument') and hasattr(self.controller.rf.instrument, 'serial'):
                             if hasattr(self.controller.rf.instrument.serial, 'reset_input_buffer'):
@@ -1730,10 +1549,9 @@ class PlasmaAutoProcess:
                     except Exception as e:
                         process_logger.warning(f"[process_processing] STEP 2: Could not clear serial buffers: {e}")
                 
-                # Выключаем плазму с несколькими попытками, если первая не удалась
                 result = False
                 plasma_off_start = time.time()
-                for plasma_attempt in range(3):  # До 3 попыток выключения
+                for plasma_attempt in range(3):
                     process_logger.info(f"[process_processing] STEP 2: Calling off_plasma (attempt {plasma_attempt + 1}/3)...")
                     result = self.controller.handle_command('off_plasma')
                     plasma_off_time = time.time() - plasma_off_start
@@ -1743,10 +1561,9 @@ class PlasmaAutoProcess:
                         process_logger.info(f"[process_processing] STEP 2: off_plasma succeeded on attempt {plasma_attempt + 1}")
                         break
                     else:
-                        if plasma_attempt < 2:  # Не последняя попытка
+                        if plasma_attempt < 2:
                             process_logger.warning(f"[process_processing] STEP 2: off_plasma failed on attempt {plasma_attempt + 1}, waiting before retry...")
-                            time.sleep(0.5)  # Задержка перед следующей попыткой
-                            # Пытаемся очистить буферы порта перед следующей попыткой
+                            time.sleep(0.5)
                             try:
                                 if hasattr(self.controller.rf, 'instrument') and hasattr(self.controller.rf.instrument, 'serial'):
                                     if hasattr(self.controller.rf.instrument.serial, 'reset_input_buffer'):
@@ -1756,35 +1573,29 @@ class PlasmaAutoProcess:
                             except Exception:
                                 pass
                 
-                # Задержка перед проверкой - генератор может выключаться с задержкой
                 time.sleep(0.5)
                 
-                # Проверяем статус напрямую из генератора (как при включении)
-                # Делаем несколько попыток чтения статуса с задержками, чтобы получить подтверждение
                 plasma_off_confirmed = False
                 status_check_attempts = 3
                 for status_attempt in range(status_check_attempts):
                     try:
                         rf_status = self.controller.rf.read_status()
                         if rf_status:
-                            rf_on = rf_status.get('rf_on', True)  # По умолчанию True, если не удалось прочитать
+                            rf_on = rf_status.get('rf_on', True)
                             forward_power = rf_status.get('forward_w', None)
                             reflected_power = rf_status.get('reflect_w', None)
                             process_logger.info(f"[process_processing] STEP 2: RF status check (attempt {self.attempt + 1}, status_check {status_attempt + 1}/{status_check_attempts}): rf_on={rf_on}, forward_power={forward_power}, reflected_power={reflected_power}")
                             
-                            # Плазма выключена только если получили подтверждение:
                             if not rf_on:
                                 plasma_off_confirmed = True
                                 process_logger.info(f"[process_processing] STEP 2: Plasma confirmed OFF by rf_on=False")
                                 break
                             elif forward_power is not None and forward_power == 0 and reflected_power is not None and reflected_power == 0:
-                                # Если обе мощности = 0, плазма выключена, даже если rf_on еще True
                                 plasma_off_confirmed = True
-                                process_logger.info(f"[process_processing] STEP 2: Plasma confirmed OFF by power=0 (both forward and reflected = 0)")
                                 break
                         else:
                             process_logger.warning(f"[process_processing] STEP 2: rf.read_status() returned None (status_check {status_attempt + 1}/{status_check_attempts})")
-                            # Пытаемся переподключиться к RF генератору асинхронно
+                            
                             def reconnect_rf_async():
                                 try:
                                     process_logger.info(f"[process_processing] STEP 2: Attempting to reconnect RF generator (read_status returned None)...")
@@ -1799,12 +1610,10 @@ class PlasmaAutoProcess:
                                     process_logger.error(f"[process_processing] STEP 2: Error reconnecting RF generator (was None): {reconnect_error}")
                                     logging.error(f"Ошибка при переподключении RF генератора (вернул None) во время process_processing step 2: {reconnect_error}")
                             
-                            # Запускаем переподключение асинхронно
                             if self._rf_operations_executor is None:
                                 self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
                             self._rf_operations_executor.submit(reconnect_rf_async)
                             
-                            # Пробуем проверить через отдельные команды мощности
                             try:
                                 forward_power = self.controller.handle_command('get_forward_power')
                                 reflected_power = self.controller.handle_command('get_reflected_power')
@@ -1816,12 +1625,11 @@ class PlasmaAutoProcess:
                             except Exception as e:
                                 process_logger.error(f"[process_processing] STEP 2: Error checking power (status_check {status_attempt + 1}): {e}")
                             
-                            # Если не последняя попытка, ждем перед следующей
                             if status_attempt < status_check_attempts - 1:
-                                time.sleep(0.5)  # Задержка перед следующей попыткой чтения статуса
+                                time.sleep(0.5)
                     except Exception as e:
                         process_logger.error(f"[process_processing] STEP 2: Error reading RF status (status_check {status_attempt + 1}): {e}")
-                        # Пытаемся переподключиться к RF генератору асинхронно при ошибке
+                        
                         def reconnect_rf_async():
                             try:
                                 process_logger.info(f"[process_processing] STEP 2: Attempting to reconnect RF generator (read_status error)...")
@@ -1836,12 +1644,10 @@ class PlasmaAutoProcess:
                                 process_logger.error(f"[process_processing] STEP 2: Error reconnecting RF generator (after error): {reconnect_error}")
                                 logging.error(f"Ошибка при переподключении RF генератора (после ошибки) во время process_processing step 2: {reconnect_error}")
                         
-                        # Запускаем переподключение асинхронно
                         if self._rf_operations_executor is None:
                             self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
                         self._rf_operations_executor.submit(reconnect_rf_async)
                         
-                        # Пробуем проверить через отдельные команды мощности
                         try:
                             forward_power = self.controller.handle_command('get_forward_power')
                             reflected_power = self.controller.handle_command('get_reflected_power')
@@ -1853,30 +1659,24 @@ class PlasmaAutoProcess:
                         except Exception as e2:
                             process_logger.error(f"[process_processing] STEP 2: Error checking power after error (status_check {status_attempt + 1}): {e2}")
                         
-                        # Если не последняя попытка, ждем перед следующей
                         if status_attempt < status_check_attempts - 1:
-                            time.sleep(0.5)  # Задержка перед следующей попыткой чтения статуса
+                            time.sleep(0.5)
                 
                 if plasma_off_confirmed:
-                    # Обновляем кэш
                     self.controller._cached_plasma_status = False
                     self.parent.update_status(self.translator.tr('plasma_off'))
-                    # Поток чтения RF уже остановлен выше, но проверяем на всякий случай
                     if hasattr(self.parent, 'stop_rf_reading'):
                         try:
                             self.parent.stop_rf_reading(wait=False)
                         except:
-                            pass  # Игнорируем ошибки, если поток уже остановлен
-                    # Обновляем значения мощности после выключения плазмы
-                    # Пытаемся прочитать еще несколько раз, затем ставим 0
+                            pass
+                        
                     def update_power_after_off():
-                        # Пытаемся прочитать мощность еще несколько раз
                         for attempt in range(3):
                             try:
                                 forward_power = self.controller.handle_command('get_forward_power')
                                 reflected_power = self.controller.handle_command('get_reflected_power')
                                 if forward_power is not None and forward_power == 0 and reflected_power is not None and reflected_power == 0:
-                                    # Мощность уже 0, обновляем UI
                                     if hasattr(self.parent, 'HFPowerZnach'):
                                         self.parent.HFPowerZnach.setText('0')
                                     if hasattr(self.parent, 'HFCurrentZnach'):
@@ -1891,13 +1691,12 @@ class PlasmaAutoProcess:
                             except Exception as e:
                                 logging.error(f"Error reading power after plasma off (attempt {attempt + 1}): {e}")
                             time.sleep(0.2)
-                        # После всех попыток ставим 0
+
                         if hasattr(self.parent, 'HFPowerZnach'):
                             self.parent.HFPowerZnach.setText('0')
                         if hasattr(self.parent, 'HFCurrentZnach'):
                             self.parent.HFCurrentZnach.setText('0')
                     
-                    # Запускаем обновление мощности через небольшую задержку
                     QTimer.singleShot(500, update_power_after_off)
                     self.attempt = 0
                     self.current_step += 1
@@ -1906,7 +1705,6 @@ class PlasmaAutoProcess:
                 else:
                     process_logger.warning(f"[process_processing] STEP 2: Plasma status is still ON on attempt {self.attempt + 1}, retrying...")
                 
-                # Если дошли сюда, плазма не выключилась
                 self.parent.update_status(f"{self.translator.tr('attempt')} {self.attempt} {self.translator.tr('attempt_off_plasma')}")
                 self.attempt += 1
 
@@ -1964,7 +1762,6 @@ class PlasmaAutoProcess:
                 
 
             elif self.current_step == 5:
-                # Переходим к venting_atm
                 self.attempt = 0
                 self.current_step = 0
                 self.current_state = 'venting_atm'
@@ -2051,23 +1848,18 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_venting_atm)
                 
             elif self.current_step == 3:
-                # Включаем звук при завершении процесса (только один раз), если включен в настройках
                 if not self.buzzer_activated:
-                    # Проверяем настройку "включить звук"
-                    enable_sound = settings.get('enable_sound', True)  # По умолчанию True для обратной совместимости
+                    enable_sound = settings.get('enable_sound', True)
                     if enable_sound:
                         self.controller.handle_command('on_buzz')
                         self.buzzer_activated = True
-                        logging.info("Process completed: Buzzer turned on (sound enabled in settings)")
-                        
-                        # Выключаем звук через 2 секунды
+
                         def turn_off_buzz():
                             self.controller.handle_command('off_buzz')
-                            logging.info("Process completed: Buzzer turned off")
                         
                         QTimer.singleShot(2000, turn_off_buzz)
                     else:
-                        self.buzzer_activated = True  # Помечаем как активированный, чтобы не пытаться включить снова
+                        self.buzzer_activated = True
                         logging.info("Process completed: Buzzer skipped (sound disabled in settings)")
 
                 def oper():
@@ -2075,8 +1867,6 @@ class PlasmaAutoProcess:
                     if hasattr(self.parent, 'ButtonStart'):
                         self.parent.ButtonStart.setText(self.translator.tr('start'))
                         self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
-                        # НЕ устанавливаем setEnabled здесь - это делается в check_permissions
-                        # LED будет включен в update_values() если кнопка активна и текст = "start"
                         self.parent.NIButton.setEnabled(False)
                         self.parent.VEButton.setEnabled(False)
                         self.parent.HFButton.setEnabled(False)
@@ -2087,8 +1877,6 @@ class PlasmaAutoProcess:
                     if hasattr(self.parent, 'ButtonStart'):
                         self.parent.ButtonStart.setText(self.translator.tr('start'))
                         self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
-                        # НЕ устанавливаем setEnabled здесь - это делается в check_permissions
-                        # LED будет включен в update_values() если кнопка активна и текст = "start"
                         self.parent.NIButton.setEnabled(False)
                         self.parent.VEButton.setEnabled(False)
                         self.parent.HFButton.setEnabled(False)
@@ -2142,16 +1930,14 @@ class PlasmaAutoProcess:
                 msg.setIcon(QMessageBox.NoIcon)
                 msg.setText(self.translator.tr('report'))
                 msg.setInformativeText(text)
-                # Убираем фокус с кнопки ОК для сенсорного экрана
                 msg.setDefaultButton(None)
-                # Находим кнопку ОК и убираем с неё фокус
+
                 ok_button = msg.button(QMessageBox.Ok)
                 if ok_button:
                     ok_button.setFocusPolicy(Qt.NoFocus)
                     ok_button.clearFocus()
-                    # Устанавливаем фокус на само окно вместо кнопки
                     msg.setFocus()
-                # Показываем окно и устанавливаем фокус на него
+
                 msg.show()
                 msg.activateWindow()
                 msg.raise_()
@@ -2181,54 +1967,29 @@ class PlasmaAutoProcess:
             return
 
     def handle_error(self, error_message, need_reboot=False):
-        start_process_logger.info(f"[HANDLE_ERROR] handle_error: ВХОД, error_message='{error_message}', need_reboot={need_reboot}, "
-                    f"current_state={self.current_state}, current_step={self.current_step}")
-        
-        # Сохраняем информацию о том, что процесс только что запустился
-        # Это нужно, чтобы не менять текст кнопки обратно на "start", если процесс только что запустился
-        # Считаем процесс "только что запущенным" если:
-        # - Состояние init_recipe или init (инициализация)
-        # - Шаг <= 2 (проверка рецепта, выключение устройств, открытие клапанов - ранние стадии инициализации)
         was_just_started = (self.current_state in ['init_recipe', 'init'] and self.current_step <= 2)
-        start_process_logger.info(f"[HANDLE_ERROR] handle_error: was_just_started={was_just_started} "
-                    f"(state in ['init_recipe', 'init']: {self.current_state in ['init_recipe', 'init']}, "
-                    f"step <= 2: {self.current_step <= 2})")
-        
-        # Останавливаем таймеры проверки СРАЗУ, чтобы они не вызывали stop_process() во время обработки ошибки
-        start_process_logger.info(f"[HANDLE_ERROR] handle_error: Останавливаем таймеры проверки")
+
         self.check_fault_timer.stop()
         self.check_stop_timer.stop()
         self.processing_time_timer.stop()
         self.processing_time_check_timer.stop()
         
-        # Быстро устанавливаем состояние, чтобы не блокировать event loop
         self.attempt = 0
         self.current_step = 0
         
-        # Обновляем статус асинхронно, чтобы не блокировать event loop
         error_status = f"{self.translator.tr('error')}: {error_message}"
         QTimer.singleShot(0, lambda: self.parent.update_status(error_status))
-
-        start_process_logger.error(f"[HANDLE_ERROR] handle_error: {error_message}, was_just_started={was_just_started}")
         
-        # Если процесс только что запустился и сразу произошла ошибка, 
-        # не запускаем process_fault() - просто возвращаем процесс в idle
         if was_just_started:
-            start_process_logger.warning(f"[HANDLE_ERROR] handle_error: Process just started, returning to idle without full fault procedure. "
-                          f"current_state будет изменен с '{self.current_state}' на 'idle'")
+            self.check_fault_timer.stop()
+            self.check_stop_timer.stop()
+            self.processing_time_timer.stop()
+            self.processing_time_check_timer.stop()
             self.current_state = "idle"
-            start_process_logger.info(f"[HANDLE_ERROR] handle_error: current_state установлен в 'idle', выходим из handle_error")
-            # Текст кнопки останется "stop", чтобы пользователь мог остановить процесс
-            # или он будет изменен в main_window.py, если start_recipe() вернул False
             return
         
-        # Для остальных случаев устанавливаем состояние fault
-        start_process_logger.info(f"[HANDLE_ERROR] handle_error: Process was not just started, setting state to 'fault'")
         self.current_state = "fault"
         
-        # НЕ меняем текст кнопки здесь - он будет изменен в process_fault() только после полной остановки процесса
-        
-        # Выключаем плазму асинхронно (как в main_window.py), если она включена
         def stop_plasma_task():
             """Задача выключения плазмы в отдельном потоке при ошибке"""
             logging.info("HANDLE_ERROR: Starting plasma stop procedure")
@@ -2329,7 +2090,6 @@ class PlasmaAutoProcess:
                 elapsed = time.time() - start_time
                 logging.error(f"HANDLE_ERROR STOP PLASMA: EXCEPTION after {elapsed:.3f}s: {e}", exc_info=True)
         
-        # Запускаем выключение плазмы в отдельном потоке (не блокирует UI)
         if self._stop_plasma_executor is None:
             self._stop_plasma_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="stop_plasma_error")
         self._stop_plasma_executor.submit(stop_plasma_task)
@@ -2366,16 +2126,12 @@ class PlasmaAutoProcess:
             msg.setText(self.translator.tr('fault'))
 
         msg.setInformativeText(error_message)
-        # Убираем фокус с кнопки ОК для сенсорного экрана
         msg.setDefaultButton(None)
-        # Находим кнопку ОК и убираем с неё фокус
         ok_button = msg.button(QMessageBox.Ok)
         if ok_button:
             ok_button.setFocusPolicy(Qt.NoFocus)
             ok_button.clearFocus()
-            # Устанавливаем фокус на само окно вместо кнопки
             msg.setFocus()
-        # Показываем окно и устанавливаем фокус на него
         msg.show()
         msg.activateWindow()
         msg.raise_()
@@ -2555,6 +2311,10 @@ class PlasmaAutoProcess:
                         self.controller.rf._lock.release()
                         logging.info("[stop_process] RF port lock released after wait")
         
+        if self._stop_plasma_executor is not None:
+            self._stop_plasma_executor.shutdown(wait=False)
+            self._stop_plasma_executor = None
+
         # Останавливаем executor для проверки отраженной мощности
         if self._reflected_power_executor is not None:
             self._reflected_power_executor.shutdown(wait=False)
@@ -2671,6 +2431,3 @@ class PlasmaAutoProcess:
 
         self.parent.ButtonStart.setText(self.translator.tr('start'))
         self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
-        # LED будет синхронизирован в main_window.check_permissions() или update_values()
-        # на основе состояния кнопки (enabled и текст)
-        
