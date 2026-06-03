@@ -211,15 +211,15 @@ class RRG_MFC_UT:
         except Exception as e:
             logging.error(f"Error closing MFC-UT connection: {str(e)}")
 
-class LF_PE:
+class RSG1000S:
     def __init__(self, port, device_id=4):
         self.port = port
         self.address = device_id
         
         self.max_attempts = 10
         self._lock = threading.Lock()  # Блокировка для thread-safe доступа к serial порту
-        self.operation_timeout = 0.3  # Общий таймаут на операцию (секунды)
-        self.serial_timeout = 0.9  # Таймаут для serial порта
+        self.operation_timeout = 0.45  # Общий таймаут на операцию (секунды)
+        self.serial_timeout = 0.15  # Таймаут для serial порта
 
         try:
             self.instrument = minimalmodbus.Instrument(port=self.port, slaveaddress=self.address)
@@ -248,7 +248,7 @@ class LF_PE:
                 try:
                     logging.info(f"DEBUG: RF on_plasma: Attempt {attempt + 1}/{self.max_attempts}, calling write_bit...")
                     write_start = time.time()
-                    self.instrument.write_bit(registeraddress=0x0001, value=1)
+                    self.instrument.write_bit(registeraddress=0x0000, value=1)
                     write_elapsed = time.time() - write_start
                     total_elapsed = time.time() - start_time
                     logging.info(f"DEBUG: RF on_plasma: write_bit completed in {write_elapsed:.3f}s, total={total_elapsed:.3f}s")
@@ -283,12 +283,12 @@ class LF_PE:
                 elapsed = time.time() - start_time
                 if elapsed > self.operation_timeout * 2:  # Увеличенный таймаут для критической операции
                     logging.warning(f"DEBUG: RF off_plasma: operation timeout ({elapsed:.3f}s > {self.operation_timeout * 2}s)")
-                    # Не возвращаем False сразу - продолжаем попытки
+                    return False
                 
                 try:
                     logging.info(f"DEBUG: RF off_plasma: Attempt {attempt + 1}/{max_attempts_off}, calling write_bit...")
                     write_start = time.time()
-                    self.instrument.write_bit(registeraddress=0x0001, value=0)
+                    self.instrument.write_bit(registeraddress=0x0000, value=0)
                     write_elapsed = time.time() - write_start
                     total_elapsed = time.time() - start_time
                     logging.info(f"DEBUG: RF off_plasma: write_bit completed in {write_elapsed:.3f}s, total={total_elapsed:.3f}s")
@@ -416,7 +416,7 @@ class LF_PE:
                 try:
                     logging.info(f"DEBUG: RF set_power: Attempt {attempt + 1}/{self.max_attempts}, calling write_register with power={power_int}...")
                     write_start = time.time()
-                    self.instrument.write_long(registeraddress=0x0013, value=power_int, number_of_decimals=0, functioncode=4)
+                    self.instrument.write_register(registeraddress=0, value=power_int, number_of_decimals=0, functioncode=6)
                     write_elapsed = time.time() - write_start
                     total_elapsed = time.time() - start_time
                     logging.info(f"DEBUG: RF set_power: write_register completed in {write_elapsed:.3f}s, total={total_elapsed:.3f}s")
@@ -453,12 +453,12 @@ class LF_PE:
                 try:
                     logging.info(f"DEBUG: RF get_power: Attempt {attempt + 1}/{self.max_attempts}, calling read_registers...")
                     read_start = time.time()
-                    resp = self.instrument.read_long(registeraddress=0x0013, number_of_registers=1, functioncode=3)
+                    resp = self.instrument.read_registers(registeraddress=0x0000, functioncode=3)
                     read_elapsed = time.time() - read_start
                     total_elapsed = time.time() - start_time
                     logging.info(f"DEBUG: RF get_power: read_registers completed in {read_elapsed:.3f}s, total={total_elapsed:.3f}s")
                     logging.debug(f"Result of get power: {resp}")
-                    return resp[0] if resp else None
+                    return resp
                 except Exception as e:
                     elapsed = time.time() - start_time
                     logging.error(f"DEBUG: RF get_power: Exception on attempt {attempt + 1}: {e}")
@@ -474,22 +474,31 @@ class LF_PE:
         logging.error(f"DEBUG: RF get_power: max attempts reached after {total_elapsed:.3f}s")
         return None
 
-    # def get_forward_power(self):
-    #     for _ in range(self.max_attempts):
-    #         status = self.read_status()
-    #         if status:
-    #             return status.get('forward_w')
+    def get_reflected_power(self):
+        for _ in range(self.max_attempts):
+            status = self.read_status()
+            if status:
+                return status.get('reflect_w')
             
-    #     logging.error("max attempts get forward power")
-    #     return None
+        logging.error("max attempts get reflected power")
+        return None
+
+    def get_forward_power(self):
+        for _ in range(self.max_attempts):
+            status = self.read_status()
+            if status:
+                return status.get('forward_w')
+            
+        logging.error("max attempts get forward power")
+        return None
 
     def close(self):
         try:
             self.off_plasma()
             self.instrument.serial.close()
-            logging.info('LF_PE successfully closed.')
+            logging.info('RSG1000S successfully closed.')
         except Exception as e:
-            logging.error(f"Error in close LF_PE: {e}")
+            logging.error(f"Error in close RSG1000S: {e}")
 
 class APEL_M_1_5PDC:
     """
@@ -1206,8 +1215,14 @@ class Controller:
                     except:
                         pass
                 
-                if settings.get('TYPE_RF') == "APEL_M_1_5PDC":
+                type_rf = settings.get('TYPE_RF')
+                
+                if type_rf == "APEL_M_1_5PDC":
                     self.rf = APEL_M_1_5PDC(settings.get('PORT_RF'), device_id=settings.get('ADDRESS_RF'))
+                    logging.info("RF reconnected")
+                    return True, "OK"
+                elif type_rf == "RSG1000S":
+                    self.rf = RSG1000S(settings.get('PORT_RF'), device_id=settings.get('ADDRESS_RF'))
                     logging.info("RF reconnected")
                     return True, "OK"
                 else:
@@ -1788,17 +1803,23 @@ class Controller:
             self.fault_device_init.append('RRG')
         
         try:
-            if settings.get('TYPE_RF') == "APEL_M_1_5PDC":
+            type_rf = settings.get('TYPE_RF')
+            if type_rf == "APEL_M_1_5PDC":
                 self.rf = APEL_M_1_5PDC(settings.get('PORT_RF'), device_id=settings.get('ADDRESS_RF'))
                 self.ok_device_init.append('APEL_M_1_5PDC')
+            elif type_rf == "RSG1000S":
+                self.rf = RSG1000S(settings.get('PORT_RF'), device_id=settings.get('ADDRESS_RF'))
+                self.ok_device_init.append('RSG1000S')
+            
         except Exception as e:
             logging.error(f"Ошибка при инициализации Генератора: {e}")
             self.init_is_successfully = False
             self.fault_device_init.append('RF')
 
         try:
-            self.sensor_water = SensorWater()
-            self.ok_device_init.append('sensor_water')
+            if settings.get('check_water_flow'):
+                self.sensor_water = SensorWater()
+                self.ok_device_init.append('sensor_water')
         except Exception as e:
             logging.error(f"Ошибка при инициализации sensor_water: {e}")
             self.init_is_successfully = False
