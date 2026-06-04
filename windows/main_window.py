@@ -751,7 +751,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             except Exception as e:
                 logging.error(f"Error reading sensor values: {e}, state={current_state}, plasma_on={plasma_on}", exc_info=True)
                 values = {'pressure': 0.0, 'water': 0.0}
-                
+
         except Exception as e:
             error_msg = str(e)
             error_code = getattr(e, 'errno', None)
@@ -798,7 +798,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 try:
                     if values_adc and values_adc.get('P') is not None:
                         pressure_voltage = fun.bit_u(float(values_adc['P']))
-                        print(pressure_voltage)
                         if pressure_voltage < 4.347 and not led_vacuum:
                             self.controller.handle_command('on_led_vacuum')
                         elif pressure_voltage >= 4.347 and led_vacuum:
