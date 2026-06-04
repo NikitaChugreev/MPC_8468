@@ -325,6 +325,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.timer_update_values = QTimer()
         self.timer_update_values.timeout.connect(self.update_values)
 
+        self.PressProgress.setMaximum(100)
+
         buttons_commands = {
             'PressZad': self.PressZad,
             'TimeZad': self.TimeZad,
@@ -721,7 +723,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         plasma_on = getattr(self.controller, '_cached_plasma_status', False)
 
         values = {'pressure': 0.0, 'water': 0.0}
-        
+        values_adc = None
+
         try:
             values_adc = self.controller.get_values_adc()
             if values_adc is None:
@@ -744,9 +747,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     values['pressure'] = 0.0
                 if values['water'] is None:
                     values['water'] = 0.0
+
             except Exception as e:
                 logging.error(f"Error reading sensor values: {e}, state={current_state}, plasma_on={plasma_on}", exc_info=True)
                 values = {'pressure': 0.0, 'water': 0.0}
+                
         except Exception as e:
             error_msg = str(e)
             error_code = getattr(e, 'errno', None)
@@ -775,39 +780,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     'pressure': pressure_raw if pressure_raw is not None else 0.0,
                     'water': water_raw if water_raw is not None else 0.0
                 }
-                
-                if pressure_raw is not None:
-                    try:
-                        pressure_value = float(pressure_raw)
-                        if pressure_value < 10:
-                            new_pressure_text = f"{pressure_value:.2f}"
-                        else:
-                            new_pressure_text = f"{int(pressure_value)}"
-                        self.PressZnach.setText(new_pressure_text)
-                    except Exception as pe:
-                        logging.error(f"update_values: Error updating pressure display: {pe}")
-                        values['pressure'] = 0.0
-                
-                if water_raw is not None:
-                    try:
-                        new_water_text = f"{water_raw:.3f}"
-                        self.WLabelS.setText(new_water_text)
-                    except Exception as we:
-                        logging.error(f"update_values: Error updating water display: {we}")
-                        values['water'] = 0.0
+
             except Exception as fallback_error:
                 values = {'pressure': 0.0, 'water': 0.0}
                 logging.error(f'update_values: Error updating: {fallback_error}')
         
+        states = None
         try:
             states = self.controller.handle_command('get_states')
+        except Exception as e:
+            logging.error(f"Error getting states: {e}")
+
+        try:
             if states and isinstance(states, dict):
                 led_vacuum = states.get('led_vacuum', False)
                 
                 try:
-                    adc_values = self.controller.get_values_adc()
-                    if adc_values and adc_values.get('P') is not None:
-                        pressure_voltage = fun.bit_u(float(adc_values['P']))
+                    if values_adc and values_adc.get('P') is not None:
+                        pressure_voltage = fun.bit_u(float(values_adc['P']))
                         print(pressure_voltage)
                         if pressure_voltage < 4.347 and not led_vacuum:
                             self.controller.handle_command('on_led_vacuum')
@@ -841,7 +831,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             logging.error(f"Error updating water display: {e}, value: {values.get('water')}")
             self.WLabelS.setText("0.000")
     
-        self.PressProgress.setMaximum(100)
+        
         try:
             press_znach = float(self.PressZnach.text())
             press_zad = float(self.PressZad.text())
@@ -868,7 +858,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             logging.error(f"Error calculating pressure progress: {e}, PressZnach: {self.PressZnach.text()}, PressZad: {self.PressZad.text()}")
         
         if self.user_mode == 'Technologist':
-            if (self.plasma_process.current_state in ['idle', 'fault'] and not self.HFButton.isChecked()):
+            if (current_state in ['idle', 'fault'] and not self.HFButton.isChecked()):
                 button_text_is_stop = self.VEButton.text() == self.translator.tr('stop_venting_gas')
                 if self.VEButton.isChecked() and button_text_is_stop:
                     self.VEButton.setEnabled(True)
@@ -882,15 +872,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             self.VEButton.setEnabled(True)
                     except (ValueError, TypeError) as e:
                         logging.error(f"Error checking pressure for VEButton enable in update_values: {e}")
-        
-        states = None
-        try:
-            states = self.controller.handle_command('get_states')
-            if states is None:
-                states = {}
-
-        except Exception as e:
-            states = {}
         
         try:
             if states is None:
