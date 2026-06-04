@@ -152,9 +152,7 @@ class ReadRFWorker(QObject):
                     if not self._running:
                         break
                     
-                    if self._consecutive_failures >= self._max_consecutive_failures:
-                        process_logger.warning(f"[ReadRFWorker] Skipping read due to {self._consecutive_failures} consecutive failures (max={self._max_consecutive_failures})")
-                    else:
+                    if not self._consecutive_failures >= self._max_consecutive_failures:
                         status = self.controller.rf.read_status()
                         read_time = time.time() - read_start
                         read_count += 1
@@ -163,30 +161,20 @@ class ReadRFWorker(QObject):
                             break
                         
                         if read_time > 1.5:
-                            process_logger.warning(f"[ReadRFWorker] Read #{read_count} took too long: {read_time:.3f}s > 1.5s, treating as failure")
                             status = None
                     
                     if status:
                         self._consecutive_failures = 0
-                        process_logger.debug(f"[ReadRFWorker] Read #{read_count}: took {read_time:.3f}s, forward={status.get('forward_w', 0)}, reflected={status.get('reflect_w', 0)}")
-                        if read_time > 1.0:
-                            process_logger.warning(f"[ReadRFWorker] SLOW READ #{read_count}: {read_time:.3f}s > 1s")
                         self.rfDataRead.emit(status)
                     else:
                         if read_time > 0:
                             self._consecutive_failures += 1
-                            process_logger.warning(f"[ReadRFWorker] Read #{read_count}: returned None, took {read_time:.3f}s (consecutive failures: {self._consecutive_failures})")
-                        else:
-                            process_logger.debug(f"[ReadRFWorker] Read skipped (consecutive failures: {self._consecutive_failures})")
                         
-                        # Если слишком много неудач подряд, пытаемся переподключиться (только при реальном чтении)
                         if read_time > 0 and self._consecutive_failures >= self._max_consecutive_failures:
-                            process_logger.warning(f"[ReadRFWorker] Too many consecutive failures ({self._consecutive_failures}), attempting reconnect...")
                             try:
                                 reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
                                 if reconnect_success:
-                                    process_logger.info(f"[ReadRFWorker] RF generator reconnected successfully")
-                                    self._consecutive_failures = 0  # Сбрасываем счетчик после переподключения
+                                    self._consecutive_failures = 0 
                                 else:
                                     process_logger.warning(f"[ReadRFWorker] Failed to reconnect RF generator: {reconnect_msg}")
                             except Exception as reconnect_error:
@@ -198,15 +186,12 @@ class ReadRFWorker(QObject):
                         break
                 except Exception as e:
                     self._consecutive_failures += 1
-                    process_logger.error(f"[ReadRFWorker] Error reading RF status #{read_count}: {e} (consecutive failures: {self._consecutive_failures})")
                     logging.error(f"Error reading RF status: {e}")
                     
                     if self._consecutive_failures >= self._max_consecutive_failures:
-                        process_logger.warning(f"[ReadRFWorker] Too many consecutive failures ({self._consecutive_failures}), attempting reconnect...")
                         try:
                             reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
                             if reconnect_success:
-                                process_logger.info(f"[ReadRFWorker] RF generator reconnected successfully after error")
                                 self._consecutive_failures = 0
                             else:
                                 process_logger.warning(f"[ReadRFWorker] Failed to reconnect RF generator after error: {reconnect_msg}")
@@ -220,7 +205,6 @@ class ReadRFWorker(QObject):
                 
                 if self._consecutive_failures >= self._max_consecutive_failures:
                     interval_seconds = 10
-                    process_logger.warning(f"[ReadRFWorker] Using extended interval {interval_seconds}s due to {self._consecutive_failures} consecutive failures (max={self._max_consecutive_failures})")
                 else:
                     interval_seconds = 2
                 
@@ -412,7 +396,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             
 
         else:
-            self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_init_devices') + str(self.controller.fault_device_init))
+            info_text = self.translator.tr('error_init_devices') + str(self.controller.fault_device_init)
+            self.show_msg(text=self.translator.tr('warning'), info_text=info_text)
             self.close()
 
     def showEvent(self, event):
@@ -902,7 +887,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         else:
                             self.VEButton.setEnabled(True)
                     except (ValueError, TypeError) as e:
-                        logging.error(f"Error checking pressure for VEButton enable in update_values: {e}, PressZnach: {self.PressZnach.text()}, PressZad: {self.PressZad.text()}")
+                        logging.error(f"Error checking pressure for VEButton enable in update_values: {e}")
         
         states = None
         try:
@@ -1267,7 +1252,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     venting_logger.debug(f"[start_venting_task] get_valves_states took {states_check_time:.3f}s")
                                     
                                     if not isinstance(valves_states, dict):
-                                        venting_logger.error(f"[start_venting_task] get_valves_states returned unexpected type: {type(valves_states)}, value: {valves_states}")
+
                                         if states_check_time > 1.0:
                                             venting_logger.warning(f"[start_venting_task] SLOW get_valves_states: {states_check_time:.3f}s > 1s")
 
@@ -2154,8 +2139,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     
     @QtCore.pyqtSlot()
     def _on_plasma_stop_error(self):
-        critical_msg = f"{self.translator.tr('error_turn_off_plasma')}\n\n⚠️ КРИТИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ: Плазма может быть еще включена!\nПопробуйте отключить снова или проверьте связь с генератором."
-        self.show_msg(text=self.translator.tr('warning'), info_text=critical_msg)
+        self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_turn_off_plasma'))
         self.update_status(self.translator.tr('error_turn_off_plasma'))
 
     def _process_stop_gases(self):
@@ -2715,7 +2699,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # НО если кнопка уже нажата и текст = "остановить напуск газа", она должна быть доступна
         # Проверка выполняется ПОСЛЕ всех других установок, чтобы иметь приоритет
         if self.user_mode == 'Technologist':
-            if (self.plasma_process.current_state in ['idle', 'fault'] and not self.HFButton.isChecked()):  # Плазма не должна быть включена
+            if (self.plasma_process.current_state in ['idle', 'fault'] and not self.HFButton.isChecked()):
                 button_text_is_stop = self.VEButton.text() == self.translator.tr('stop_venting_gas')
                 if self.VEButton.isChecked() and button_text_is_stop:
                     self.VEButton.setEnabled(True)
@@ -2726,7 +2710,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         if press_znach >= press_zad:
                             self.VEButton.setEnabled(False)
                     except (ValueError, TypeError) as e:
-                        logging.error(f"Error checking pressure for VEButton enable in check_permissions: {e}, PressZnach: {self.PressZnach.text()}, PressZad: {self.PressZad.text()}")
+                        logging.error(f"Error checking pressure for VEButton enable in check_permissions: {e}")
 
         if settings['time_pump_for_service'] > settings['max_time_pump_for_service']:
             self.NIButton.setStyleSheet('background-color: red')
