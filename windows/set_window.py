@@ -16,7 +16,7 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
     def __init__(self, parent=None):
         super(SetWindow, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowTitleHint)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowTitleHint)
         self.setWindowTitle('GN')
         self.showFullScreen()
 
@@ -143,7 +143,7 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
             msg.setDefaultButton(None)
             ok_button = msg.button(QMessageBox.Ok)
             if ok_button:
-                ok_button.setFocusPolicy(QtCore.Qt.NoFocus)
+                ok_button.setFocusPolicy(Qt.NoFocus)
                 ok_button.clearFocus()
                 msg.setFocus()
             msg.show()
