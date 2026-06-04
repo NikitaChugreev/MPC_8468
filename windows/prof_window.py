@@ -205,7 +205,7 @@ class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
         set.show()
 
     def power_off(self):
-        import os
+        import subprocess
 
         self.time_work = time.time() - self.parent().time_start_work
         last_time = settings.get('time_work', 0)
@@ -213,5 +213,5 @@ class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
         settings.update({'time_work': current_time})
         save_settings(settings)
         
-        os.system("sudo shutdown -h now")
+        subprocess.run(['shutdown', '-h', 'now'])
 

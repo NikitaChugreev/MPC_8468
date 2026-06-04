@@ -189,7 +189,11 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
             btn.setText(btn.text() + ' ' + recipes[str(i+1)]['title'])
 
     def open_recipe(self):
-        num_recipe = int(self.sender().objectName()[6]) if len(self.sender().objectName()) == 7 else int(self.sender().objectName()[6:8])
+        btn_name = self.sender().objectName()
+        if not btn_name.startswith('Button'):
+            logging.error(f"Unexpected button name: {btn_name}")
+            return
+        num_recipe = int(btn_name.replace('Button', ''))
 
         style_on = 'text-align: left; background-color: rgb(120, 220, 220); border: 1px solid rgb(120, 120, 120); border-radius: 2px;'
         style_off = 'text-align: left; background-color: rgb(220, 220, 220); border: 1px solid rgb(120, 120, 120); border-radius: 2px;'
@@ -220,8 +224,14 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
 
         recipes[str(self.RecNumber.text())]['title'] = self.TitleLine.text()
         recipes[str(self.RecNumber.text())]['com'] = self.ComText.toPlainText()
-        recipes[str(self.RecNumber.text())]['ResPressure'] = float(self.PressLine.text())
-        recipes[str(self.RecNumber.text())]['power'] = int(self.PowerLine.text())
+        try:
+            recipes[str(self.RecNumber.text())]['ResPressure'] = float(self.PressLine.text())
+        except ValueError:
+            recipes[str(self.RecNumber.text())]['ResPressure'] = 0.1
+        try:
+            recipes[str(self.RecNumber.text())]['power'] = int(self.PowerLine.text())
+        except ValueError:
+            recipes[str(self.RecNumber.text())]['power'] = 0    
         recipes[str(self.RecNumber.text())]['time'] = self.TimeLine.text()
 
         for i in range(1, number_gases + 1):
@@ -259,7 +269,8 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
 
     def copy_recipe(self):
         try:
-            self.data_for_copy = self.parent().get_current_recipe()
+            if self.parent() is not None:
+                self.data_for_copy = self.parent().get_current_recipe()
             
             if self.data_for_copy is None:
                 logging.error("copy_recipe: get_current_recipe returned None")

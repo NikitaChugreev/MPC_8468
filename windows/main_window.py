@@ -17,11 +17,15 @@ from state_machine import PlasmaAutoProcess, process_logger
 
 from config.settings import settings
 
+pressure_atm = 1000.0
+
 number_gases = settings.get('NUMBER_GASES', 2)
 if number_gases == 3:
     from ui.ui_ser.ui_3 import Ui_MainWindow
+    ui_dir = 'ui/ui_ser/ui_3'
 elif number_gases == 2:
     from ui.ui_ser.ui_2 import Ui_MainWindow
+    ui_dir = 'ui/ui_ser/ui_2'
 
 from windows.prof_window import ProfWindow
 from windows.rec_window import RecWindow
@@ -772,19 +776,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 except Exception as reconnect_error:
                     logging.error(f"update_values: Error scheduling sensor reconnection: {reconnect_error}")
             
-            try:
-                pressure_raw = self.controller.handle_command('get_sensor_pressure')
-                water_raw = self.controller.handle_command('get_sensor_water')
-            
-                values = {
-                    'pressure': pressure_raw if pressure_raw is not None else 0.0,
-                    'water': water_raw if water_raw is not None else 0.0
-                }
-
-            except Exception as fallback_error:
-                values = {'pressure': 0.0, 'water': 0.0}
-                logging.error(f'update_values: Error updating: {fallback_error}')
-        
         states = None
         try:
             states = self.controller.handle_command('get_states')
@@ -798,14 +789,40 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 try:
                     if values_adc and values_adc.get('P') is not None:
                         pressure_voltage = fun.bit_u(float(values_adc['P']))
-                        if pressure_voltage < 4.347 and not led_vacuum:
+                        pressure_led = settings.get('PRESSURE_LED', 4.347)
+                        if pressure_voltage < pressure_led and not led_vacuum:
                             self.controller.handle_command('on_led_vacuum')
-                        elif pressure_voltage >= 4.347 and led_vacuum:
+                        elif pressure_voltage >= pressure_led and led_vacuum:
                             self.controller.handle_command('off_led_vacuum')
                 except Exception as adc_error:
-                    pass
+                    logging.debug(f"ADC error in LED vacuum: {adc_error}")
         except Exception as e:
             logging.error(f"Error managing LED vacuum: {e}")
+
+        try:
+            if states and isinstance(states, dict):
+                current_led_start_state = states.get('led_start', False)
+                button_enabled = self.ButtonStart.isEnabled()
+                button_text_is_start = self.ButtonStart.text() == self.translator.tr('start')
+                
+                should_led_start_be_on = button_enabled and button_text_is_start
+                
+                if should_led_start_be_on and not current_led_start_state:
+                    self.controller.handle_command('on_led_start')
+                elif not should_led_start_be_on and current_led_start_state:
+                    self.controller.handle_command('off_led_start')
+                
+                current_led_stop_state = states.get('led_stop', False)
+                button_text_is_stop = self.ButtonStart.text() == self.translator.tr('stop')
+                
+                should_led_stop_be_on = button_enabled and button_text_is_stop
+                
+                if should_led_stop_be_on and not current_led_stop_state:
+                    self.controller.handle_command('on_led_stop')
+                elif not should_led_stop_be_on and current_led_stop_state:
+                    self.controller.handle_command('off_led_stop')
+        except Exception as e:
+            logging.error(f"Error syncing LED start/stop: {e}")
 
         try:
             pressure_value = float(values['pressure'])
@@ -830,7 +847,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             logging.error(f"Error updating water display: {e}, value: {values.get('water')}")
             self.WLabelS.setText("0.000")
     
-        
         try:
             press_znach = float(self.PressZnach.text())
             press_zad = float(self.PressZad.text())
@@ -840,15 +856,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             else:
                 logZnach = math.log10(max(0.001, press_znach))
                 logZad = math.log10(max(0.001, press_zad))
-                logMax = math.log10(1000.0)
+                logMax = math.log10(pressure_atm)
                 
                 if logMax != logZad and logMax > logZad:
                     progressPressure = 100.0 - ((logZnach - logZad) / (logMax - logZad)) * 100.0
                     progressPressure = max(0.0, min(100.0, progressPressure))
                     self.PressProgress.setValue(round(progressPressure))
                 else:
-                    if press_zad > 0 and press_zad < 1000:
-                        progressPressure = 100.0 - ((press_znach - press_zad) / (1000.0 - press_zad)) * 100.0
+                    if press_zad > 0 and press_zad < pressure_atm:
+                        progressPressure = 100.0 - ((press_znach - press_zad) / (pressure_atm - press_zad)) * 100.0
                         progressPressure = max(0.0, min(100.0, progressPressure))
                         self.PressProgress.setValue(round(progressPressure))
                     else:
@@ -871,41 +887,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             self.VEButton.setEnabled(True)
                     except (ValueError, TypeError) as e:
                         logging.error(f"Error checking pressure for VEButton enable in update_values: {e}")
-        
-        try:
-            if states is None:
-                states = {}
-            current_led_start_state = states.get('led_start', False)
-            button_enabled = self.ButtonStart.isEnabled()
-            button_text_is_start = self.ButtonStart.text() == self.translator.tr('start')
-            
-            should_led_start_be_on = button_enabled and button_text_is_start
-            
-            if should_led_start_be_on and not current_led_start_state:
-                self.controller.handle_command('on_led_start')
-            elif not should_led_start_be_on and current_led_start_state:
-                self.controller.handle_command('off_led_start')
-            
-            current_led_stop_state = states.get('led_stop', False)
-            button_text_is_stop = self.ButtonStart.text() == self.translator.tr('stop')
-            
-            should_led_stop_be_on = button_enabled and button_text_is_stop
-            
-            if should_led_stop_be_on and not current_led_stop_state:
-                self.controller.handle_command('on_led_stop')
-            elif not should_led_stop_be_on and current_led_stop_state:
-                self.controller.handle_command('off_led_stop')
-        except Exception as e:
-            logging.error(f"Error syncing LED start/stop in update_values: {e}")
 
     def update_ui_texts(self):
         self.LabelProf_3.setText(self.translator.tr('status'))
         self.LabelProf.setText(self.translator.tr('recipe'))
         self.ButtonStart.setText(self.translator.tr('start'))
         self.ButtonRecept.setText(self.translator.tr('recipes'))
-        self.ButtonRecept.setIcon(QtGui.QIcon('ui/Pictures13/Recept.png'))
+        self.ButtonRecept.setIcon(QtGui.QIcon(ui_dir + 'Recept.png'))
         self.ButtonOutput.setText(self.translator.tr('exit'))
-        self.ButtonOutput.setIcon(QtGui.QIcon('ui/Pictures13/Exit.png'))
+        self.ButtonOutput.setIcon(QtGui.QIcon(ui_dir + 'Exit.png'))
         self.NIButton.setText(self.translator.tr('turn_on_pump'))
         self.VEButton.setText(self.translator.tr('start_venting_gas'))
         self.HFButton.setText(self.translator.tr('turn_on_plasma'))
@@ -944,18 +934,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.controller.handle_command('on_bp')
 
         self.ButtonStart.setText(self.translator.tr('stop'))
-        self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
+        self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
         QtWidgets.QApplication.processEvents()
         
         result = self.plasma_process.start_process()
         if not result:
             self.ButtonStart.setText(self.translator.tr('start'))
-            self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
             QtWidgets.QApplication.processEvents()
         else:
             if self.ButtonStart.text() != self.translator.tr('stop'):
                 self.ButtonStart.setText(self.translator.tr('stop'))
-                self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
                 QtWidgets.QApplication.processEvents()
 
     def on_start_button_clicked(self):
@@ -965,7 +955,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             if self.ButtonStart.text() != self.translator.tr('start'):
                 self.ButtonStart.setText(self.translator.tr('start'))
-                self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
                 QtWidgets.QApplication.processEvents()
             
             if self.ButtonStart.text() == self.translator.tr('start'):          
@@ -994,7 +984,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             QTimer.singleShot(1000, lambda: self.update_status(self.translator.tr('system_ready_oper')))    
                         else:
                             self.ButtonStart.setText(self.translator.tr('stop'))
-                            self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
+                            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
                             QtWidgets.QApplication.processEvents()
                             
                             self.timer_venting_atm.stop()
@@ -1004,12 +994,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             result = self.plasma_process.start_recipe()
                             if not result:
                                 self.ButtonStart.setText(self.translator.tr('start'))
-                                self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
                                 QtWidgets.QApplication.processEvents()
                             else:
                                 if self.ButtonStart.text() != self.translator.tr('stop'):
                                     self.ButtonStart.setText(self.translator.tr('stop'))
-                                    self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
+                                    self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
                                     QtWidgets.QApplication.processEvents()
                     else:
                         self.TimeZnach.setText('00:00')
@@ -1019,19 +1009,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         self.TimeProgress.setValue(0)
 
                         self.ButtonStart.setText(self.translator.tr('stop'))
-                        self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
+                        self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
                         
                         QtWidgets.QApplication.processEvents()
                         
                         result = self.plasma_process.start_recipe()
                         if not result:
                             self.ButtonStart.setText(self.translator.tr('start'))
-                            self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
                             QtWidgets.QApplication.processEvents()
                         else:
                             if self.ButtonStart.text() != self.translator.tr('stop'):
                                 self.ButtonStart.setText(self.translator.tr('stop'))
-                                self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
+                                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
                                 QtWidgets.QApplication.processEvents()
         else:
             if current_state == 'init_recipe' and self.plasma_process.current_step <= 2:
@@ -1040,7 +1030,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if current_state not in ['idle', 'fault']:
                 self.plasma_process.stop_process()
                 self.ButtonStart.setText(self.translator.tr('start'))
-                self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
 
     def on_start_pump_clicked(self):
         if self.NIButton.text() == self.translator.tr('turn_on_pump'):
@@ -1097,8 +1087,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.NIButton.setChecked(True)
 
     def on_venting_clicked(self):
-        venting_start_time = time.time()
-        
         if self.VEButton.text() == self.translator.tr('start_venting_gas'):
             if self.plasma_process.current_state == 'idle':
                 validation_start = time.time()
@@ -1123,8 +1111,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     
                     def start_venting_task():
                         try:
-                            task_start = time.time()
-                            
                             QTimer.singleShot(0, lambda: main_window_ref.update_status(main_window_ref.translator.tr('setting_flows')))
                             
                             success_set_flow = False
@@ -1534,11 +1520,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             try:
                 water_flow = self.controller.handle_command('get_sensor_water')
                 if water_flow == 0.0:
-                    self.handle_error(self.translator.tr('error_water_flow_zero'), need_reboot=False)
+                    self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_water_flow_zero'))
                     water_ok = False
             except Exception as e:
                 logging.error(f"start_recipe: Error checking water flow: {e}")
-                self.handle_error(f"{self.translator.tr('error_checking_water_flow')}: {e}", need_reboot=False)
+                self.show_msg(text=self.translator.tr('warning'), info_text=self.translator.tr('error_checking_water_flow'))
                 water_ok = False
 
         if not self.timer_plasma.isActive():
@@ -2371,8 +2357,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._rf_thread_busy = False
     
     def on_rf_data_read(self, status):
-        rf_data_start = time.time()
-        
         if status is None:
             return
         
@@ -2400,7 +2384,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             else:
                 if not rf_on and forward_power == 0 and reflected_power == 0:
-                    ui_update_start = time.time()
                     if hasattr(self, 'HFPowerZnach'):
                         self.HFPowerZnach.setText("0")
                     if hasattr(self, 'HFCurrentZnach'):
@@ -2457,17 +2440,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return False, self.translator.tr('error_format_flow')
         except Exception as e:
             return False, f"{self.translator.tr('error_validation')}: {str(e)}."
-
-    def update_pressure_display(self, pressure_value):
-        try:
-            pressure_float = float(pressure_value)
-            if pressure_float < 10:
-                self.PressZnach.setText(f"{pressure_float:.2f}")
-            else:
-                self.PressZnach.setText(f"{int(pressure_float)}")
-        except (ValueError, TypeError) as e:
-            logging.error(f"Error formatting pressure: {e}, value: {pressure_value}")
-            self.PressZnach.setText("0.00")
     
     def check_permissions(self):
         process_state = self.plasma_process.current_state
@@ -2475,13 +2447,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if process_state not in ['idle', 'fault']:
             if self.ButtonStart.text() != self.translator.tr('stop'):
                 self.ButtonStart.setText(self.translator.tr('stop'))
-                self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
             self.ButtonStart.setEnabled(True)
         else:
             button_text = self.ButtonStart.text()
             if button_text != self.translator.tr('start'):
                 self.ButtonStart.setText(self.translator.tr('start'))
-                self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
             self.ButtonStart.setEnabled(True)
 
         self.NIButton.setEnabled(True)
@@ -2591,7 +2563,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.ButtonStart.setEnabled(True)
             elif button_text != self.translator.tr('start'):
                 self.ButtonStart.setText(self.translator.tr('start'))
-                self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
                 self.ButtonStart.setEnabled(True)
             else:
                 self.ButtonStart.setEnabled(True)
@@ -2600,32 +2572,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.VEButton.setEnabled(True)
             self.HFButton.setEnabled(True)
             self.VE0Button.setEnabled(True)
-        
-        try:
-            states = self.controller.handle_command('get_states')
-            if states and isinstance(states, dict):
-                current_led_start_state = states.get('led_start', False)
-                button_enabled = self.ButtonStart.isEnabled()
-                button_text_is_start = self.ButtonStart.text() == self.translator.tr('start')
-                
-                should_led_start_be_on = button_enabled and button_text_is_start
-                
-                if should_led_start_be_on and not current_led_start_state:
-                    self.controller.handle_command('on_led_start')
-                elif not should_led_start_be_on and current_led_start_state:
-                    self.controller.handle_command('off_led_start')
-                
-                current_led_stop_state = states.get('led_stop', False)
-                button_text_is_stop = self.ButtonStart.text() == self.translator.tr('stop')
-                
-                should_led_stop_be_on = button_enabled and button_text_is_stop
-                
-                if should_led_stop_be_on and not current_led_stop_state:
-                    self.controller.handle_command('on_led_stop')
-                elif not should_led_stop_be_on and current_led_stop_state:
-                    self.controller.handle_command('off_led_stop')
-        except Exception as e:
-            logging.error(f"Error syncing LED start/stop: {e}")
+
         
         if not self.ButtonStart.isEnabled() and self.user_mode != 'Operator':
             self.PressZad.setEnabled(True)

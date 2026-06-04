@@ -94,18 +94,21 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
         self.ButtonBuzzer.setChecked(self.ButtonBuzzer.text() == self.translator.tr('yes'))
     
     def save(self):
-        settings.update({
-            'use_pass_technologist': True if self.ButtonPass.text() == self.translator.tr('yes') else False,
-            'time_venting': int(self.ClockVE0.text()),
-            'time_pump': int(self.ClockNI.text()),
-            'coef_rrg1': float(self.userInputRrgConvCoeffPlace_1.text()),
-            'coef_rrg2': float(self.userInputRrgConvCoeffPlace_2.text()),
-            'coef_rrg3': float(self.userInputRrgConvCoeffPlace_3.text()),
-            'coef_rrg4': float(self.userInputRrgConvCoeffPlace_4.text()),
-            'LANG': self.comboBoxLang.currentIndex(),
-            'enable_sound': True if self.ButtonBuzzer.text() == self.translator.tr('yes') else False
-        })
-        
-        save_settings(settings)
-        
-        self.close()
+        try:
+            settings.update({
+                'use_pass_technologist': True if self.ButtonPass.text() == self.translator.tr('yes') else False,
+                'time_venting': int(self.ClockVE0.text()),
+                'time_pump': int(self.ClockNI.text()),
+                'coef_rrg1': float(self.userInputRrgConvCoeffPlace_1.text()),
+                'coef_rrg2': float(self.userInputRrgConvCoeffPlace_2.text()),
+                'coef_rrg3': float(self.userInputRrgConvCoeffPlace_3.text()),
+                'coef_rrg4': float(self.userInputRrgConvCoeffPlace_4.text()),
+                'LANG': self.comboBoxLang.currentIndex(),
+                'enable_sound': True if self.ButtonBuzzer.text() == self.translator.tr('yes') else False
+            })
+            save_settings(settings)
+            self.close()
+
+        except ValueError:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Ошибка", f"Введены недопустимые значения. Пожалуйста, проверьте правильность введенных данных.")

@@ -22,6 +22,7 @@ DEFAULT_SETTINGS = {
     "MIN_POWER_BP": 10,
     "MAX_POWER_BP": 1000,
     "ResPressure": 0.05,
+    "PRESSURE_LED": 4.434,
     "use_pass_technologist": True,
     "time_venting": 60,
     "time_pump": 20,
