@@ -1,5 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import Qt
+
 from windows.key_window import KeyWindow
 
 from config.settings import settings, save_settings
