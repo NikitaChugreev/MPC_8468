@@ -79,7 +79,6 @@ class ReadFlowsWorker(QObject):
         try:
             for num_rrg in self.active_rrgs:
                 if not self._running:
-                    logging.debug(f"ReadFlowsWorker stopped, breaking loop at RRG {num_rrg}")
                     break
 
                 try:
@@ -677,7 +676,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.flow_worker = flow_worker
 
             flow_thread.start()
-            logging.debug(f"Flow thread started for RRGs: {active_rrgs}")
         except Exception as e:
             logging.error(f"Error starting flow thread: {e}")
             with self._flow_thread_lock:
@@ -693,7 +691,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.last_values[f'flow_rrg{key}'] = float(value)
         attr_name = f"VE{key}FlowZnach"
         if not hasattr(self, attr_name):
-            logging.warning(f"on_flow_read: виджет {attr_name!r} не найден")
             return
         label = getattr(self, attr_name)
         label.setText(f"{float(value):.1f}")
@@ -718,19 +715,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.update_status(self.translator.tr('gas_inlet_completed'))
         except Exception as e:
             logging.error(f"DEBUG: ERROR in _update_ui_after_stop: {e}", exc_info=True)
-            logging.info("=" * 80)
 
     def update_values(self):
         current_state = getattr(self.plasma_process, 'current_state', 'unknown')
         plasma_on = getattr(self.controller, '_cached_plasma_status', False)
-        timer_active = self.timer_update_values.isActive() if hasattr(self, 'timer_update_values') else False
 
         values = {'pressure': 0.0, 'water': 0.0}
         
         try:
             values_adc = self.controller.get_values_adc()
             if values_adc is None:
-                logging.warning(f"update_values: get_values_adc returned None - state={current_state}, plasma_on={plasma_on}")
                 values_adc = {'P': None, 'T': None}
 
             if values_adc.get('P') is not None:
@@ -756,7 +750,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         except Exception as e:
             error_msg = str(e)
             error_code = getattr(e, 'errno', None)
-            logging.error(f"update_values: CRITICAL ERROR in outer try block: {e}, errno={error_code}, state={current_state}, plasma_on={plasma_on}", exc_info=True)
+            logging.error(f"update_values: CRITICAL ERROR in outer try block: {e}, errno={error_code}", exc_info=True)
             
             if error_code == 121 or 'I/O error' in error_msg or 'Remote I/O' in error_msg:
                 try:
@@ -834,7 +828,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.PressZnach.setText(new_pressure_text)
         
         except (ValueError, TypeError) as e:
-            logging.error(f"Error converting pressure to float: {e}, value: {values.get('pressure')}, state={current_state}, plasma_on={plasma_on}")
+            logging.error(f"Error converting pressure to float: {e}, value: {values.get('pressure')}")
             self.PressZnach.setText("0.00")
 
         try:
@@ -844,7 +838,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             else:
                 self.WLabelS.setText("0.000")
         except Exception as e:
-            logging.error(f"Error updating water display: {e}, value: {values.get('water')}, state={current_state}, plasma_on={plasma_on}")
+            logging.error(f"Error updating water display: {e}, value: {values.get('water')}")
             self.WLabelS.setText("0.000")
     
         self.PressProgress.setMaximum(100)
@@ -975,13 +969,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
         result = self.plasma_process.start_process()
         if not result:
-            logging.error("start_process returned False, reverting button text")
             self.ButtonStart.setText(self.translator.tr('start'))
             self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
             QtWidgets.QApplication.processEvents()
         else:
             if self.ButtonStart.text() != self.translator.tr('stop'):
-                logging.warning(f"ButtonStart text changed after start_process: {self.ButtonStart.text()}, expected: {self.translator.tr('stop')}")
                 self.ButtonStart.setText(self.translator.tr('stop'))
                 self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
                 QtWidgets.QApplication.processEvents()
@@ -992,7 +984,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if current_state == 'idle':
 
             if self.ButtonStart.text() != self.translator.tr('start'):
-                logging.info(f"on_start_button_clicked: Process is idle but button text is '{self.ButtonStart.text()}', updating to 'start'")
                 self.ButtonStart.setText(self.translator.tr('start'))
                 self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
                 QtWidgets.QApplication.processEvents()
@@ -1037,7 +1028,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                 QtWidgets.QApplication.processEvents()
                             else:
                                 if self.ButtonStart.text() != self.translator.tr('stop'):
-                                    logging.warning(f"ButtonStart text changed after start_recipe: {self.ButtonStart.text()}, expected: {self.translator.tr('stop')}")
                                     self.ButtonStart.setText(self.translator.tr('stop'))
                                     self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
                                     QtWidgets.QApplication.processEvents()
@@ -1060,7 +1050,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             QtWidgets.QApplication.processEvents()
                         else:
                             if self.ButtonStart.text() != self.translator.tr('stop'):
-                                logging.warning(f"ButtonStart text changed after start_recipe: {self.ButtonStart.text()}, expected: {self.translator.tr('stop')}")
                                 self.ButtonStart.setText(self.translator.tr('stop'))
                                 self.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Stop.png'))
                                 QtWidgets.QApplication.processEvents()
@@ -1564,34 +1553,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             
             try:
                 if self._stop_gas_executor is None:
-                    logging.info("DEBUG: Creating new ThreadPoolExecutor...")
                     self._stop_gas_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="stop_gas")
-                    logging.info("DEBUG: ThreadPoolExecutor created")
-                logging.info("DEBUG: Submitting task...")
                 future = self._stop_gas_executor.submit(stop_gases_task)
-                logging.info(f"DEBUG: Task submitted, future: {future}")
             except Exception as e:
                 logging.error(f"DEBUG: Error submitting task to executor: {e}", exc_info=True)
             
             def read_flows_post_stop_task():
                 thread_id = threading.current_thread().ident
-                logging.info(f"DEBUG: read_flows_post_stop_task STARTED in thread {thread_id}")
                 import time
                 for read_count in range(4):
-                    logging.info(f"DEBUG: Post-stop flow read iteration {read_count + 1}/4")
                     time.sleep(0.5)
                     for rrg_num in active_rrgs:
                         try:
                             type_gas = gas_types.get(rrg_num, 0)
-                            logging.info(f"DEBUG: Reading flow for RRG {rrg_num}...")
                             read_start = time.time()
                             current_flow = self.controller.handle_command(
                                 command='read_flow',
                                 num_rrg=rrg_num,
                                 type_gas=type_gas
                             )
-                            read_elapsed = time.time() - read_start
-                            logging.info(f"DEBUG: RRG {rrg_num} flow read completed in {read_elapsed:.3f}s, value: {current_flow}")
                             flow_value = current_flow if current_flow is not None else 0.0
                             QtCore.QMetaObject.invokeMethod(
                                 self,
@@ -1640,7 +1620,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             
                             try:
                                 if hasattr(self, 'stop_rf_reading'):
-                                    logging.info("START PLASMA: Stopping RF reading thread before on_plasma...")
                                     self.stop_rf_reading(wait=False)
                                     time.sleep(0.3)
                                     
@@ -1659,10 +1638,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                         result = self.controller.handle_command('set_power', power=str(power))
                                         if result:
                                             success_set_power = True
-                                            logging.info(f"START PLASMA: Power set successfully: {power}W (attempt {attempt + 1})")
                                             break
-                                        else:
-                                            logging.warning(f"START PLASMA: set_power returned False on attempt {attempt + 1}")
                                     except Exception as e:
                                         logging.error(f"START PLASMA: Error setting power (attempt {attempt + 1}): {e}")
                                     
@@ -1670,7 +1646,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                         time.sleep(0.3)
                                 
                                 if not success_set_power:
-                                    logging.error("START PLASMA: Failed to set power")
                                     QtCore.QMetaObject.invokeMethod(
                                         self,
                                         "_on_plasma_start_error",
@@ -1686,7 +1661,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     try:
                                         result = self.controller.handle_command('on_plasma')
                                         if not result:
-                                            logging.warning(f"START PLASMA: on_plasma command returned False on attempt {attempt + 1}")
                                             if attempt < self.max_attempts - 1:
                                                 time.sleep(0.3)
                                                 continue
@@ -1700,7 +1674,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                                 rf_status = self.controller.rf.read_status()
                                                 if rf_status:
                                                     rf_on = rf_status.get('rf_on', False)
-                                                    logging.info(f"START PLASMA: RF status check (attempt {attempt + 1}, status_read {status_attempt + 1}/3): rf_on={rf_on}")
                                                     if rf_on:
                                                         break
                                                 if status_attempt < 2:
@@ -1710,18 +1683,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                                 success = True
                                                 logging.info(f"START PLASMA: Plasma confirmed ON on attempt {attempt + 1}")
                                                 break
-                                            if rf_status and not rf_on:
-                                                logging.warning(f"START PLASMA: Plasma status rf_on=False on attempt {attempt + 1}, retrying...")
+
+
                                             if not rf_status:
-                                                logging.warning(f"START PLASMA: rf.read_status() returned None on attempt {attempt + 1}")
 
                                                 def reconnect_rf_async():
                                                     try:
-                                                        logging.info(f"[START PLASMA] Attempting to reconnect RF generator (read_status returned None)...")
                                                         reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
-                                                        if reconnect_success:
-                                                            logging.info(f"[START PLASMA] RF generator reconnected successfully (was None)")
-                                                        else:
+                                                        if not reconnect_success:
                                                             logging.warning(f"[START PLASMA] Failed to reconnect RF generator (was None): {reconnect_msg}")
                                                     except Exception as reconnect_error:
                                                         logging.error(f"[START PLASMA] Error reconnecting RF generator (was None): {reconnect_error}")
@@ -1736,11 +1705,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
                                             def reconnect_rf_async():
                                                 try:
-                                                    logging.info(f"[START PLASMA] Attempting to reconnect RF generator (read_status error)...")
                                                     reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
-                                                    if reconnect_success:
-                                                        logging.info(f"[START PLASMA] RF generator reconnected successfully (after error)")
-                                                    else:
+                                                    if not reconnect_success:
                                                         logging.warning(f"[START PLASMA] Failed to reconnect RF generator (after error): {reconnect_msg}")
                                                 except Exception as reconnect_error:
                                                     logging.error(f"[START PLASMA] Error reconnecting RF generator (after error): {reconnect_error}")
@@ -1766,9 +1732,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                         QtCore.Qt.QueuedConnection,
                                         QtCore.Q_ARG(str, 'error_turn_on_plasma')
                                     )
-                                
-                                total_elapsed = time.time() - start_time
-                                logging.info(f"START PLASMA: Task completed in {total_elapsed:.3f}s")
                                 
                             except Exception as e:
                                 elapsed = time.time() - start_time
@@ -1827,7 +1790,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     self.controller.rf.instrument.serial.reset_input_buffer()
                                 if hasattr(self.controller.rf.instrument.serial, 'reset_output_buffer'):
                                     self.controller.rf.instrument.serial.reset_output_buffer()
-                                logging.info("STOP PLASMA: Serial port buffers cleared")
                         except Exception as e:
                             logging.warning(f"STOP PLASMA: Could not clear serial buffers: {e}")
                     
@@ -1855,21 +1817,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     logging.error(f"STOP PLASMA: Error during reconnection attempt: {reconnect_error}")
                         
                         result = self.controller.handle_command('off_plasma')
-                        plasma_off_time = time.time() - plasma_off_start
-                        logging.info(f"STOP PLASMA: off_plasma attempt {plasma_attempt + 1} took {plasma_off_time:.3f}s, result={result}")
                         
                         if result:
-                            logging.info(f"STOP PLASMA: off_plasma succeeded on attempt {plasma_attempt + 1}")
                             break
                         else:
                             if plasma_attempt < max_plasma_attempts - 1:
-                                logging.warning(f"STOP PLASMA: off_plasma failed on attempt {plasma_attempt + 1}, reconnecting and retrying...")
-                                
                                 try:
                                     reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
-                                    if reconnect_success:
-                                        logging.info(f"STOP PLASMA: RF generator reconnected before retry")
-                                    else:
+                                    if not reconnect_success:
                                         logging.error(f"STOP PLASMA: Failed to reconnect RF generator before retry: {reconnect_msg}")
                                 except Exception as reconnect_error:
                                     logging.error(f"STOP PLASMA: Error reconnecting before retry: {reconnect_error}")
@@ -1882,12 +1837,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                             self.controller.rf.instrument.serial.reset_input_buffer()
                                         if hasattr(self.controller.rf.instrument.serial, 'reset_output_buffer'):
                                             self.controller.rf.instrument.serial.reset_output_buffer()
-                                        logging.debug("STOP PLASMA: Serial port buffers cleared before retry")
                                 except Exception as e:
                                     logging.debug(f"STOP PLASMA: Could not clear serial buffers before retry: {e}")
-                    
-                    if not result:
-                        logging.error(f"STOP PLASMA: CRITICAL - Failed to turn off plasma after {max_plasma_attempts} attempts!")
                     
                     time.sleep(0.5)
                     
@@ -2301,7 +2252,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     success = False
                     for attempt in range(self.max_attempts):
                         try:
-                            logging.info(f"PLASMA TIMEOUT: Attempt {attempt + 1}/{self.max_attempts}")
                             result = self.controller.handle_command('off_plasma')
                             if result:
                                 time.sleep(0.3)
@@ -2309,22 +2259,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     rf_status = self.controller.rf.read_status()
                                     if rf_status:
                                         rf_on = rf_status.get('rf_on', True)
-                                        logging.info(f"PLASMA TIMEOUT: RF status check (attempt {attempt + 1}): rf_on={rf_on}")
                                         if not rf_on:
                                             self.controller._cached_plasma_status = False
                                             success = True
-                                            logging.info(f"PLASMA TIMEOUT: Plasma confirmed OFF on attempt {attempt + 1}")
                                             QtCore.QMetaObject.invokeMethod(
                                                 self,
                                                 "_on_plasma_timeout",
                                                 QtCore.Qt.QueuedConnection
                                             )
                                             break
-                                        else:
-                                            logging.warning(f"PLASMA TIMEOUT: Plasma still ON on attempt {attempt + 1}, retrying...")
                                     else:
-                                        logging.warning(f"PLASMA TIMEOUT: rf.read_status() returned None on attempt {attempt + 1}")
-
                                         def reconnect_rf_async():
                                             try:
                                                 reconnect_success, reconnect_msg = self.controller.reconnect_device('RF')
@@ -2352,8 +2296,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                         from concurrent.futures import ThreadPoolExecutor
                                         self._rf_operations_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="RFOps")
                                     self._rf_operations_executor.submit(reconnect_rf_async)
-                            else:
-                                logging.warning(f"PLASMA TIMEOUT: off_plasma command returned False on attempt {attempt + 1}")
                         except Exception as e:
                             logging.error(f"PLASMA TIMEOUT: Error stopping plasma (attempt {attempt + 1}): {e}", exc_info=True)
                         
