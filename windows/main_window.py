@@ -1118,7 +1118,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def on_venting_clicked(self):
         venting_start_time = time.time()
-        venting_logger.info(f"[on_venting_clicked] ENTRY: button_text='{self.VEButton.text()}'")
         
         if self.VEButton.text() == self.translator.tr('start_venting_gas'):
             if self.plasma_process.current_state == 'idle':
@@ -1154,7 +1153,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             flow_setup_start = time.time()
                             for attempt in range(max_attempts_ref):
                                 attempt_start = time.time()
-                                venting_logger.debug(f"[start_venting_task] Flow setup attempt {attempt + 1}/{max_attempts_ref}")
                                 
                                 # Устанавливаем потоки для всех РРГ
                                 set_flow_success = True
@@ -1174,7 +1172,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                             venting_logger.debug(f"[start_venting_task] set_flow RRG{i} took {flow_op_time:.3f}s, result={result}")
                                             
                                             if result is False:
-                                                venting_logger.warning(f"[start_venting_task] Failed to set flow for RRG {i} (attempt {attempt + 1})")
                                                 set_flow_success = False
                                         else:
                                             # Устанавливаем поток в 0 для неактивных РРГ
@@ -1212,7 +1209,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             venting_logger.info(f"[start_venting_task] Flow setup completed in {flow_setup_time:.3f}s, success={success_set_flow}")
                             
                             if success_set_flow:
-                                venting_logger.info(f"[start_venting_task] Flow setup successful, proceeding to valve setup")
                                 # ШАГ 2: Открытие клапанов
                                 valve_setup_start = time.time()
                                 success_open_valve = False
@@ -1281,7 +1277,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     'success': success_valve,
                                     'selected_gases': selected_gases_list
                                 })
-                                venting_logger.info(f"[start_venting_task] Signal emitted")
+
                             else:
                                 main_window_ref._venting_result = {
                                     'success': False,
@@ -1289,15 +1285,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     'selected_gases': selected_gases.copy()
                                 }
                                 
-                                venting_logger.warning(f"[start_venting_task] Flow setup failed, emitting signal")
                                 main_window_ref._venting_result_worker.ventingCompleted.emit({
                                     'success': False,
                                     'error': 'flow_setup_failed',
                                     'selected_gases': selected_gases.copy()
                                 })
                             
-                            task_time = time.time() - task_start
-                            venting_logger.info(f"[start_venting_task] COMPLETED in {task_time:.3f}s")
                         except Exception as e:
                             venting_logger.error(f"[start_venting_task] FATAL ERROR: {e}", exc_info=True)
                             main_window_ref._venting_result = {
@@ -1315,9 +1308,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     if self._venting_executor is None:
                         self._venting_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="VentingGas")
                     self._venting_executor.submit(start_venting_task)
-                    
-                    total_time = time.time() - venting_start_time
-                    venting_logger.info(f"[on_venting_clicked] EXIT: submitted async task, took {total_time:.3f}s")
 
                 else:
                     self.VEButton.setChecked(False)
@@ -1325,12 +1315,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     if settings.get('LANG') == 0:
                         self.VEButton.setStyleSheet('font-size: 20px')
                     self.update_status(msg)
-                    total_time = time.time() - venting_start_time
-                    venting_logger.info(f"[on_venting_clicked] EXIT: validation failed, took {total_time:.3f}s")
 
         else:
             if self._venting_in_progress:
-                venting_logger.warning("[on_venting_clicked] Venting operation already in progress, ignoring stop click")
                 return
             
             self._venting_in_progress = True
@@ -1346,17 +1333,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 except Exception as e:
                     venting_logger.error(f"[on_venting_clicked] Error checking VE{i}Button: {e}")
             
-            venting_logger.info(f"[on_venting_clicked] STOP GASES: Active RRGs: {active_rrgs}, gas types: {gas_types}")
             
             self.update_status(self.translator.tr('stopping_venting_gas'))
             
             def stop_gases_task():
-                venting_logger.info("[stop_gases_task] Task started in background thread")
                 start_time = time.time()
                 
                 try:
                     step1_start = time.time()
-                    venting_logger.info("[stop_gases_task] Step 1 - Stopping flow reading thread")
                     try:
                         flow_thread_running = False
                         try:
@@ -1366,49 +1350,39 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             pass
                         
                         if flow_thread_running:
-                            venting_logger.info("[stop_gases_task] Flow thread is running, stopping...")
                             stop_thread_start = time.time()
                             try:
                                 self.stop_flow_thread(wait=True)
                                 stop_thread_time = time.time() - stop_thread_start
-                                venting_logger.info(f"[stop_gases_task] Flow thread stopped in {stop_thread_time:.3f}s")
                             except Exception as e:
                                 stop_thread_time = time.time() - stop_thread_start
                                 venting_logger.error(f"[stop_gases_task] Error in stop_flow_thread (took {stop_thread_time:.3f}s): {e}", exc_info=True)
                                 try:
                                     if self.flow_thread and self.flow_thread.isRunning():
-                                        venting_logger.warning("[stop_gases_task] Force terminating flow thread")
                                         self.flow_thread.terminate()
                                         if not self.flow_thread.wait(1000):
                                             venting_logger.error("[stop_gases_task] Flow thread did not terminate after 1s")
                                 except Exception as e2:
                                     venting_logger.error(f"[stop_gases_task] Error force terminating flow thread: {e2}")
-                        else:
-                            venting_logger.info("[stop_gases_task] Flow thread is not running")
+                        
                     except Exception as e:
                         venting_logger.error(f"[stop_gases_task] Error stopping flow thread: {e}", exc_info=True)
                     
                     time.sleep(0.1)
-                    step1_time = time.time() - step1_start
-                    venting_logger.info(f"[stop_gases_task] Step 1 completed in {step1_time:.3f}s")
                     
                     step2_start = time.time()
-                    venting_logger.info(f"[stop_gases_task] Step 2 - Closing valves for RRGs: {active_rrgs}")
                     valves_closed = {}
                     for i in active_rrgs:
                         valve_op_start = time.time()
                         try:
-                            venting_logger.info(f"[stop_gases_task] Closing valve VE{i}")
                             result = self.controller.handle_command(f"close_valve_ve{i}")
                             valve_op_time = time.time() - valve_op_start
                             venting_logger.debug(f"[stop_gases_task] close_valve_ve{i} took {valve_op_time:.3f}s, result={result}")
                             
                             if result:
                                 valves_closed[i] = True
-                                venting_logger.info(f"[stop_gases_task] Valve VE{i} closed (assuming success based on command result)")
                             else:
                                 valves_closed[i] = False
-                                venting_logger.warning(f"[stop_gases_task] close_valve_ve{i} returned False")
                             
                             if i < active_rrgs[-1]:
                                 time.sleep(0.05)
@@ -1423,42 +1397,32 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     time.sleep(0.1)
                     
                     step3_start = time.time()
-                    venting_logger.info(f"[stop_gases_task] Step 3 - Setting flows to 0 for RRGs: {active_rrgs}")
                     flows_set_to_zero = {}
                     for rrg_num in active_rrgs:
                         flow_op_start = time.time()
                         try:
                             type_gas = gas_types.get(rrg_num, 0)
-                            venting_logger.info(f"[stop_gases_task] Setting RRG {rrg_num} flow to 0 (type_gas={type_gas})")
                             result = self.controller.handle_command(
                                 command='set_flow',
                                 num_rrg=rrg_num,
                                 flow_lh=0,
                                 type_gas=type_gas
                             )
-                            set_flow_time = time.time() - flow_op_start
-                            venting_logger.debug(f"[stop_gases_task] set_flow RRG{rrg_num} to 0 took {set_flow_time:.3f}s, result={result}")
                             
                             if result:
                                 time.sleep(0.1)
-                                read_flow_start = time.time()
                                 current_flow = self.controller.handle_command(
                                     command='read_flow',
                                     num_rrg=rrg_num,
                                     type_gas=type_gas
                                 )
-                                read_flow_time = time.time() - read_flow_start
-                                venting_logger.debug(f"[stop_gases_task] read_flow RRG{rrg_num} took {read_flow_time:.3f}s, result={current_flow}")
                                 
                                 if current_flow is not None:
                                     flows_set_to_zero[rrg_num] = (abs(current_flow) < 0.1)
-                                    venting_logger.info(f"[stop_gases_task] RRG {rrg_num} flow: {current_flow}, confirmed: {flows_set_to_zero[rrg_num]}")
                                 else:
                                     flows_set_to_zero[rrg_num] = False
-                                    venting_logger.warning(f"[stop_gases_task] read_flow RRG{rrg_num} returned None")
                             else:
                                 flows_set_to_zero[rrg_num] = False
-                                venting_logger.warning(f"[stop_gases_task] set_flow RRG{rrg_num} to 0 returned False")
 
                             if rrg_num < active_rrgs[-1]:
                                 time.sleep(0.05)
@@ -1478,7 +1442,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         
                         for rrg_num, is_zero in flows_set_to_zero.items():
                             if not is_zero:
-                                venting_logger.info(f"[stop_gases_task] Retrying to set RRG {rrg_num} flow to 0")
                                 type_gas = gas_types.get(rrg_num, 0)
                                 for retry in range(3):
                                     try:
@@ -1508,32 +1471,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                         venting_logger.error(f"[stop_gases_task] Error retrying RRG {rrg_num} (retry {retry + 1}): {e}")
                         
                         all_flows_zero = all(flows_set_to_zero.values()) if flows_set_to_zero else False
-                        venting_logger.info(f"[stop_gases_task] After retry - flows: {all_flows_zero}, flows_set_to_zero: {flows_set_to_zero}")
                     
                     if not all_valves_closed:
-                        venting_logger.warning("[stop_gases_task] Some valves not closed, retrying (without state check)...")
                         time.sleep(0.5)
                         
                         for i, is_closed in valves_closed.items():
                             if not is_closed:
-                                venting_logger.info(f"[stop_gases_task] Retrying to close valve VE{i}")
                                 for retry in range(3):
                                     try:
                                         retry_start = time.time()
-                                        result = self.controller.handle_command(f"close_valve_ve{i}")
-                                        retry_time = time.time() - retry_start
-                                        venting_logger.debug(f"[stop_gases_task] Retry {retry + 1}: close_valve_ve{i} took {retry_time:.3f}s, result={result}")
                                         
                                         if result:
                                             valves_closed[i] = True
-                                            venting_logger.info(f"[stop_gases_task] Valve VE{i} closed on retry {retry + 1} (assuming success)")
                                             break
                                         time.sleep(0.3)
                                     except Exception as e:
                                         venting_logger.error(f"[stop_gases_task] Error retrying valve VE{i} (retry {retry + 1}): {e}")
                         
                         all_valves_closed = all(valves_closed.values()) if valves_closed else False
-                        venting_logger.info(f"[stop_gases_task] After retry - valves: {all_valves_closed}, valves_closed: {valves_closed}")
                     
                     self._venting_result_worker.ventingCompleted.emit({
                         'success': True,
@@ -1610,7 +1565,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if water_ok:
                 if self.TimeZad.text() != '00:00':
                     power = int(self.HFPowerZad.text())
-                    if 10 <= power <= settings.get('MAX_POWER_BP'):
+                    if settings.get('MIN_POWER_BP') <= power <= settings.get('MAX_POWER_BP'):
                         
                         self.update_status(self.translator.tr('turning_on_plasma'))
                         self.HFButton.setChecked(True) 
@@ -1931,7 +1886,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             try:
                                 forward_power = self.controller.handle_command('get_forward_power')
                                 reflected_power = self.controller.handle_command('get_reflected_power')
-                                logging.info(f"STOP PLASMA: Power check after error (status_check {status_attempt + 1}): forward={forward_power}, reflected={reflected_power}")
                                 if forward_power is not None and forward_power == 0 and reflected_power is not None and reflected_power == 0:
                                     plasma_off_confirmed = True
                                     break
@@ -2012,7 +1966,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.VEButton.setStyleSheet('font-size: 20px')
                 self.VEButton.setEnabled(True)
                 self.update_status(self.translator.tr('system_ready_tech'))
-                venting_logger.info(f"[_on_venting_completed] Button updated for STOP, text now: '{self.VEButton.text()}'")
                 return
             
             if success:
@@ -2022,13 +1975,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.update_status(f"{self.translator.tr('venting_mixture_gases')} {selected_gases[0]} {self.translator.tr('and')} {selected_gases[1]}.")
                 
                 new_text = self.translator.tr('stop_venting_gas')
-                venting_logger.info(f"[_on_venting_completed] Setting button text to: '{new_text}'")
                 self.VEButton.setText(new_text)
                 if settings.get('LANG') == 0:
                     self.VEButton.setStyleSheet('font-size: 18px')
                 self.VEButton.setChecked(True)
                 self.VEButton.setEnabled(True)
-                venting_logger.info(f"[_on_venting_completed] Button updated successfully, text now: '{self.VEButton.text()}'")
             else:
                 self.VEButton.setChecked(False)
                 self.VEButton.setText(self.translator.tr('start_venting_gas'))
@@ -2137,10 +2088,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                     command='set_flow', 
                                     num_rrg=rrg_num, 
                                     flow_lh=0, 
-                                    type_gas=getattr(self, f"VE{rrg_num}ComboBox").currentIndex()
-                                )
-                                if result is False:
-                                    logging.warning(f"Failed to set flow to 0 for RRG {rrg_num}")
+                                    type_gas=getattr(self, f"VE{rrg_num}ComboBox").currentIndex())
                             except Exception as e:
                                 logging.error(f"Exception setting flow to 0 for RRG {rrg_num}: {e}")
                     

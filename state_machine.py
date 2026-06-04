@@ -986,7 +986,6 @@ class PlasmaAutoProcess:
                     return
                 
                 current_pressure = self.controller.handle_command('get_sensor_pressure')
-                self.parent.update_pressure_display(current_pressure)
 
                 elapsed_time = int(time.time() - self.pumping_start_time)
                 
@@ -1004,10 +1003,10 @@ class PlasmaAutoProcess:
                     self.current_state = 'venting'
                     QTimer.singleShot(1000, self.process_venting)
                 else:
-                    if current_pressure < 10:
-                        self.parent.PressZnach.setText(f"{current_pressure:.2f}")
-                    else:
-                        self.parent.PressZnach.setText(f"{int(current_pressure)}")
+                    # if current_pressure < 10:
+                    #     self.parent.PressZnach.setText(f"{current_pressure:.2f}")
+                    # else:
+                    #     self.parent.PressZnach.setText(f"{int(current_pressure)}")
                     minutes, seconds = elapsed_time // 60, elapsed_time % 60
                     time_str = f"{minutes:02d}:{seconds:02d}"
                     self.parent.update_display_time(time_str)
