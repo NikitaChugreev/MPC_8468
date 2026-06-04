@@ -875,7 +875,15 @@
     "Restart your system. If the problem persists, contact support.",
     "請重啟系統。如果問題仍然存在，請聯絡技術支援。"
   ],
-
+  "error_invalid_data": [
+    "Введены недопустимые значения. Пожалуйста, проверьте правильность введенных данных.",
+    "Invalid data entered. Please check the correctness of the entered data.",
+    "输入了无效数据。请检查输入数据的正确性。"
+  ],
+  "error_copy_recipe": [
+    "Ошибка копирования параметров рецепта.", 
+    "Error copying recipe parameters.", 
+    "复制配方参数时出错。"],
   "error_over_reflected_power": [
     "Отраженная мощность больше 10 Вт.", 
     "Reflected power greater than 10 W.", 

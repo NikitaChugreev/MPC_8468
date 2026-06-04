@@ -222,16 +222,12 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
             msg.setIcon(QMessageBox.Warning)
             msg.setText(self.translator.tr('warning'))
             msg.setInformativeText(self.translator.tr("enter_valid_value"))
-            # Убираем фокус с кнопки ОК для сенсорного экрана
             msg.setDefaultButton(None)
-            # Находим кнопку ОК и убираем с неё фокус
             ok_button = msg.button(QMessageBox.Ok)
             if ok_button:
                 ok_button.setFocusPolicy(QtCore.Qt.NoFocus)
                 ok_button.clearFocus()
-                # Устанавливаем фокус на само окно вместо кнопки
                 msg.setFocus()
-            # Показываем окно и устанавливаем фокус на него
             msg.show()
             msg.activateWindow()
             msg.raise_()

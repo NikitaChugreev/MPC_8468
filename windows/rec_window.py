@@ -1,6 +1,7 @@
 import logging
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from windows.word_window import WordWindow
 from windows.key_window import KeyWindow
@@ -303,7 +304,43 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         except Exception as e:
             logging.error(f"Error in copy_recipe: {e}", exc_info=True)
 
-            from PyQt5.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "Ошибка", f"Ошибка при копировании рецепта: {e}")
+            msg = QMessageBox()
+    
+            msg.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+            msg.setStyleSheet("""
+                            QMessageBox {
+                                background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                                    stop:0 rgb(255, 255, 200), stop:1 rgb(255, 255, 150));
+                                border: 3px solid rgb(255, 200, 0);
+                                border-radius: 15px;
+                                padding: 20px;
+                            }
+                            QLabel {
+                                font: 80 28pt "Lato Semibold"; 
+                                color: rgb(0, 3, 51);
+                                background-color: transparent;
+                            }
+                            QPushButton {
+                            font: 80 18pt "Lato Semibold"; 
+                                min-width: 100px;
+                                min-height: 40px;
+                                padding: 8px;
+                            }
+                            """)
+
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText(self.translator.tr('warning'))
+            msg.setInformativeText(self.translator.tr("error_copy_recipe"))
+            msg.setDefaultButton(None)
+            ok_button = msg.button(QMessageBox.Ok)
+            if ok_button:
+                ok_button.setFocusPolicy(QtCore.Qt.NoFocus)
+                ok_button.clearFocus()
+                msg.setFocus()
+            msg.show()
+            msg.activateWindow()
+            msg.raise_()
+            msg.exec()
+
 
 
