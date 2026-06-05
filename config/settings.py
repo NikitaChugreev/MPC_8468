@@ -33,6 +33,8 @@ DEFAULT_SETTINGS = {
     "pass_service": "5678",
     "coef_rrg1": 1.0,
     "coef_rrg2": 1.0,
+    "coef_rrg3": 1.0,
+    "coef_rrg4": 1.0,
     "LANG": 0,
     "enable_sound": True,
     "check_water_flow": True
