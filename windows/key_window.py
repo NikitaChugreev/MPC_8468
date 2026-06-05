@@ -5,9 +5,9 @@ from PyQt5.QtCore import Qt
 from config.settings import settings, save_settings
 
 if settings.get('NUMBER_GASES') == 3:
-    from ui.ui_ser.ui_3 import Ui_KeyWindow
+    from ui.ui_ser.ui_3.keywindow import Ui_KeyWindow
 elif settings.get('NUMBER_GASES') == 2:
-    from ui.ui_ser.ui_2 import Ui_KeyWindow
+    from ui.ui_ser.ui_2.keywindow import Ui_KeyWindow
 
 from utils.translator import Translator
 

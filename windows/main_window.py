@@ -21,10 +21,10 @@ pressure_atm = 1000.0
 
 number_gases = settings.get('NUMBER_GASES', 2)
 if number_gases == 3:
-    from ui.ui_ser.ui_3 import Ui_MainWindow
+    from ui.ui_ser.ui_3.mainwindow import Ui_MainWindow
     ui_dir = 'ui/ui_ser/ui_3'
 elif number_gases == 2:
-    from ui.ui_ser.ui_2 import Ui_MainWindow
+    from ui.ui_ser.ui_2.mainwindow import Ui_MainWindow
     ui_dir = 'ui/ui_ser/ui_2'
 
 from windows.prof_window import ProfWindow
@@ -382,7 +382,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.PressProgress.hide()
         self.TimeProgress.hide()
-        self.HFProgress.hide()
 
         for i in range(1, number_gases + 1):
             getattr(self, f'VE{i}Progress').hide()
@@ -1005,7 +1004,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         self.TimeZnach.setText('00:00')
                         self.DisplayTime.setText('00:00')
 
-                        self.HFProgress.setValue(0)
                         self.TimeProgress.setValue(0)
 
                         self.ButtonStart.setText(self.translator.tr('stop'))
@@ -2596,10 +2594,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.StatusLine.setText(self.translator.tr('system_ready_oper'))
 
             for label in self.labels_service:
-                label.hide()
+                try:
+                    label.hide()
+                except:
+                    pass
 
             for label in self.buttons_service:
-                label.hide()
+                try:
+                    label.hide()
+                except:
+                    pass
 
         elif self.user_mode == 'Technologist':
             self.label_user.setText(self.translator.tr('technologist'))
@@ -2607,19 +2611,31 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.StatusLine.setText(self.translator.tr('system_ready_tech'))
                 
             for label in self.labels_service:
-                label.hide()
+                try:
+                    label.hide()
+                except:
+                    pass
 
             for label in self.buttons_service:
-                label.hide()
+                try:
+                    label.hide()
+                except:
+                    pass
 
         elif self.user_mode == 'Service':
             self.label_user.setText(self.translator.tr('service_engineer'))
 
             for label in self.labels_service:
-                label.show()
+                try:
+                    label.show()
+                except:
+                    pass
             
             for label in self.buttons_service:
-                label.show()
+                try:
+                    label.show()
+                except:
+                    pass
             
     def open_prof(self):
         profile_window = ProfWindow(self)

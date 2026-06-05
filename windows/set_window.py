@@ -8,9 +8,9 @@ from config.settings import settings, save_settings
 from utils.translator import Translator
 
 if settings.get('NUMBER_GASES') == 3:
-    from ui.ui_ser.ui_3 import Ui_SetWindow
+    from ui.ui_ser.ui_3.setwindow import Ui_SetWindow
 elif settings.get('NUMBER_GASES') == 2:
-    from ui.ui_ser.ui_2 import Ui_SetWindow
+    from ui.ui_ser.ui_2.setwindow import Ui_SetWindow
 
 class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
     def __init__(self, parent=None):

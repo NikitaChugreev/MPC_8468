@@ -12,9 +12,9 @@ from config.settings import settings
 from utils.translator import Translator
 
 if settings.get('NUMBER_GASES') == 3:
-    from ui.ui_ser.ui_3 import Ui_RecWindow
+    from ui.ui_ser.ui_3.recwindow import Ui_RecWindow
 elif settings.get('NUMBER_GASES') == 2:
-    from ui.ui_ser.ui_2 import Ui_RecWindow
+    from ui.ui_ser.ui_2.recwindow import Ui_RecWindow
 
 number_gases = settings.get('NUMBER_GASES')
 
