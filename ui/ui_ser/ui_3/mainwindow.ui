@@ -1706,7 +1706,7 @@ border-radius: 2px;</string>
      <item row="9" column="2">
       <widget class="QPushButton" name="VE3ButtonS">
        <property name="text">
-        <string>VE2</string>
+        <string>VE3</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -1992,6 +1992,20 @@ border-radius: 2px;</string>
      </item>
      <item row="12" column="1">
       <widget class="QLabel" name="plasma_value">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>valve_ve3</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLabel" name="valve_ve3">
        <property name="text">
         <string>TextLabel</string>
        </property>
