@@ -361,24 +361,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for btn in self.buttons_service:
             btn.clicked.connect(lambda checked, btn=btn: self.handle_commands(btn.objectName()))
 
-        self.labels_not_enabled_operator = [
-            self.NIButton, self.VEButton, self.HFButton, self.VE0Button, 
-            self.PressZad, self.HFPowerZad, self.TimeZad, self.ButtonClose]
-
         for i in range(1, number_gases + 1):
-            self.labels_service.append([
+            self.labels_service.extend([
                 getattr(self, f'button_rrg_{i}'),
                 getattr(self, f'valve_ve{i}_value'),
                 getattr(self, f'title_address_rrg{i}')
             ])
-            
-            self.labels_not_enabled_operator.append([
-                getattr(self, f'VE{i}Button'),
-                getattr(self, f'VE{i}ComboBox'),
-                getattr(self, f'VE{i}FlowZad')
-            ])
-
-            self.buttons_service.append([getattr(self, f'VE{i}ButtonS')])
+            self.buttons_service.append(getattr(self, f'VE{i}ButtonS'))
 
         self.PressProgress.hide()
         self.TimeProgress.hide()
@@ -398,7 +387,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             QTimer.singleShot(200, self.check_service_pump)
             QTimer.singleShot(500, lambda: self.timer_update_values.start(1000))
             
-
         else:
             info_text = self.translator.tr('error_init_devices') + str(self.controller.fault_device_init)
             self.show_msg(text=self.translator.tr('warning'), info_text=info_text)
