@@ -372,9 +372,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.PressProgress.hide()
         self.TimeProgress.hide()
 
-        for i in range(1, number_gases + 1):
-            getattr(self, f'VE{i}Progress').hide()
-
         if self.controller.init_is_successfully:
             self.timer_update_time.start(1000)
             self.timer_check_button_start.start(500)
@@ -908,13 +905,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # self.LabelProf_18.setText(self.translator.tr('power_unit'))
         
         for i in work_gases:
-            getattr(self, 'fVE{i}ComboBox').setItemText(0, self.translator.tr('air'))
-            getattr(self, 'fVE{i}ComboBox').setItemText(1, self.translator.tr('argon'))
-            getattr(self, 'fVE{i}ComboBox').setItemText(2, self.translator.tr('oxigen'))
-            getattr(self, 'fVE{i}ComboBox').setItemText(3, self.translator.tr('nitrogen'))
-            if getattr(self, 'fVE{i}ComboBox').count() < 5:
-                getattr(self, 'fVE{i}ComboBox').addItem("") 
-            getattr(self, 'fVE{i}ComboBox').setItemText(4, self.translator.tr('custom_gas'))
+            getattr(self, f'VE{i}ComboBox').setItemText(0, self.translator.tr('air'))
+            getattr(self, f'VE{i}ComboBox').setItemText(1, self.translator.tr('argon'))
+            getattr(self, f'VE{i}ComboBox').setItemText(2, self.translator.tr('oxigen'))
+            getattr(self, f'VE{i}ComboBox').setItemText(3, self.translator.tr('nitrogen'))
+            if getattr(self, f'VE{i}ComboBox').count() < 5:
+                getattr(self, f'VE{i}ComboBox').addItem("") 
+            getattr(self, f'VE{i}ComboBox').setItemText(4, self.translator.tr('custom_gas'))
 
     def init_system(self):
         self.update_status(self.translator.tr('init'))
