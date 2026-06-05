@@ -1703,16 +1703,6 @@ border-radius: 2px;</string>
        </property>
       </widget>
      </item>
-     <item row="9" column="2">
-      <widget class="QPushButton" name="VE3ButtonS">
-       <property name="text">
-        <string>VE2</string>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="10" column="1">
       <widget class="QPushButton" name="VE02ButtonS">
        <property name="text">
@@ -1720,13 +1710,6 @@ border-radius: 2px;</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="2">
-      <widget class="QPushButton" name="button_rrg_3">
-       <property name="text">
-        <string>3</string>
        </property>
       </widget>
      </item>
@@ -1781,13 +1764,6 @@ border-radius: 2px;</string>
       <widget class="QLabel" name="title_address_rf">
        <property name="text">
         <string>RF</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="title_address_rrg3">
-       <property name="text">
-        <string>РРГ 3</string>
        </property>
       </widget>
      </item>
