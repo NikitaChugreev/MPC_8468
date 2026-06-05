@@ -8,6 +8,8 @@ dict_pins = {
     'pump': 20,
     've1': 13,
     've2': 12,
+    've3': 6,
+    've4': 26,
     've01': 19,
     'buzz': 5,
     'sensor_door' : 15,
