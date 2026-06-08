@@ -1,5 +1,13 @@
+from PyQt5.QtCore import QObject, pyqtSignal
 from config.settings import settings
 import json
+
+
+class _LanguageEmitter(QObject):
+    language_changed = pyqtSignal()
+
+
+language_emitter = _LanguageEmitter()
 
 class Translator:
     def __init__(self, locale_file="locales/common.json"):
@@ -17,6 +25,10 @@ class Translator:
             print(f"⚠️ Translation file not found: {self.locale_file}")
             self.translations = {}
 
+    def set_language(self, lang_index):
+        self.lang_index = lang_index
+        language_emitter.language_changed.emit()
+
     def tr(self, key):
         value = self.translations.get(key)
         if value is None:
@@ -26,3 +38,6 @@ class Translator:
             return value[self.lang_index]
 
         return key
+    
+
+translator = Translator()

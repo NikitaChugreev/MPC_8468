@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from windows.set_window import SetWindow
 from config.settings import settings, save_settings
-from utils.translator import Translator 
+from utils.translator import translator, language_emitter
 
 if settings.get('NUMBER_GASES') == 3:
     from ui.ui_ser.ui_3.profwindow import Ui_ProfWindow
@@ -21,7 +21,8 @@ class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
         self.setWindowTitle('GN')
         self.showFullScreen()
 
-        self.translator = Translator()
+        self.translator = translator
+        language_emitter.language_changed.connect(self.update_ui_texts)
 
         self.pass_labels = [self.TextPass, self.LineEdit1, self.LineEdit2, self.LineEdit3, self.LineEdit4, self.Button0,
                             self.Button1, self.Button2, self.Button3, self.Button4, self.Button5, self.Button6, self.Button7,

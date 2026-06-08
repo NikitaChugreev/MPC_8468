@@ -9,7 +9,7 @@ from windows.key_window import KeyWindow
 
 from recipes.recipes import recipes, save_recipes
 from config.settings import settings
-from utils.translator import Translator
+from utils.translator import translator, language_emitter
 
 number_gases = settings.get('NUMBER_GASES', 2)
 if number_gases == 3:
@@ -47,7 +47,8 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         }
 
         self.data_for_copy = None
-        self.translator = Translator()
+        self.translator = translator
+        language_emitter.language_changed.connect(self.update_ui_texts)
 
         self.buttons = [getattr(self, f"Button{i}") for i in range(1, 51)]
         self.ButtonClose.clicked.connect(self.close)

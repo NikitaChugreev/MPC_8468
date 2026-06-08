@@ -32,7 +32,7 @@ from windows.rec_window import RecWindow
 from windows.key_window import KeyWindow
 
 from recipes.recipes import recipes
-from utils.translator import Translator
+from utils.translator import translator, language_emitter
 
 if number_gases == 4:
     work_gases = ['1', '2', '3', '4']
@@ -259,7 +259,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
         self._rf_operations_executor = None
 
-        self.translator = Translator()
+        self.translator = translator
+        language_emitter.language_changed.connect(self._on_language_changed)
+
         
         self.time_start_work = time.time()
 
@@ -388,6 +390,34 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             info_text = self.translator.tr('error_init_devices') + str(self.controller.fault_device_init)
             self.show_msg(text=self.translator.tr('warning'), info_text=info_text)
             self.close()
+
+    def _on_language_changed(self):
+        """Вызывается при смене языка. Обновляет статичные тексты и восстанавливает
+        правильные тексты кнопок с состоянием (on/off) на основе isChecked()."""
+        self.update_ui_texts()
+        # Восстанавливаем тексты кнопок с состоянием
+        if self.NIButton.isChecked():
+            self.NIButton.setText(self.translator.tr('turn_off_pump'))
+        if self.VEButton.isChecked():
+            self.VEButton.setText(self.translator.tr('stop_venting_gas'))
+        if self.VE0Button.isChecked():
+            self.VE0Button.setText(self.translator.tr('stop_venting'))
+        if self.HFButton.isChecked():
+            self.HFButton.setText(self.translator.tr('turn_off_plasma'))
+        if self.PurgeButton.isChecked():
+            self.PurgeButton.setText(self.translator.tr('stop_purge'))
+        if self.plasma_process.current_state != "idle":
+            self.ButtonStart.setText(self.translator.tr('stop'))
+            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
+
+        current_status = self.StatusLine.text()
+        status_key = next(
+            (k for k, v in self.translator.translations.items()
+             if isinstance(v, list) and current_status in v),
+            None
+        )
+        if status_key:
+            self.update_status(self.translator.tr(status_key))
 
     def showEvent(self, event):
         super().showEvent(event)

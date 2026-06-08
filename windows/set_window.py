@@ -5,7 +5,8 @@ from PyQt5.QtCore import Qt
 from windows.key_window import KeyWindow
 
 from config.settings import settings, save_settings
-from utils.translator import Translator
+from utils.translator import translator, language_emitter
+
 
 number_gases = settings.get('NUMBER_GASES', 2)
 if number_gases == 3:
@@ -23,7 +24,8 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
         self.setWindowTitle('GN')
         self.showFullScreen()
 
-        self.translator = Translator()
+        self.translator = translator
+        language_emitter.language_changed.connect(self.update_ui_texts)
 
         self.ButtonPass.setText(self.translator.tr('yes') if settings['use_pass_technologist'] else self.translator.tr('no'))
         self.ButtonPass.setChecked(bool(settings['use_pass_technologist']))

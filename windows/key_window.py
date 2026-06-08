@@ -4,12 +4,13 @@ from PyQt5.QtCore import Qt
 
 from config.settings import settings, save_settings
 
+
 if settings.get('NUMBER_GASES') == 3:
     from ui.ui_ser.ui_3.keywindow import Ui_KeyWindow
 elif settings.get('NUMBER_GASES') == 2:
     from ui.ui_ser.ui_2.keywindow import Ui_KeyWindow
 
-from utils.translator import Translator
+from utils.translator import translator, language_emitter
 
 class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
     def __init__(self, parent=None, sender=None, recipe=False, recipe_number=None):
@@ -21,7 +22,8 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
 
         self.label_sender = sender
 
-        self.translator = Translator()
+        self.translator = translator
+        language_emitter.language_changed.connect(self.update_ui_texts)
 
         self.ButtonPoint_1.hide()
         self.ButtonPoint_2.hide()
@@ -260,7 +262,7 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
         else:
             self.close()
 
-    def input_number(self, button=None):
+    def input_number(self):
         new_text = self.NumberLine.text() + self.sender().text()
     
         if self.label_sender == 'TimeZad':
