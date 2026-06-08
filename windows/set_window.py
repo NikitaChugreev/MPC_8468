@@ -56,6 +56,8 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
                 lambda checked, sender=f'coef_rrg{i}': self.open_key(sender=sender)
             )
 
+        self.old_lang = self.comboBoxLang.currentIndex()
+
         self.update_ui_texts()
 
     def reset_time_pump(self):
@@ -103,6 +105,8 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
     
     def save(self):
         try:
+            new_lang = self.comboBoxLang.currentIndex()
+
             settings.update({
                 'use_pass_technologist': True if self.ButtonPass.text() == self.translator.tr('yes') else False,
                 'time_venting': int(self.ClockVE0.text()),
@@ -115,6 +119,11 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
             for i in range(1, number_gases + 1):
                     settings.update({f'coef_rrg{i}': float(getattr(self, f'userInputRrgConvCoeffPlace_{i}').text())})
             save_settings(settings)
+            
+            if new_lang != self.old_lang:
+                translator.set_language(new_lang)  # обновляет lang_index и уведомляет все окна
+
+
             self.close()
 
         except ValueError:
