@@ -1975,7 +1975,7 @@ border-radius: 2px;</string>
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="serviceButton">
     <property name="geometry">
      <rect>
       <x>1540</x>
@@ -2063,7 +2063,7 @@ border-radius: 2px;</string>
    <zorder>label_time</zorder>
    <zorder>label_user</zorder>
    <zorder>gridLayoutWidget_3</zorder>
-   <zorder>pushButton</zorder>
+   <zorder>serviceButton</zorder>
    <zorder>address_rrg2_2</zorder>
   </widget>
  </widget>

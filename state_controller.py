@@ -1104,7 +1104,7 @@ class SensorWater:
     def stop(self):
         self._stop = True
         time.sleep(0.05)
-        
+       
 class Controller:
     def __init__(self):
         self.init_is_successfully = True
@@ -1167,7 +1167,7 @@ class Controller:
         # ThreadPoolExecutor для асинхронного переподключения RRG
         self._rrg_reconnect_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="RRGReconnect")
         # Счетчики неудач для каждого RRG (чтобы не переподключаться слишком часто)
-        self._rrg_failure_counters = {1: 0, 2: 0}
+        self._rrg_failure_counters = {1: 0, 2: 0, 3: 0}
         self._max_rrg_failures_before_reconnect = 3  # Переподключаемся после 3 неудач подряд
         
         # Счетчики ошибок I/O для датчиков (для автоматического переподключения)

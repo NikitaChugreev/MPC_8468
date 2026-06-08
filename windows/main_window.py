@@ -29,6 +29,7 @@ elif number_gases == 2:
 from windows.prof_window import ProfWindow
 from windows.rec_window import RecWindow
 from windows.key_window import KeyWindow
+from windows.service_window import ServiceWindow
 
 from recipes.recipes import recipes
 from utils.translator import translator, language_emitter
@@ -275,6 +276,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ButtonClose.clicked.connect(self.close)
         self.ButtonOutput.clicked.connect(self.open_prof)
         self.ButtonRecept.clicked.connect(self.open_rec)
+        self.serviceButton.clicked.connect(self.open_service)
 
         self.ButtonStart.clicked.connect(self.on_start_button_clicked)
         self.NIButton.clicked.connect(self.on_start_pump_clicked)
@@ -351,7 +353,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.PressLableSADC, self.PressLableSZnachU, self.WLabelS, self.BPButtonS,
             self.title_address_rf, self.led_start_value, self.led_stop_value,
             self.led_vacuum_value, self.pump_value, self.ps_value,
-            self.valve_ve01_value, self.buzz_value, self.plasma_value, self.button_rf
+            self.valve_ve01_value, self.buzz_value, self.plasma_value, self.button_rf, self.serviceButton
         ]
         
         self.buttons_service = [
@@ -2662,6 +2664,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def open_key(self, sender=None):
         key_window = KeyWindow(self, sender=sender)
         key_window.show()
+
+    def open_service(self):
+        service_window = ServiceWindow()
+        service_window.show()
 
     def update_recipe(self, num_recipe):
         self.current_recipe = num_recipe
