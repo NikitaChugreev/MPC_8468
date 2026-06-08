@@ -1,16 +1,14 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import Qt
 
-from config.settings import settings, save_settings
-
+from config.settings import settings
+from utils.translator import translator, language_emitter
 
 if settings.get('NUMBER_GASES') == 3:
     from ui.ui_ser.ui_3.keywindow import Ui_KeyWindow
 elif settings.get('NUMBER_GASES') == 2:
     from ui.ui_ser.ui_2.keywindow import Ui_KeyWindow
 
-from utils.translator import translator, language_emitter
 
 class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
     def __init__(self, parent=None, sender=None, recipe=False, recipe_number=None):
@@ -224,7 +222,7 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
         if not is_valid:
             msg = QMessageBox()
     
-            msg.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+            msg.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
             msg.setStyleSheet("""
                             QMessageBox {
                                 background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, 

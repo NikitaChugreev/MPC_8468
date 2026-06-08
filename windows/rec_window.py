@@ -190,7 +190,6 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
             getattr(self, f'VE{i}GasLine').setReadOnly(True)
             getattr(self, f'VE{i}FlowLine').setReadOnly(True)
         
-
     def init_title_buttons(self):
         for i, btn in enumerate(self.buttons):
             btn.setText(btn.text() + ' ' + recipes[str(i+1)]['title'])
@@ -272,7 +271,6 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         for i in range(1, number_gases + 1):
             getattr(self, f'VE{i}GasLine').setText('')
             getattr(self, f'VE{i}FlowLine').setText('0.0')
-        
 
     def copy_recipe(self):
         try:

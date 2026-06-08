@@ -1,21 +1,20 @@
+from datetime import datetime, timedelta
 import math
 import time
 import threading
-from datetime import datetime, timedelta
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QTimer, Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QMessageBox
 from concurrent.futures import ThreadPoolExecutor
-
 from logging.handlers import RotatingFileHandler
 import logging
 
 import fun
 from state_controller import controller
+from config.settings import settings
 from state_machine import PlasmaAutoProcess, process_logger
 
-from config.settings import settings
 
 pressure_atm = 1000.0
 
