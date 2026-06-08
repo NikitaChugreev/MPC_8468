@@ -29,12 +29,12 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
         self.TimePump.setText(str(int(settings['time_pump_for_service']) // 3600))
         self.TimePumpSer.setText(str(int(settings['max_time_pump_for_service']) // 3600))
         self.TimeMPC.setText(str(int(settings['time_work']) // 3600))
-        self.userInputRrgConvCoeffPlace_1.setText(str(settings['coef_rrg1']))
-        self.userInputRrgConvCoeffPlace_2.setText(str(settings['coef_rrg2']))
-        self.userInputRrgConvCoeffPlace_3.setText(str(settings['coef_rrg3']))
-        self.userInputRrgConvCoeffPlace_4.setText(str(settings['coef_rrg4']))
+
+        number_gases = settings.get("NUMBER_GASES")
+        for i in range(1, number_gases + 1):
+            getattr(self, f'userInputRrgConvCoeffPlace_{i}').setText(str(settings[f'coef_rrg{i}']))
+
         self.comboBoxLang.setCurrentIndex(settings['LANG'])
-        # Инициализация кнопки бузера из настроек
         self.ButtonBuzzer.setText(self.translator.tr('yes') if settings.get('enable_sound', True) else self.translator.tr('no'))
         self.ButtonBuzzer.setChecked(bool(settings.get('enable_sound', True)))
 
@@ -46,10 +46,10 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
 
         self.ClockVE0.clicked.connect(lambda: self.open_key(sender='ClockVE0'))
         self.ClockNI.clicked.connect(lambda: self.open_key(sender='ClockNI'))
-        self.userInputRrgConvCoeffPlace_1.clicked.connect(lambda: self.open_key(sender='coef_rrg1'))
-        self.userInputRrgConvCoeffPlace_2.clicked.connect(lambda: self.open_key(sender='coef_rrg2'))
-        self.userInputRrgConvCoeffPlace_3.clicked.connect(lambda: self.open_key(sender='coef_rrg3'))
-        self.userInputRrgConvCoeffPlace_4.clicked.connect(lambda: self.open_key(sender='coef_rrg4'))
+        for i in range(1, number_gases + 1):
+            getattr(self, f'userInputRrgConvCoeffPlace_{i}').clicked.connect(
+                lambda checked, sender=f'coef_rrg{i}': self.open_key(sender=sender)
+            )
 
         self.update_ui_texts()
 
@@ -102,13 +102,13 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
                 'use_pass_technologist': True if self.ButtonPass.text() == self.translator.tr('yes') else False,
                 'time_venting': int(self.ClockVE0.text()),
                 'time_pump': int(self.ClockNI.text()),
-                'coef_rrg1': float(self.userInputRrgConvCoeffPlace_1.text()),
-                'coef_rrg2': float(self.userInputRrgConvCoeffPlace_2.text()),
-                'coef_rrg3': float(self.userInputRrgConvCoeffPlace_3.text()),
-                'coef_rrg4': float(self.userInputRrgConvCoeffPlace_4.text()),
                 'LANG': self.comboBoxLang.currentIndex(),
                 'enable_sound': True if self.ButtonBuzzer.text() == self.translator.tr('yes') else False
             })
+
+            number_gases = settings.get("NUMBER_GASES")
+            for i in range(1, number_gases + 1):
+                    settings.update({f'coef_rrg{i}': float(getattr(self, f'userInputRrgConvCoeffPlace_{i}').text())})
             save_settings(settings)
             self.close()
 
