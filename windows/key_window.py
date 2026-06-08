@@ -135,26 +135,51 @@ class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):
         is_valid = True
         text_str = self.NumberLine.text()
 
-        if self.label_sender in ['TimeZad']:
-            formatted = text_str
-            if text_str != '' and text_str[-1] == ':':
-                formatted = text_str + '00'
-            elif len(text_str) == 1:
-                formatted = '0' + text_str + ':00'
-            elif len(text_str) == 2:
-                formatted = text_str + ':00'
-            elif len(text_str) == 4 and text_str.startswith('00:'):
-                formatted = '00:0' + text_str[3]
-            else:
-                formatted = text_str
+        if self.label_sender == 'TimeZad':
+            raw = text_str.strip()
+            formatted = None
 
+            # 1. Если строка состоит только из цифр – преобразуем в MM:SS
+            if raw.isdigit():
+                if len(raw) == 1:
+                    raw = '0' + raw + '00'
+                elif len(raw) == 2:
+                    raw = raw + '00'
+                elif len(raw) == 3:
+                    raw = '0' + raw
+                elif len(raw) >= 4:
+                    raw = raw.zfill(4)
+                    raw = raw[:2] + ':' + raw[2:]
+                else:
+                    raw = ''
+                formatted = raw
+            # 2. Если есть двоеточие – форматируем минуты и секунды (две цифры)
+            elif ':' in raw:
+                parts = raw.split(':')
+                if len(parts) >= 2:
+                    minutes = parts[0].zfill(2)
+                    seconds = parts[1].zfill(2)
+                    formatted = f"{minutes}:{seconds}"
+                else:
+                    formatted = raw
+            # 3. Остальные случаи (например, "5:") – пытаемся исправить
+            else:
+                # Если строка заканчивается на ':', добавляем "00"
+                if raw.endswith(':'):
+                    formatted = raw + '00'
+                else:
+                    formatted = raw
+
+            # Валидация
             try:
+                if ':' not in formatted:
+                    raise ValueError
                 minutes, seconds = map(int, formatted.split(':'))
                 if 0 <= minutes <= 59 and 0 <= seconds <= 59:
                     getattr(self.parent(), self.label_sender).setText(formatted)
+                    is_valid = True
                 else:
                     is_valid = False
-                    self.message = self.translator.tr('enter_valid_value')
             except:
                 is_valid = False
         

@@ -842,7 +842,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 logZad = math.log10(max(0.001, press_zad))
                 logMax = math.log10(pressure_atm)
                 
-                if logMax != logZad and logMax > logZad:
+                if logMax > logZad:
                     progressPressure = 100.0 - ((logZnach - logZad) / (logMax - logZad)) * 100.0
                     progressPressure = max(0.0, min(100.0, progressPressure))
                     self.PressProgress.setValue(round(progressPressure))
