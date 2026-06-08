@@ -35,7 +35,7 @@
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>ui/Pictures13/Exit.png</normaloff>ui/Pictures13/Exit.png</iconset>
+      <normaloff>ui/ui_ser/ui_3/Pictures13/Exit.png</normaloff>ui/ui_ser/ui_3/Pictures13/Exit.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -200,7 +200,7 @@
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>ui/Pictures13/Recept.png</normaloff>ui/Pictures13/Recept.png</iconset>
+      <normaloff>ui/ui_ser/ui_3/Pictures13/Recept.png</normaloff>ui/ui_ser/ui_3/Pictures13/Recept.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -979,7 +979,7 @@ border-radius: 2px;</string>
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>ui/Pictures13/Start.png</normaloff>ui/Pictures13/Start.png</iconset>
+      <normaloff>ui/ui_ser/ui_3/Pictures13/Start.png</normaloff>ui/ui_ser/ui_3/Pictures13/Start.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -1033,7 +1033,7 @@ border-radius: 2px;
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>ui/Pictures13/logo(66).png</pixmap>
+     <pixmap>ui/ui_ser/ui_3/Pictures13/logo(66).png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="StatusLabel">
@@ -1049,7 +1049,7 @@ border-radius: 2px;
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>ui/Pictures13/Ok.png</pixmap>
+     <pixmap>ui/ui_ser/ui_3/Pictures13/Ok.png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="VE0Label">
@@ -1065,7 +1065,7 @@ border-radius: 2px;
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>ui/Pictures13/Wait.png</pixmap>
+     <pixmap>ui/ui_ser/ui_3/Pictures13/Wait.png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="NILabel">
@@ -1084,7 +1084,7 @@ border-radius: 2px;
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>ui/Pictures13/Wait.png</pixmap>
+     <pixmap>ui/ui_ser/ui_3/Pictures13/Wait.png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="VELabel">
@@ -1100,7 +1100,7 @@ border-radius: 2px;
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>ui/Pictures13/Wait.png</pixmap>
+     <pixmap>ui/ui_ser/ui_3/Pictures13/Wait.png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="HFLabel">
@@ -1116,7 +1116,7 @@ border-radius: 2px;
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>ui/Pictures13/Wait.png</pixmap>
+     <pixmap>ui/ui_ser/ui_3/Pictures13/Wait.png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="LabelProf_16">

@@ -7,9 +7,12 @@ from windows.key_window import KeyWindow
 from config.settings import settings, save_settings
 from utils.translator import Translator
 
-if settings.get('NUMBER_GASES') == 3:
+number_gases = settings.get('NUMBER_GASES', 2)
+if number_gases == 3:
+    ui_dir = 'ui/ui_ser/ui_3/'
     from ui.ui_ser.ui_3.setwindow import Ui_SetWindow
-elif settings.get('NUMBER_GASES') == 2:
+elif number_gases == 2:
+    ui_dir = 'ui/ui_ser/ui_2/'
     from ui.ui_ser.ui_2.setwindow import Ui_SetWindow
 
 class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
@@ -76,9 +79,9 @@ class SetWindow(QtWidgets.QMainWindow, Ui_SetWindow):
         self.LabelSet_17.setText(self.translator.tr('hours'))
         self.LabelSet_21.setText(self.translator.tr('select_language'))
         self.ButtonSave.setText(self.translator.tr('save'))
-        self.ButtonSave.setIcon(QtGui.QIcon('ui/Pictures13/Save.png'))
+        self.ButtonSave.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Save.png'))
         self.ButtonCancel.setText(self.translator.tr('cancel'))
-        self.ButtonCancel.setIcon(QtGui.QIcon('ui/Pictures13/Cancel.png'))
+        self.ButtonCancel.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Cancel.png'))
         self.LabelSet_6.setText(self.translator.tr('sec'))
         self.LabelSet_5.setText(self.translator.tr('min'))
         # ButtonBuzzer инициализируется из настроек в __init__, не перезаписываем здесь

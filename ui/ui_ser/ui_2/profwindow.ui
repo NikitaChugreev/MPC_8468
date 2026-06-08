@@ -123,7 +123,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Shutdown.png</normaloff>ui/Pictures13/Shutdown.png</iconset>
+     <normaloff>ui/ui_ser/ui_2/Pictures13/Shutdown.png</normaloff>ui/ui_ser/ui_2/Pictures13/Shutdown.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -529,7 +529,7 @@ text-align: center;</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Setting.png</normaloff>ui/Pictures13/Setting.png</iconset>
+     <normaloff>ui/ui_ser/ui_2/Pictures13/Setting.png</normaloff>ui/ui_ser/ui_2/Pictures13/Setting.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -606,7 +606,7 @@ text-align: center;</string>
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>ui/Pictures13/logo(66).png</pixmap>
+    <pixmap>ui/ui_ser/ui_2/Pictures13/logo(66).png</pixmap>
    </property>
   </widget>
   <zorder>Screen</zorder>

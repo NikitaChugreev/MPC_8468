@@ -11,10 +11,14 @@ from recipes.recipes import recipes, save_recipes
 from config.settings import settings
 from utils.translator import Translator
 
-if settings.get('NUMBER_GASES') == 3:
+number_gases = settings.get('NUMBER_GASES', 2)
+if number_gases == 3:
+    ui_dir = 'ui/ui_ser/ui_3/'
     from ui.ui_ser.ui_3.recwindow import Ui_RecWindow
-elif settings.get('NUMBER_GASES') == 2:
+elif number_gases == 2:
+    ui_dir = 'ui/ui_ser/ui_2/'
     from ui.ui_ser.ui_2.recwindow import Ui_RecWindow
+
 
 number_gases = settings.get('NUMBER_GASES')
 
@@ -88,7 +92,7 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         self.TitleButton.setText(self.translator.tr('name'))
         self.ComButton.setText(self.translator.tr('comment'))
         self.ButtonCheck.setText(self.translator.tr('select'))
-        self.ButtonCheck.setIcon(QtGui.QIcon('ui/Pictures13/Select.png'))
+        self.ButtonCheck.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Select.png'))
         self.LabelText_11.setText(self.translator.tr('base_pressure_2'))
         self.LabelText_5.setText(self.translator.tr('gas_1'))
         self.LabelText_6.setText(self.translator.tr('gas_2'))
@@ -98,11 +102,11 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         self.LabelText_10.setText(self.translator.tr('flow_unit'))
         self.LabelText_12.setText(self.translator.tr('power_unit'))
         self.ButtonClear.setText(self.translator.tr('clear'))
-        self.ButtonClear.setIcon(QtGui.QIcon('ui/Pictures13/Clean.png'))
+        self.ButtonClear.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Clean.png'))
         self.ButtonSave.setText(self.translator.tr('copy_parameters'))
-        self.ButtonSave.setIcon(QtGui.QIcon('ui/Pictures13/Save.png'))
+        self.ButtonSave.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Save.png'))
         self.ButtonClose.setText(self.translator.tr('close'))
-        self.ButtonClose.setIcon(QtGui.QIcon('ui/Pictures13/Close.png'))
+        self.ButtonClose.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Close.png'))
 
     def _apply_scrollbar_style(self):
         """Стильный вертикальный скроллбар: трек + ручка с градиентом и hover."""

@@ -37,7 +37,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Cancel.png</normaloff>ui/Pictures13/Cancel.png</iconset>
+     <normaloff>ui/ui_ser/ui_3/Pictures13/Cancel.png</normaloff>ui/ui_ser/ui_3/Pictures13/Cancel.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -287,7 +287,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Clean.png</normaloff>ui/Pictures13/Clean.png</iconset>
+     <normaloff>ui/ui_ser/ui_3/Pictures13/Clean.png</normaloff>ui/ui_ser/ui_3/Pictures13/Clean.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -317,7 +317,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Select.png</normaloff>ui/Pictures13/Select.png</iconset>
+     <normaloff>ui/ui_ser/ui_3/Pictures13/Select.png</normaloff>ui/ui_ser/ui_3/Pictures13/Select.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -415,7 +415,7 @@ border-radius: 2px;</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Backspace.png</normaloff>ui/Pictures13/Backspace.png</iconset>
+     <normaloff>ui/ui_ser/ui_3/Pictures13/Backspace.png</normaloff>ui/ui_ser/ui_3/Pictures13/Backspace.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -506,7 +506,7 @@ border-radius: 2px;</string>
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>ui/Pictures13/logo(66).png</pixmap>
+    <pixmap>ui/ui_ser/ui_3/Pictures13/logo(66).png</pixmap>
    </property>
   </widget>
   <zorder>Screen</zorder>

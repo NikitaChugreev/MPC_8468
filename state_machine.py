@@ -11,6 +11,10 @@ from config.settings import settings
 from utils.translator import Translator
 
 number_gases = settings.get('NUMBER_GASES', 2)
+if number_gases == 3:
+    ui_dir = 'ui/ui_ser/ui_3/'
+elif number_gases == 2:
+    ui_dir = 'ui/ui_ser/ui_2/'
 
 if number_gases == 4:
     work_gases = ['1', '2', '3', '4']
@@ -69,7 +73,7 @@ class PlasmaAutoProcess:
         self.pumping_start_time = 0
         self.processing_start_time = 0
         self.venting_atm_start_time = 0
-        self.rrg_is_heating = [False for i in range(len(work_gases))]
+        self.rrg_is_heating = {i: False for i in work_gases}
         self.attempt = 0
 
         # НЕИЗМЕНЯЕМЫЕ
@@ -369,6 +373,7 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_fault)
         
             elif self.current_step == 4:
+                states = self.safe_get_states()
                 if states.get('pump', 1):
                     self.controller.handle_command('off_pump')
                     logging.info(self.translator.tr('pump_off'))
@@ -394,7 +399,7 @@ class PlasmaAutoProcess:
                 
                 if button_text == self.translator.tr('stop'):
                     self.parent.ButtonStart.setText(self.translator.tr('start'))
-                    self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                    self.parent.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
                     self.parent.ButtonStart.setEnabled(True)
                     self.parent.RecName.deselect()
                 else:
@@ -419,7 +424,7 @@ class PlasmaAutoProcess:
 
                 self.parent.update_status(self.translator.tr('system_ready'))
                 self.parent.ButtonStart.setText(self.translator.tr('start'))
-                self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                self.parent.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
 
         except Exception as e:
             self.handle_error(f"{self.translator.tr('error_emergency_stop')}: {e}", need_reboot=True)
@@ -682,7 +687,6 @@ class PlasmaAutoProcess:
                 self.parent.VEButton.setEnabled(False)
                 self.parent.HFButton.setEnabled(False)
                 self.parent.VE0Button.setEnabled(False)
-                self.parent.HFButton.setEnabled(False)
 
                 self.pressure_history = []
                 self.pumping_start_time = 0
@@ -1004,10 +1008,6 @@ class PlasmaAutoProcess:
                     self.current_state = 'venting'
                     QTimer.singleShot(1000, self.process_venting)
                 else:
-                    # if current_pressure < 10:
-                    #     self.parent.PressZnach.setText(f"{current_pressure:.2f}")
-                    # else:
-                    #     self.parent.PressZnach.setText(f"{int(current_pressure)}")
                     minutes, seconds = elapsed_time // 60, elapsed_time % 60
                     time_str = f"{minutes:02d}:{seconds:02d}"
                     self.parent.update_display_time(time_str)
@@ -1866,7 +1866,7 @@ class PlasmaAutoProcess:
                     self.parent.StatusLine.setText(self.translator.tr('system_ready_oper'))
                     if hasattr(self.parent, 'ButtonStart'):
                         self.parent.ButtonStart.setText(self.translator.tr('start'))
-                        self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                        self.parent.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
                         self.parent.NIButton.setEnabled(False)
                         self.parent.VEButton.setEnabled(False)
                         self.parent.HFButton.setEnabled(False)
@@ -1876,7 +1876,7 @@ class PlasmaAutoProcess:
                     self.parent.StatusLine.setText(self.translator.tr('system_ready_tech'))
                     if hasattr(self.parent, 'ButtonStart'):
                         self.parent.ButtonStart.setText(self.translator.tr('start'))
-                        self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+                        self.parent.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
                         self.parent.NIButton.setEnabled(False)
                         self.parent.VEButton.setEnabled(False)
                         self.parent.HFButton.setEnabled(False)
@@ -2374,45 +2374,23 @@ class PlasmaAutoProcess:
                 self.parent.StatusLine.setText(self.translator.tr('plasma_off'))
 
             valves_states = self.safe_get_valves_states()
-            if valves_states.get('valve_ve1', 'open') == 'open':
-                self.controller.handle_command('close_valve_ve1')
-                self.parent.StatusLine.setText(self.translator.tr('ve1_close'))
-            
-            if valves_states.get('valve_ve2', 'open') == 'open':
-                self.controller.handle_command('close_valve_ve2')
-                self.parent.StatusLine.setText(self.translator.tr('ve2_close'))
 
-            if valves_states.get('valve_ve3', 'open') == 'open':
-                self.controller.handle_command('close_valve_ve3')
-                self.parent.StatusLine.setText(self.translator.tr('ve3_close'))
-            
-            if valves_states.get('valve_ve4', 'open') == 'open':
-                self.controller.handle_command('close_valve_ve4')
-                self.parent.StatusLine.setText(self.translator.tr('ve4_close'))
-            
-            if valves_states.get('valve_ve01', 'open') == 'open':
-                self.controller.handle_command('close_valve_ve01')
-                self.parent.StatusLine.setText(self.translator.tr('ve01_close'))
+            for valve in all_gases:
+                if valves_states.get(f'valve_ve{valve}', 'open') == 'open':
+                    self.controller.handle_command(f'close_valve_ve{valve}')
+                    self.parent.StatusLine.setText(self.translator.tr(f've{valve}_close'))
+                    time.sleep(0.05)
+
+            valves_states_after = self.safe_get_valves_states()
+            all_closed = all(valves_states_after.get(f'valve_ve{valve}', 'close') == 'close' for valve in all_gases)
 
             if states.get('pump', 1):
                 self.controller.handle_command('off_pump')
                 self.parent.StatusLine.setText(self.translator.tr('pump_off'))
                 time.sleep(0.2)  # Задержка для выключения насоса
 
-            states = self.controller.handle_command('get_states')
-            if not isinstance(states, dict):
-                states = {}
-            valves_states = self.safe_get_valves_states()
-            if states and valves_states and all([
-                    states.get('plasma', 1) == 0,
-                    valves_states.get('valve_ve1', 'close') == 'close',
-                    valves_states.get('valve_ve2', 'close') == 'close',
-                    valves_states.get('valve_ve3', 'close') == 'close',
-                    valves_states.get('valve_ve4', 'close') == 'close',
-                    valves_states.get('valve_ve01', 'close') == 'close',
-                    states.get('pump', 1) == 0,
-                    ]):
-                logging.info("stop_process: All devices turned off successfully")
+            states = self.safe_get_states()
+            if all_closed and states.get('pump', 1) == 0 and states.get('plasma', 1) == 0:
                 break
             
             time.sleep(0.3)  # Задержка между попытками
@@ -2431,4 +2409,4 @@ class PlasmaAutoProcess:
         QTimer.singleShot(1000, lambda: self.parent.update_status(self.translator.tr('system_ready_tech')))
 
         self.parent.ButtonStart.setText(self.translator.tr('start'))
-        self.parent.ButtonStart.setIcon(QtGui.QIcon('ui/Pictures13/Start.png'))
+        self.parent.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))

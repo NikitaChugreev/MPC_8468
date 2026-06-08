@@ -22,10 +22,10 @@ pressure_atm = 1000.0
 number_gases = settings.get('NUMBER_GASES', 2)
 if number_gases == 3:
     from ui.ui_ser.ui_3.mainwindow import Ui_MainWindow
-    ui_dir = 'ui/ui_ser/ui_3'
+    ui_dir = 'ui/ui_ser/ui_3/'
 elif number_gases == 2:
     from ui.ui_ser.ui_2.mainwindow import Ui_MainWindow
-    ui_dir = 'ui/ui_ser/ui_2'
+    ui_dir = 'ui/ui_ser/ui_2/'
 
 from windows.prof_window import ProfWindow
 from windows.rec_window import RecWindow
@@ -877,9 +877,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.LabelProf.setText(self.translator.tr('recipe'))
         self.ButtonStart.setText(self.translator.tr('start'))
         self.ButtonRecept.setText(self.translator.tr('recipes'))
-        self.ButtonRecept.setIcon(QtGui.QIcon(ui_dir + 'Recept.png'))
+        self.ButtonRecept.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Recept.png'))
         self.ButtonOutput.setText(self.translator.tr('exit'))
-        self.ButtonOutput.setIcon(QtGui.QIcon(ui_dir + 'Exit.png'))
+        self.ButtonOutput.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Exit.png'))
         self.NIButton.setText(self.translator.tr('turn_on_pump'))
         self.VEButton.setText(self.translator.tr('start_venting_gas'))
         self.HFButton.setText(self.translator.tr('turn_on_plasma'))
@@ -918,18 +918,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.controller.handle_command('on_bp')
 
         self.ButtonStart.setText(self.translator.tr('stop'))
-        self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
+        self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
         QtWidgets.QApplication.processEvents()
         
         result = self.plasma_process.start_process()
         if not result:
             self.ButtonStart.setText(self.translator.tr('start'))
-            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
+            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
             QtWidgets.QApplication.processEvents()
         else:
             if self.ButtonStart.text() != self.translator.tr('stop'):
                 self.ButtonStart.setText(self.translator.tr('stop'))
-                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
                 QtWidgets.QApplication.processEvents()
 
     def on_start_button_clicked(self):
@@ -939,7 +939,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             if self.ButtonStart.text() != self.translator.tr('start'):
                 self.ButtonStart.setText(self.translator.tr('start'))
-                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
                 QtWidgets.QApplication.processEvents()
             
             if self.ButtonStart.text() == self.translator.tr('start'):          
@@ -968,7 +968,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             QTimer.singleShot(1000, lambda: self.update_status(self.translator.tr('system_ready_oper')))    
                         else:
                             self.ButtonStart.setText(self.translator.tr('stop'))
-                            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
+                            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
                             QtWidgets.QApplication.processEvents()
                             
                             self.timer_venting_atm.stop()
@@ -978,12 +978,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             result = self.plasma_process.start_recipe()
                             if not result:
                                 self.ButtonStart.setText(self.translator.tr('start'))
-                                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
+                                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
                                 QtWidgets.QApplication.processEvents()
                             else:
                                 if self.ButtonStart.text() != self.translator.tr('stop'):
                                     self.ButtonStart.setText(self.translator.tr('stop'))
-                                    self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
+                                    self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
                                     QtWidgets.QApplication.processEvents()
                     else:
                         self.TimeZnach.setText('00:00')
@@ -992,19 +992,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         self.TimeProgress.setValue(0)
 
                         self.ButtonStart.setText(self.translator.tr('stop'))
-                        self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
+                        self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
                         
                         QtWidgets.QApplication.processEvents()
                         
                         result = self.plasma_process.start_recipe()
                         if not result:
                             self.ButtonStart.setText(self.translator.tr('start'))
-                            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
+                            self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
                             QtWidgets.QApplication.processEvents()
                         else:
                             if self.ButtonStart.text() != self.translator.tr('stop'):
                                 self.ButtonStart.setText(self.translator.tr('stop'))
-                                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
+                                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
                                 QtWidgets.QApplication.processEvents()
         else:
             if current_state == 'init_recipe' and self.plasma_process.current_step <= 2:
@@ -1013,7 +1013,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if current_state not in ['idle', 'fault']:
                 self.plasma_process.stop_process()
                 self.ButtonStart.setText(self.translator.tr('start'))
-                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
 
     def on_start_pump_clicked(self):
         if self.NIButton.text() == self.translator.tr('turn_on_pump'):
@@ -2430,13 +2430,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if process_state not in ['idle', 'fault']:
             if self.ButtonStart.text() != self.translator.tr('stop'):
                 self.ButtonStart.setText(self.translator.tr('stop'))
-                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Stop.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
             self.ButtonStart.setEnabled(True)
         else:
             button_text = self.ButtonStart.text()
             if button_text != self.translator.tr('start'):
                 self.ButtonStart.setText(self.translator.tr('start'))
-                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
             self.ButtonStart.setEnabled(True)
 
         self.NIButton.setEnabled(True)
@@ -2546,7 +2546,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.ButtonStart.setEnabled(True)
             elif button_text != self.translator.tr('start'):
                 self.ButtonStart.setText(self.translator.tr('start'))
-                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Start.png'))
+                self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Start.png'))
                 self.ButtonStart.setEnabled(True)
             else:
                 self.ButtonStart.setEnabled(True)

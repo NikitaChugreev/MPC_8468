@@ -37,7 +37,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Select.png</normaloff>ui/Pictures13/Select.png</iconset>
+     <normaloff>ui/ui_ser/ui_3/Pictures13/Select.png</normaloff>ui/ui_ser/ui_3/Pictures13/Select.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -113,7 +113,7 @@ border-radius: 2px;</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Save.png</normaloff>ui/Pictures13/Save.png</iconset>
+     <normaloff>ui/ui_ser/ui_3/Pictures13/Save.png</normaloff>ui/ui_ser/ui_3/Pictures13/Save.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -143,7 +143,7 @@ border-radius: 2px;</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Clean.png</normaloff>ui/Pictures13/Clean.png</iconset>
+     <normaloff>ui/ui_ser/ui_3/Pictures13/Clean.png</normaloff>ui/ui_ser/ui_3/Pictures13/Clean.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -198,7 +198,7 @@ border-radius: 2px;</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Close.png</normaloff>ui/Pictures13/Close.png</iconset>
+     <normaloff>ui/ui_ser/ui_3/Pictures13/Close.png</normaloff>ui/ui_ser/ui_3/Pictures13/Close.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -2125,7 +2125,7 @@ border-radius: 2px;</string>
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>ui/Pictures13/logo(66).png</pixmap>
+    <pixmap>ui/ui_ser/ui_3/Pictures13/logo(66).png</pixmap>
    </property>
   </widget>
   <widget class="QComboBox" name="CountPurge">

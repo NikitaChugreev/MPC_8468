@@ -204,7 +204,7 @@ border-radius: 2px;</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Cancel.png</normaloff>ui/Pictures13/Cancel.png</iconset>
+     <normaloff>ui/ui_ser/ui_2/Pictures13/Cancel.png</normaloff>ui/ui_ser/ui_2/Pictures13/Cancel.png</iconset>
    </property>
    <property name="iconSize">
     <size>
@@ -298,7 +298,7 @@ border-radius: 2px;</string>
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>ui/Pictures13/logo(66).png</pixmap>
+    <pixmap>ui/ui_ser/ui_2/Pictures13/logo(66).png</pixmap>
    </property>
   </widget>
   <widget class="QLabel" name="LabelSet_9">
@@ -626,7 +626,7 @@ border-radius: 2px;</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>ui/Pictures13/Save.png</normaloff>ui/Pictures13/Save.png</iconset>
+     <normaloff>ui/ui_ser/ui_2/Pictures13/Save.png</normaloff>ui/ui_ser/ui_2/Pictures13/Save.png</iconset>
    </property>
    <property name="iconSize">
     <size>
