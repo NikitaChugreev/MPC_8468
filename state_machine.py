@@ -69,6 +69,7 @@ class PlasmaAutoProcess:
         self.pumping_start_time = 0
         self.processing_start_time = 0
         self.venting_atm_start_time = 0
+        self.rrg_is_heating = [False for i in range(len(work_gases))]
         self.attempt = 0
 
         # НЕИЗМЕНЯЕМЫЕ
@@ -706,17 +707,19 @@ class PlasmaAutoProcess:
                 is_valid = True
 
                 for i in work_gases:
-                    recipe_gas = self.recipe_params.get(f"VE{i}", {})
-                    if recipe_gas.get('switch', 0):
-                        self.controller.handle_command(f"open_valve_ve{i}")
+                    if not self.rrg_is_heating[i]:
+                        recipe_gas = self.recipe_params.get(f"VE{i}", {})
+                        if recipe_gas.get('switch', 0):
+                            self.controller.handle_command(f"open_valve_ve{i}")
 
                 for i in work_gases:
-                    recipe_gas = self.recipe_params.get(f"VE{i}", {})
-                    a = recipe_gas.get('switch', 0)
-                    valves_check = self.safe_get_valves_states()
-                    b = valves_check.get(f"valve_ve{i}", 'open') == 'close'
-                    if a and b:
-                        is_valid = False
+                    if not self.rrg_is_heating[i]:
+                        recipe_gas = self.recipe_params.get(f"VE{i}", {})
+                        a = recipe_gas.get('switch', 0)
+                        valves_check = self.safe_get_valves_states()
+                        b = valves_check.get(f"valve_ve{i}", 'open') == 'close'
+                        if a and b:
+                            is_valid = False
             
                 if is_valid:
                     self.attempt = 0
@@ -741,15 +744,11 @@ class PlasmaAutoProcess:
                     recipe_gas = self.recipe_params.get(f"VE{i}", {})
                     type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
                     if recipe_gas.get('switch', 0):
-                        self.controller.handle_command('set_flow', 
-                                                       num_rrg=i, 
-                                                       flow_lh=settings.get('MAX_FLOW_RRG', 0), 
-                                                       type_gas=type_gas)
+                        if not self.rrg_is_heating[i]:
+                            self.controller.handle_command('set_flow', num_rrg=i, flow_lh=settings.get('MAX_FLOW_RRG', 0), type_gas=type_gas)
+                            self.rrg_is_heating[i] = True
                     else:
-                        self.controller.handle_command('set_flow', 
-                                                       num_rrg=i, 
-                                                       flow_lh=0, 
-                                                       type_gas=type_gas)
+                        self.controller.handle_command('set_flow', num_rrg=i, flow_lh=0, type_gas=type_gas)
                     time.sleep(0.05)
 
                 time.sleep(0.1)
@@ -757,14 +756,16 @@ class PlasmaAutoProcess:
                 for i in work_gases:
                     recipe_gas = self.recipe_params.get(f"VE{i}", {})
                     if recipe_gas.get('switch', 0):
-                        type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
-                        set_flow = self.controller.handle_command('read_set_flow', num_rrg=i, type_gas=type_gas)
-                        if set_flow is None:
-                            is_valid = False
-                            continue
-                        max_flow = float(settings.get('MAX_FLOW_RRG', 0))
-                        if abs(float(set_flow) - max_flow) > self.FLOW_TOLERANCE:
-                            is_valid = False
+                        if not self.rrg_is_heating[i]:
+                            type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
+                            set_flow = self.controller.handle_command('read_set_flow', num_rrg=i, type_gas=type_gas)
+                            if set_flow is None:
+                                is_valid = False
+                                continue
+                            max_flow = float(settings.get('MAX_FLOW_RRG', 0))
+                            if abs(float(set_flow) - max_flow) > self.FLOW_TOLERANCE:
+                                is_valid = False
+
                     time.sleep(0.05)
 
                 if is_valid:
@@ -2349,6 +2350,7 @@ class PlasmaAutoProcess:
         self.pumping_start_time = 0
         self.processing_start_time = 0
         self.venting_atm_start_time = 0
+
         # Сначала выключаем критичные устройства (плазма, нагрев)
         states = self.controller.handle_command('get_states')
         if not isinstance(states, dict):
