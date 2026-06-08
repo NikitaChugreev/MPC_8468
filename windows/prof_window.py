@@ -129,6 +129,11 @@ class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
         self.ButtonNI.show()
         self.ButtonVE0.show()
 
+        if self.parent().plasma_process.current_state != 'idle':
+            self.ButtonNI.setEnabled(False)
+            self.ButtonVE0.setEnabled(False)
+            
+
     def init_buttons(self):
         for button in self.buttons:
             button.clicked.connect(self.input_number)

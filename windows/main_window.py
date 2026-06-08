@@ -1524,9 +1524,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             
                             try:
                                 if hasattr(self, 'stop_rf_reading'):
-                                    self.stop_rf_reading(wait=False)
-                                    time.sleep(0.3)
-                                    
+                                    self.stop_rf_reading(wait=True)
+                                    time.sleep(0.1)
+                                                                    
                                     if hasattr(self.controller.rf, '_lock'):
                                         if self.controller.rf._lock.acquire(blocking=False):
                                             self.controller.rf._lock.release()
