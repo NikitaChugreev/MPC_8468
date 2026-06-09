@@ -1150,7 +1150,7 @@ class Ui_ServiceWindow(object):
         self.LabelSet_45.setText(_translate("ServiceWindow", "Тип RF"))
         self.config_type_RF.setItemText(0, _translate("ServiceWindow", "RSG1000S"))
         self.config_type_RF.setItemText(1, _translate("ServiceWindow", "RSG500S"))
-        self.config_type_RF.setItemText(2, _translate("ServiceWindow", "APEL"))
+        self.config_type_RF.setItemText(2, _translate("ServiceWindow", "APEL_M_1_5PDC"))
         self.LabelSet_47.setText(_translate("ServiceWindow", "Ост. давление"))
         self.find_address_RRG4.setText(_translate("ServiceWindow", "-"))
         self.LabelSet_22.setText(_translate("ServiceWindow", "Адрес РРГ 4"))

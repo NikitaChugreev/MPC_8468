@@ -460,7 +460,7 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         self.TYPE_RF_MAP = {
             'RSG1000S': 0,
             'RSG500S': 1,
-            'APEL': 2
+            'APEL_M_1_5PDC': 2
         }
         
         self.NUM_GASES_MAP = {
@@ -471,10 +471,6 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
 
         self.read_config()
         self.check_ports()
-
-
-        
-        
     
     def handle_commands(self, sender):
         try:
