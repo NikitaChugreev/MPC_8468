@@ -1631,19 +1631,6 @@ border-radius: 2px;</string>
      <string>Оператор</string>
     </property>
    </widget>
-   <widget class="QWidget" name="gridLayoutWidget_3">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>760</y>
-      <width>160</width>
-      <height>282</height>
-     </rect>
-    </property>
-    <layout class="QGridLayout" name="gridLayout_3">
-
-    </layout>
-   </widget>
    <widget class="QPushButton" name="serviceButton">
     <property name="geometry">
      <rect>
