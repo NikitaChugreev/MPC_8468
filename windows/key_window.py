@@ -4,10 +4,7 @@ from PyQt5.QtWidgets import QMessageBox
 from config.settings import settings
 from utils.translator import translator, language_emitter
 
-if settings.get('NUMBER_GASES') == 3:
-    from ui.ui_ser.ui_3.keywindow import Ui_KeyWindow
-elif settings.get('NUMBER_GASES') == 2:
-    from ui.ui_ser.ui_2.keywindow import Ui_KeyWindow
+from ui.ui_ser.keywindow import Ui_KeyWindow
 
 
 class KeyWindow(QtWidgets.QMainWindow, Ui_KeyWindow):

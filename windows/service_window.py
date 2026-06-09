@@ -7,11 +7,10 @@ import minimalmodbus
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QThread, pyqtSignal
 
-number_gases = settings.get('NUMBER_GASES', 2)
-if number_gases == 3:
-    from ui.ui_ser.ui_3.servicewindow import Ui_ServiceWindow
-elif number_gases == 2:
-    from ui.ui_ser.ui_2.servicewindow import Ui_ServiceWindow
+import fun
+
+from ui.ui_ser.servicewindow import Ui_ServiceWindow
+
 
 from config.settings import settings, save_settings
 
@@ -483,6 +482,47 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         self.read_config()
         self.check_ports()
 
+
+        self.buttons_service = [
+            self.DoorButtonS, self.StartButtonS, self.StopButtonS, self.DoorLightS, self.StartLightS, self.StopLightS, 
+            self.VE1ButtonS, self.VE2ButtonS,
+            self.VE01ButtonS, self.NIButtonS, self.BuzzButtonS, self.ButtonClose
+        ]
+
+        for btn in self.buttons_service:
+            btn.clicked.connect(lambda checked, btn=btn: self.handle_commands(btn.objectName()))
+    
+    def handle_commands(self, sender):
+        try:
+            command = None
+
+            if sender == 'VE1ButtonS':
+                command = 'open_valve_ve1' if getattr(self, sender).isChecked() else 'close_valve_ve1'
+            if sender == 'VE2ButtonS':
+                command = 'open_valve_ve2' if getattr(self, sender).isChecked() else 'close_valve_ve2'
+            if sender == 'VE3ButtonS':
+                command = 'open_valve_ve3' if getattr(self, sender).isChecked() else 'close_valve_ve3'
+            if sender == 'VE4ButtonS':
+                command = 'open_valve_ve4' if getattr(self, sender).isChecked() else 'close_valve_ve4'
+            if sender == 'VE01ButtonS':
+                command = 'open_valve_ve01' if getattr(self, sender).isChecked() else 'close_valve_ve01'
+            if sender == 'NIButtonS':
+                command = 'on_pump' if getattr(self, sender).isChecked() else 'off_pump'
+            if sender == 'BuzzButtonS':
+                command = 'on_buzz' if getattr(self, sender).isChecked() else 'off_buzz'
+
+            self.parent().controller.handle_command(command=command)
+
+        except Exception as e:
+            print(e)
+      
+
+    def update_values(self):
+        values_adc = self.parent().values_adc
+        water_raw = self.parent().controller.handle_command('get_sensor_water')
+        if values_adc.get('P') is not None:
+            self.PressLableSZnachU.setText(str(fun.bit_u(float(values_adc['P']))) + ' В')
+            self.WLabelS.setText(water_raw + str('л/мин'))
 
     def connect_buttons(self):
         self.btn_checkPorts.clicked.connect(self.check_ports)

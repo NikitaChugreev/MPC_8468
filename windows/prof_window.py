@@ -6,11 +6,7 @@ from windows.set_window import SetWindow
 from config.settings import settings, save_settings
 from utils.translator import translator, language_emitter
 
-if settings.get('NUMBER_GASES') == 3:
-    from ui.ui_ser.ui_3.profwindow import Ui_ProfWindow
-elif settings.get('NUMBER_GASES') == 2:
-    from ui.ui_ser.ui_2.profwindow import Ui_ProfWindow
-
+from ui.ui_ser.profwindow import Ui_ProfWindow
 
 class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
     def __init__(self, parent=None):

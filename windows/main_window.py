@@ -233,6 +233,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.user_mode = 'Operator'
 
+        self.values_adc = None
+
         self.blinking_active = False
 
         self.flow_thread = None
@@ -342,20 +344,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             button.clicked.connect(lambda checked, k=key: self.open_key(k))
         
         self.labels_service = [
-            self.label_26, self.label_35, self.PressLableSZnachU, self.WLabelS, self.serviceButton
+            self.serviceButton
         ]
-        
-        self.buttons_service = [
-            self.DoorButtonS, self.StartButtonS, self.StopButtonS, self.DoorLightS, self.StartLightS, self.StopLightS, 
-            self.VE1ButtonS, self.VE2ButtonS,
-            self.VE01ButtonS, self.NIButtonS, self.BuzzButtonS, self.ButtonClose
-        ]
-
-        if number_gases == 3: 
-            self.buttons_service.append(self.VE3ButtonS)
-
-        for btn in self.buttons_service:
-            btn.clicked.connect(lambda checked, btn=btn: self.handle_commands(btn.objectName()))
 
         for i in range(1, number_gases + 1):
             self.labels_service.extend([
@@ -730,15 +720,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         plasma_on = getattr(self.controller, '_cached_plasma_status', False)
 
         values = {'pressure': 0.0, 'water': 0.0}
-        values_adc = None
+        self.values_adc = None
 
         try:
-            values_adc = self.controller.get_values_adc()
-            if values_adc is None:
-                values_adc = {'P': None, 'T': None}
+            self.values_adc = self.controller.get_values_adc()
 
-            if values_adc.get('P') is not None:
-               self.PressLableSZnachU.setText(str(fun.bit_u(float(values_adc['P']))))
+            if self.values_adc is None:
+                self.values_adc = {'P': None, 'T': None}
 
             try:
                 pressure_raw = self.controller.handle_command('get_sensor_pressure')
@@ -789,8 +777,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 led_vacuum = states.get('led_vacuum', False)
                 
                 try:
-                    if values_adc and values_adc.get('P') is not None:
-                        pressure_voltage = fun.bit_u(float(values_adc['P']))
+                    if self.values_adc and self.values_adc.get('P') is not None:
+                        pressure_voltage = fun.bit_u(float(self.values_adc['P']))
                         pressure_led = settings.get('PRESSURE_LED', 4.347)
                         if pressure_voltage < pressure_led and not led_vacuum:
                             self.controller.handle_command('on_led_vacuum')
@@ -838,16 +826,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         except (ValueError, TypeError) as e:
             logging.error(f"Error converting pressure to float: {e}, value: {values.get('pressure')}")
             self.PressZnach.setText("0.00")
-
-        try:
-            if values['water'] is not None:
-                new_water_text = f"{values['water']:.3f}"
-                self.WLabelS.setText(new_water_text + str('л/мин'))
-            else:
-                self.WLabelS.setText("0.000")
-        except Exception as e:
-            logging.error(f"Error updating water display: {e}, value: {values.get('water')}")
-            self.WLabelS.setText("0.000")
     
         try:
             press_znach = float(self.PressZnach.text())
@@ -2769,55 +2747,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 data[f'VE{i}'] = {"switch": 0, "gas": None, "flow": 0.0}
 
             return data
-            
-    
-    def handle_commands(self, sender):
-        logs_text = {
-            "open_valve_ve1": 'VE1 ОТКРЫТ ⭢ ЗАКРЫТ',
-            "open_valve_ve2": 'VE2 ОТКРЫТ ⭢ ЗАКРЫТ',
-            "open_valve_ve3": 'VE3 ОТКРЫТ ⭢ ЗАКРЫТ',
-            "open_valve_ve4": 'VE4 ОТКРЫТ ⭢ ЗАКРЫТ',
-            "open_valve_ve01": 'VE01 ОТКРЫТ ⭢ ЗАКРЫТ',
-            "close_valve_ve1": 'VE1 ЗАКРЫТ ⭢ ОТКРЫТ',
-            "close_valve_ve2": 'VE2 ЗАКРЫТ ⭢ ОТКРЫТ',
-            "close_valve_ve3": 'VE3 ЗАКРЫТ ⭢ ОТКРЫТ',
-            "close_valve_ve4": 'VE4 ЗАКРЫТ ⭢ ОТКРЫТ',
-            "close_valve_ve01": 'VE01 ЗАКРЫТ ⭢ ОТКРЫТ',
-            "close_valve_ve02": 'VE01 ЗАКРЫТ ⭢ ОТКРЫТ',
-            'on_pump': 'Насос ОТКЛЮЧЕН ⭢ ВКЛЮЧЕН',
-            'off_pump': 'Насос ВКЛЮЧЕН ⭢ ОТКЛЮЧЕН',
-            'on_ps': 'БП ОТКЛЮЧЕН ⭢ ВКЛЮЧЕН',
-            'off_ps': 'БП ВКЛЮЧЕН ⭢ ОТКЛЮЧЕН',
-            'on_buzz': 'Бузер ОТКЛЮЧЕН ⭢ ВКЛЮЧЕН',
-            'off_buzz': 'Бузер ВКЛЮЧЕН ⭢ ОТКЛЮЧЕН',
-            'on_plasma': 'Плазма ОТКЛЮЧЕНА ⭢ ВКЛЮЧЕНА',
-            'off_plasma': 'Плазма ВКЛЮЧЕНА ⭢ ОТКЛЮЧЕНА',
-        }
-
-        try:
-            command = None
-
-            if sender == 'VE1ButtonS':
-                command = 'open_valve_ve1' if getattr(self, sender).isChecked() else 'close_valve_ve1'
-            if sender == 'VE2ButtonS':
-                command = 'open_valve_ve2' if getattr(self, sender).isChecked() else 'close_valve_ve2'
-            if sender == 'VE3ButtonS':
-                command = 'open_valve_ve3' if getattr(self, sender).isChecked() else 'close_valve_ve3'
-            if sender == 'VE4ButtonS':
-                command = 'open_valve_ve4' if getattr(self, sender).isChecked() else 'close_valve_ve4'
-            if sender == 'VE01ButtonS':
-                command = 'open_valve_ve01' if getattr(self, sender).isChecked() else 'close_valve_ve01'
-            if sender == 'NIButtonS':
-                command = 'on_pump' if getattr(self, sender).isChecked() else 'off_pump'
-            if sender == 'BuzzButtonS':
-                command = 'on_buzz' if getattr(self, sender).isChecked() else 'off_buzz'
-
-            logging.info(logs_text[command])
-            self.controller.handle_command(command=command)
-
-        except Exception as e:
-            logging.error(str(sender) + ':' + str(e))
-            
+                  
     def closeEvent(self, event):
         self.plasma_process.cleanup()
         
