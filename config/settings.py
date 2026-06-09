@@ -39,7 +39,12 @@ DEFAULT_SETTINGS = {
     "LANG": 0,
     "enable_sound": True,
     "check_water_flow": True,
-    "auto_venting_atm": True
+    "auto_venting_atm": True,
+    "last_ve1": 0,
+    "last_ve2": 0,
+    "last_ve3": 0,
+    "enable_purge": True,
+    "sensor_door": True
 }
 
 def load_settings():

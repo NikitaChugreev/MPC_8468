@@ -238,7 +238,6 @@ class PlasmaAutoProcess:
                 if hasattr(self.parent, 'stop_rf_reading'):
                     logging.info("[process_fault] STEP 1: Stopping RF reading thread before off_plasma...")
                     self.parent.stop_rf_reading(wait=True)
-                    time.sleep(1.0)
 
                     if self.controller.rf is not None and hasattr(self.controller.rf, '_lock'):
                         if self.controller.rf._lock.acquire(blocking=False):
@@ -656,7 +655,6 @@ class PlasmaAutoProcess:
                 if hasattr(self.parent, 'stop_rf_reading'):
                     logging.info("[process_init_recipe] Stopping RF reading thread before off_plasma (if running)...")
                     self.parent.stop_rf_reading(wait=True)
-                    time.sleep(0.5)
                 
                 if states.get('plasma', 1):
                     self.controller.handle_command('off_plasma')
@@ -1193,7 +1191,6 @@ class PlasmaAutoProcess:
             if self.current_step == 0:
                 if hasattr(self.parent, 'stop_rf_reading'):
                     self.parent.stop_rf_reading(wait=True)
-                    time.sleep(0.5)
 
                     if self.controller.rf is not None and hasattr(self.controller.rf, '_lock'):
                         if self.controller.rf._lock.acquire(blocking=False):
@@ -1522,8 +1519,6 @@ class PlasmaAutoProcess:
                     self.parent.stop_rf_reading(wait=True)  # Ждем завершения, чтобы порт точно освободился
                     rf_stop_time = time.time() - rf_stop_start
                     process_logger.info(f"[process_processing] STEP 2: RF reading thread stopped in {rf_stop_time:.3f}s")
-                    
-                    time.sleep(1.0)
                     
                     lock_acquired = False
                     if self.controller.rf is not None and hasattr(self.controller.rf, '_lock'):
@@ -2005,7 +2000,6 @@ class PlasmaAutoProcess:
                 if hasattr(self.parent, 'stop_rf_reading'):
                     logging.info("HANDLE_ERROR STOP PLASMA: Stopping RF reading thread before off_plasma...")
                     self.parent.stop_rf_reading(wait=True)  # Ждем завершения, чтобы порт точно освободился
-                    time.sleep(1.0)  # Задержка для гарантии полного освобождения порта
                     
                     # Проверяем, что блокировка порта освобождена
                     if self.controller.rf is not None and hasattr(self.controller.rf, '_lock'):
@@ -2302,7 +2296,6 @@ class PlasmaAutoProcess:
         if hasattr(self.parent, 'stop_rf_reading'):
             logging.info("[stop_process] Stopping RF reading thread before off_plasma...")
             self.parent.stop_rf_reading(wait=True)  # Ждем завершения, чтобы порт точно освободился
-            time.sleep(1.0)  # Задержка для гарантии полного освобождения порта
             
             # Проверяем, что блокировка порта освобождена
             if self.controller.rf is not None and hasattr(self.controller.rf, '_lock'):

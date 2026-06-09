@@ -35,5 +35,10 @@
     "LANG": 0,
     "enable_sound": true,
     "check_water_flow": true,
-    "auto_venting_atm": true
+    "auto_venting_atm": true,
+    "last_ve1": 0,
+    "last_ve2": 0,
+    "last_ve3": 0,
+    "enable_purge": true,
+    "sensor_door": true
 }
