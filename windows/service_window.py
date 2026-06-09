@@ -463,6 +463,11 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             '9600': 1, '14440': 2, '19200': 3,
             '38400': 4, '56000': 5, '57600': 6, '115200': 7
         }
+
+        self.TYPE_RF_MAP = {
+            'RSG1000S': 0,
+            'APEL': 1
+        }
         
         self.NUM_GASES_MAP = {
             '2': 0, 
@@ -488,9 +493,6 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             self.VE1ButtonS, self.VE2ButtonS,
             self.VE01ButtonS, self.NIButtonS, self.BuzzButtonS, self.ButtonClose
         ]
-
-        for btn in self.buttons_service:
-            btn.clicked.connect(lambda checked, btn=btn: self.handle_commands(btn.objectName()))
     
     def handle_commands(self, sender):
         try:
@@ -532,81 +534,98 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         self.btn_checkCurrentAddresses.clicked.connect(self.read_current_addresses)
         self.btn_checkPortRRG.clicked.connect(self.check_port_rrg)
         self.btn_checkPortRF.clicked.connect(self.check_port_rf)
-        self.btn_applyNewAddressRRG1.clicked.connect(lambda: self.apply_new_address_rrg(1))
-        self.btn_applyNewAddressRRG2.clicked.connect(lambda: self.apply_new_address_rrg(2))
-        self.btn_applyNewAddressRRG3.clicked.connect(lambda: self.apply_new_address_rrg(3))
-        self.btn_applySetAddressRRG1.clicked.connect(lambda: self.update_address(1))
-        self.btn_applySetAddressRRG2.clicked.connect(lambda: self.update_address(2))
-        self.btn_applySetAddressRRG3.clicked.connect(lambda: self.update_address(3))
-        self.btn_applyNewBaudrateRRG1.clicked.connect(lambda: self.update_baudrate(1))
-        self.btn_applyNewBaudrateRRG2.clicked.connect(lambda: self.update_baudrate(2))
-        self.btn_applyNewBaudrateRRG3.clicked.connect(lambda: self.update_baudrate(3))
-        self.btn_checkRRG1.clicked.connect(lambda: self.check_port_rrg_full(1))
-        self.btn_checkRRG2.clicked.connect(lambda: self.check_port_rrg_full(2))
-        self.btn_checkRRG3.clicked.connect(lambda: self.check_port_rrg_full(3))
+
+        for i in range(1, 5):
+            getattr(self, f'btn_applyNewAddressRRG{i}').clicked.connect(lambda: self.apply_new_address_rrg(i))
+            getattr(self, f'btn_applySetAddressRRG{i}').clicked.connect(lambda: self.update_address(i))
+            getattr(self, f'btn_applyNewBaudrateRRG{i}').clicked.connect(lambda: self.update_baudrate(i))
+            getattr(self, f'btn_checkRRG{i}').clicked.connect(lambda: self.check_port_rrg_full(i))
+            getattr(self, f'btn_findRRG{i}').clicked.connect(lambda: self.find_address_rrg(i))
+
         self.btn_checkRF.clicked.connect(self.check_port_rf_full)
         self.btn_measurement_RF.clicked.connect(self.measurement_rf)
         self.btn_measurement_RRG.clicked.connect(self.measurement_rrg)
-        self.btn_findRRG1.clicked.connect(lambda: self.find_address_rrg(1))
-        self.btn_findRRG2.clicked.connect(lambda: self.find_address_rrg(2))
-        self.btn_findRRG3.clicked.connect(lambda: self.find_address_rrg(3))
+
         self.btn_findRF.clicked.connect(self.find_address_rf)
         self.btn_check_config.clicked.connect(self.check_config)
 
-    def check_ports(self):
-        ports = os.listdir('/dev/serial/by-path')
-        self.textEdit.setText('')
+        for btn in self.buttons_service:
+            btn.clicked.connect(lambda checked, btn=btn: self.handle_commands(btn.objectName()))
 
+    def check_ports(self):
+        self.textEdit.setText('')
+        self.comboBox_2.clear()
+        self.edit_checkRRG1_port.clear()
+        self.edit_checkRRG2_port.clear()
+        self.edit_checkRRG3_port.clear()
+        self.edit_checkRRG4_port.clear()
+        self.edit_checkRF_port.clear()
+
+        ports = os.listdir('/dev/serial/by-path')
+        
         for port in ports:
             port = '/dev/serial/by-path/' + port
             self.comboBox_2.addItem(port)
             self.edit_checkRRG1_port.addItem(port)
             self.edit_checkRRG2_port.addItem(port)
             self.edit_checkRRG3_port.addItem(port)
+            self.edit_checkRRG4_port.addItem(port)
             self.edit_checkRF_port.addItem(port)
             self.textEdit.setText(port + '\n' + self.textEdit.toPlainText())
 
     def read_config(self):
+        self.config_number_gases.setCurrentIndex(self.NUM_GASES_MAP.get(str(settings.get('NUMBER_GASES')), 0))
+
         self.config_port_RRG.setText(settings.get('PORT_RRG'))
-        self.config_address_rrg1.setValue(settings.get('ADDRESS_RRG1'))
-        self.config_address_rrg2.setValue(settings.get('ADDRESS_RRG2'))
-        self.config_address_rrg3.setValue(settings.get('ADDRESS_RRG3'))
+        self.config_baudrate_RRG.setValue(settings.get('BAUDRATE_RRG'))
+
+        for i in range(1, 5):
+            getattr(self, f'config_address_rrg{i}').setValue(settings.get(f'ADDRESS_RRG{i}'))
+            
+        self.config_min_flow.setValue(settings.get('MIN_FLOW_RRG'))
         self.config_max_flow.setValue(settings.get('MAX_FLOW_RRG'))
-        self.config_number_gases.setCurrentIndex(self.NUM_GASES_MAP.get(str(settings.get('NUMBER_GASES', 2)), 0))
+
         self.config_port_RF.setText(settings.get('PORT_RF'))
+        self.config_baudrate_RF.setValue(settings.get('BAUDRATE_RF'))
         self.config_address_rf.setValue(settings.get('ADDRESS_RF'))
+
+        self.config_min_power.setValue(settings.get('MIN_POWER_BP'))
         self.config_max_power.setValue(settings.get('MAX_POWER_BP'))
+        self.config_type_RF.setCurrentIndex(self.TYPE_RF_MAP.get(settings.get('TYPE_RF')))
+
         self.config_water.setCurrentIndex(self.ANS_BOOL_MAP.get(settings.get('sensor_water', 'false')))
-        self.config_hall.setCurrentIndex(self.ANS_BOOL_MAP.get(settings.get('sensor_hall', 'false')))
-        self.config_baudrate_RRG.setCurrentIndex(self.BAUD_INDEX_MAP.get(str(settings.get('BAUDRATE_RRG', '9600')), 0))
-        self.config_baudrate_RF.setCurrentIndex(self.BAUD_INDEX_MAP.get(str(settings.get('BAUDRATE_RF', '9600')), 0))
+        self.config_hall.setCurrentIndex(self.ANS_BOOL_MAP.get(settings.get('sensor_door', 'false')))
+        self.config_purge.setCurrentIndex(self.ANS_BOOL_MAP.get(settings.get('enable_purge', 'false')))
+        self.config_res_pressure.setValue(settings.get('ResPressure'))
 
-        self.label_currentAddressRRG1.setText(str(settings.get('ADDRESS_RRG1', 0)))
-        self.label_currentAddressRRG2.setText(str(settings.get('ADDRESS_RRG2', 0)))
-        self.label_currentAddressRRG3.setText(str(settings.get('ADDRESS_RRG3', 0)))
-
-        self.edit_newBaudrateRRG1.setCurrentIndex(self.BAUD_INDEX_MAP.get(str(settings.get('BAUDRATE_RRG', '9600')), 0))
-        self.edit_newBaudrateRRG2.setCurrentIndex(self.BAUD_INDEX_MAP.get(str(settings.get('BAUDRATE_RRG', '9600')), 0))
-        self.edit_newBaudrateRRG3.setCurrentIndex(self.BAUD_INDEX_MAP.get(str(settings.get('BAUDRATE_RRG', '9600')), 0))
                             
     def save_config(self):
         config = {
+            'NUMBER_GASES': int(self.config_number_gases.currentText()),
+
             'PORT_RRG': self.config_port_RRG.text(),
-            'BAUDRATE_RRG': int(self.config_baudrate_RRG.currentText()),
+            'BAUDRATE_RRG': int(self.config_baudrate_RRG.value()),
+
             'ADDRESS_RRG1': self.config_address_rrg1.value(),
             'ADDRESS_RRG2': self.config_address_rrg2.value(),
             'ADDRESS_RRG3': self.config_address_rrg3.value(),
+            'ADDRESS_RRG3': self.config_address_rrg4.value(),
+
+            'MIN_FLOW_RRG': self.config_min_flow.value(),
             'MAX_FLOW_RRG': self.config_max_flow.value(),
-            'NUMBER_GASES': int(self.config_number_gases.currentText()),
 
             'PORT_RF': self.config_port_RF.text(),
+            'BAUDRATE_RF': int(self.config_baudrate_RF.value()),
             'ADDRESS_RF': self.config_address_rf.value(),
-            'BAUDRATE_RF': int(self.config_baudrate_RF.currentText()),
-            'MAX_POWER_BP': self.config_max_power.value(),
 
-            'has_water': self.ANS_BOOL_REVERSE.get(self.config_water.currentText()),
-            'has_hall': self.ANS_BOOL_REVERSE.get(self.config_hall.currentText()),
-            'has_purge': self.ANS_BOOL_REVERSE.get(self.config_purge.currentText())
+            'MIN_POWER_BP': self.config_min_power.value(),
+            'MAX_POWER_BP': self.config_max_power.value(),
+            'TYPE_RF': self.config_type_RF.currentText(),
+
+            'sensor_water': self.ANS_BOOL_REVERSE.get(self.config_water.currentText()),
+            'sensor_door': self.ANS_BOOL_REVERSE.get(self.config_hall.currentText()),
+            'enable_purge': self.ANS_BOOL_REVERSE.get(self.config_purge.currentText()),
+            'ResPressure': self.config_res_pressure.value()
         }
 
         try:
@@ -617,9 +636,9 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             self.textEdit.setText(f'Ошибка при сохраненении: {str(e)}')
             
     def read_current_addresses(self):
-        self.label_currentAddressRRG1.setText(str(settings.get('ADDRESS_RRG1', 0)))
-        self.label_currentAddressRRG2.setText(str(settings.get('ADDRESS_RRG2', 0)))
-        self.label_currentAddressRRG3.setText(str(settings.get('ADDRESS_RRG3', 0)))
+        for i in range(1, 5):
+            getattr(self, f'label_currentAddressRRG{i}').setText(str(settings.get(f'ADDRESS_RRG{i}', 0)))
+
 
     def make_instrument(self, port, baudrate, address, timeout=0.5):
         instrument = minimalmodbus.Instrument(port=port, slaveaddress=address)
@@ -627,7 +646,7 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         instrument.serial.stopbits = 1
         instrument.serial.bytesize = 8
         instrument.serial.parity = minimalmodbus.serial.PARITY_NONE
-        instrument.serial.timeout = timeout   # теперь можно передавать
+        instrument.serial.timeout = timeout
         return instrument
 
     def check_port_rrg(self):
