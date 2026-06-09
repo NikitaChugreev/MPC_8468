@@ -1188,13 +1188,13 @@
         "time": "00:00"
     },
     "45": {
-        "title": "Тест 1",
-        "com": "",
+        "title": "Тест 1 (100 Вт, 1 газ)",
+        "com": "Тест на низкой мощности",
         "ResPressure": 0.2,
         "VE1": {
-            "switch": 1,
+            "switch": 0,
             "gas": 0,
-            "flow": 5.0
+            "flow": 0.0
         },
         "VE2": {
             "switch": 0,
@@ -1202,9 +1202,9 @@
             "flow": 0.0
         },
         "VE3": {
-            "switch": 0,
-            "gas": null,
-            "flow": 0.0
+            "switch": 1,
+            "gas": 0,
+            "flow": 15.0
         },
         "VE4": {
             "switch": 0,
@@ -1212,16 +1212,16 @@
             "flow": 0.0
         },
         "power": 100,
-        "time": "00:30"
+        "time": "05:00"
     },
     "46": {
-        "title": "Тест 2",
+        "title": "Тест 2 (100 Вт, 2 газа)",
         "com": "",
         "ResPressure": 0.2,
         "VE1": {
             "switch": 1,
-            "gas": 0,
-            "flow": 5.0
+            "gas": 2,
+            "flow": 6.0
         },
         "VE2": {
             "switch": 0,
@@ -1229,63 +1229,9 @@
             "flow": 0.0
         },
         "VE3": {
-            "switch": 0,
-            "gas": null,
-            "flow": 0.0
-        },
-        "VE4": {
-            "switch": 0,
-            "gas": null,
-            "flow": 0.0
-        },
-        "power": 200,
-        "time": "00:30"
-    },
-    "47": {
-        "title": "Тест 3",
-        "com": "",
-        "ResPressure": 0.2,
-        "VE1": {
             "switch": 1,
-            "gas": 0,
-            "flow": 5.0
-        },
-        "VE2": {
-            "switch": 0,
-            "gas": 0,
-            "flow": 0.0
-        },
-        "VE3": {
-            "switch": 0,
-            "gas": null,
-            "flow": 0.0
-        },
-        "VE4": {
-            "switch": 0,
-            "gas": null,
-            "flow": 0.0
-        },
-        "power": 300,
-        "time": "00:30"
-    },
-    "48": {
-        "title": "Тест 4",
-        "com": "",
-        "ResPressure": 0.2,
-        "VE1": {
-            "switch": 1,
-            "gas": 0,
-            "flow": 5.0
-        },
-        "VE2": {
-            "switch": 0,
-            "gas": 0,
-            "flow": 0.0
-        },
-        "VE3": {
-            "switch": 0,
-            "gas": null,
-            "flow": 0.0
+            "gas": 1,
+            "flow": 9.0
         },
         "VE4": {
             "switch": 0,
@@ -1293,60 +1239,114 @@
             "flow": 0.0
         },
         "power": 100,
-        "time": "00:30"
+        "time": "05:00"
     },
-    "49": {
-        "title": "Тест 5",
+    "47": {
+        "title": "Тест 3 (500 Вт, 1 газ)",
         "com": "",
         "ResPressure": 0.2,
         "VE1": {
-            "switch": 1,
+            "switch": 0,
             "gas": 0,
-            "flow": 5.0
+            "flow": 0.0
         },
         "VE2": {
-            "switch": 1,
+            "switch": 0,
             "gas": 0,
-            "flow": 5.0
+            "flow": 0.0
         },
         "VE3": {
-            "switch": 0,
-            "gas": null,
-            "flow": 0.0
+            "switch": 1,
+            "gas": 1,
+            "flow": 15.0
         },
         "VE4": {
             "switch": 0,
             "gas": null,
             "flow": 0.0
         },
-        "power": 200,
+        "power": 500,
+        "time": "02:00"
+    },
+    "48": {
+        "title": "Тест 4 (500 Вт, 2 газа)",
+        "com": "",
+        "ResPressure": 0.2,
+        "VE1": {
+            "switch": 1,
+            "gas": 2,
+            "flow": 12.0
+        },
+        "VE2": {
+            "switch": 0,
+            "gas": 0,
+            "flow": 0.0
+        },
+        "VE3": {
+            "switch": 1,
+            "gas": 1,
+            "flow": 18.0
+        },
+        "VE4": {
+            "switch": 0,
+            "gas": null,
+            "flow": 0.0
+        },
+        "power": 500,
+        "time": "02:00"
+    },
+    "49": {
+        "title": "Тест 5 (1000 Вт, 1 газ)",
+        "com": "",
+        "ResPressure": 0.2,
+        "VE1": {
+            "switch": 0,
+            "gas": 0,
+            "flow": 0.0
+        },
+        "VE2": {
+            "switch": 0,
+            "gas": 0,
+            "flow": 0.0
+        },
+        "VE3": {
+            "switch": 1,
+            "gas": 1,
+            "flow": 30.0
+        },
+        "VE4": {
+            "switch": 0,
+            "gas": null,
+            "flow": 0.0
+        },
+        "power": 1000,
         "time": "00:30"
     },
     "50": {
-        "title": "Тест 6",
+        "title": "Тест 6 (1000 Вт, 2 газа)",
         "com": "",
         "ResPressure": 0.2,
         "VE1": {
             "switch": 1,
-            "gas": 0,
-            "flow": 5.0
+            "gas": 2,
+            "flow": 20.0
         },
         "VE2": {
-            "switch": 1,
+            "switch": 0,
             "gas": 0,
-            "flow": 5.0
+            "flow": 0.0
         },
         "VE3": {
-            "switch": 0,
-            "gas": null,
-            "flow": 0.0
+            "switch": 1,
+            "gas": 1,
+            "flow": 20.0
         },
         "VE4": {
             "switch": 0,
             "gas": null,
             "flow": 0.0
         },
-        "power": 300,
+        "power": 1000,
         "time": "00:30"
     }
 }
