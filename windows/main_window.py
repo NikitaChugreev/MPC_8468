@@ -342,18 +342,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         for key, button in buttons_commands.items():
             button.clicked.connect(lambda checked, k=key: self.open_key(k))
-        
-        self.labels_service = [
-            self.serviceButton
-        ]
-
-        for i in range(1, number_gases + 1):
-            self.labels_service.extend([
-                getattr(self, f'button_rrg_{i}'),
-                getattr(self, f'valve_ve{i}_value'),
-                getattr(self, f'title_address_rrg{i}')
-            ])
-            self.buttons_service.append(getattr(self, f'VE{i}ButtonS'))
 
         if number_gases == 2:
             self.VE1ComboBox.setCurrentIndex(settings.get('last_ve1', 0))
@@ -2600,54 +2588,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def update_labels(self):
         if self.user_mode == 'Operator':
+            self.serviceButton.hide()
             self.label_user.setText(self.translator.tr('operator'))
 
             if self.StatusLine.text() == self.translator.tr('system_ready_tech'):
                 self.StatusLine.setText(self.translator.tr('system_ready_oper'))
 
-            for label in self.labels_service:
-                try:
-                    label.hide()
-                except:
-                    pass
-
-            for label in self.buttons_service:
-                try:
-                    label.hide()
-                except:
-                    pass
-
         elif self.user_mode == 'Technologist':
+            self.serviceButton.hide()
             self.label_user.setText(self.translator.tr('technologist'))
+
             if self.StatusLine.text() == self.translator.tr('system_ready_oper'):
                 self.StatusLine.setText(self.translator.tr('system_ready_tech'))
-                
-            for label in self.labels_service:
-                try:
-                    label.hide()
-                except:
-                    pass
-
-            for label in self.buttons_service:
-                try:
-                    label.hide()
-                except:
-                    pass
 
         elif self.user_mode == 'Service':
             self.label_user.setText(self.translator.tr('service_engineer'))
-
-            for label in self.labels_service:
-                try:
-                    label.show()
-                except:
-                    pass
-            
-            for label in self.buttons_service:
-                try:
-                    label.show()
-                except:
-                    pass
+            self.serviceButton.show()
             
     def open_prof(self):
         profile_window = ProfWindow(self)

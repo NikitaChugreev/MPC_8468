@@ -2334,7 +2334,6 @@ class Controller:
                 return res
             
             elif command == "get_reflected_power":
-                return 0
                 if self.rf is None:
                     logging.error("get_reflected_power: RF generator not initialized")
                     return None
