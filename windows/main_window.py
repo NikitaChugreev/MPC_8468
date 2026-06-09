@@ -286,13 +286,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.HFButton.clicked.connect(self.on_start_plasma_clicked)
         self.VE0Button.clicked.connect(self.on_venting_atm_clicked)
 
-        if hasattr(self, 'button_rrg_1'):
-            self.button_rrg_1.clicked.connect(lambda: self.save_address_rrg("1"))
-        if hasattr(self, 'button_rrg_2'):
-            self.button_rrg_2.clicked.connect(lambda: self.save_address_rrg("2"))
-        if hasattr(self, 'button_rf'):
-            self.button_rf.clicked.connect(self.save_address_rf)
-
         self.current_recipe = None
 
         self.max_attempts = 10
@@ -349,19 +342,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             button.clicked.connect(lambda checked, k=key: self.open_key(k))
         
         self.labels_service = [
-            self.label_2, self.label_3, self.label_4, self.label_5, self.label_6, self.label_7, self.label_8, self.label_9, 
-            self.label_11, self.label_13, self.label_14, self.label_16, self.label_17,
-            self.label_26, self.label_28, self.label_29, self.label_30, self.label_31, self.label_35, self.label_36,
-            self.PressLableSADC, self.PressLableSZnachU, self.WLabelS, self.BPButtonS,
-            self.title_address_rf, self.led_start_value, self.led_stop_value,
-            self.led_vacuum_value, self.pump_value, self.ps_value,
-            self.valve_ve01_value, self.buzz_value, self.plasma_value, self.button_rf, self.serviceButton
+            self.label_26, self.label_35, self.PressLableSZnachU, self.WLabelS, self.serviceButton
         ]
         
         self.buttons_service = [
             self.DoorButtonS, self.StartButtonS, self.StopButtonS, self.DoorLightS, self.StartLightS, self.StopLightS, 
-            self.VE01ButtonS, self.NIButtonS, self.HFButtonS, self.BuzzButtonS, self.ButtonClose
+            self.VE1ButtonS, self.VE2ButtonS,
+            self.VE01ButtonS, self.NIButtonS, self.BuzzButtonS, self.ButtonClose
         ]
+
+        if number_gases == 3: 
+            self.buttons_service.append(self.VE3ButtonS)
 
         for btn in self.buttons_service:
             btn.clicked.connect(lambda checked, btn=btn: self.handle_commands(btn.objectName()))
@@ -482,14 +473,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def update_time(self):
         self.label_time.setText((datetime.now() + timedelta(hours=3)).strftime("%d.%m.%Y %H:%M:%S"))
-
-    def save_address_rrg(self, number):
-        find_address = self.controller.scan_modbus_rrg(number)
-        self.label_2.setText(f"Адрес: {find_address}" if find_address != 0 else 'Адрес не найден')
-
-    def save_address_rf(self):
-        find_address = self.controller.scan_modbus_rf()
-        self.label_2.setText(f"Адрес: {find_address}" if find_address != 0 else 'Адрес не найден')
 
     def _on_flow_thread_finished(self):
         with self._flow_thread_lock:
@@ -755,7 +738,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 values_adc = {'P': None, 'T': None}
 
             if values_adc.get('P') is not None:
-               self.PressLableSADC.setText(str(values_adc['P']))
                self.PressLableSZnachU.setText(str(fun.bit_u(float(values_adc['P']))))
 
             try:
@@ -860,7 +842,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         try:
             if values['water'] is not None:
                 new_water_text = f"{values['water']:.3f}"
-                self.WLabelS.setText(new_water_text)
+                self.WLabelS.setText(new_water_text + str('л/мин'))
             else:
                 self.WLabelS.setText("0.000")
         except Exception as e:
@@ -2829,8 +2811,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 command = 'on_pump' if getattr(self, sender).isChecked() else 'off_pump'
             if sender == 'BuzzButtonS':
                 command = 'on_buzz' if getattr(self, sender).isChecked() else 'off_buzz'
-            if sender == 'HFButtonS':
-                command = 'on_plasma' if getattr(self, sender).isChecked() else 'off_plasma'
 
             logging.info(logs_text[command])
             self.controller.handle_command(command=command)
