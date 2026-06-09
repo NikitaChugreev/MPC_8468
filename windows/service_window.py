@@ -469,8 +469,8 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             '4': 2
         }
 
-        self.read_config()
-        self.check_ports()
+        # self.read_config()
+        # self.check_ports()
     
     def handle_commands(self, sender):
         try:
