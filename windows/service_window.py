@@ -10,8 +10,6 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import fun
 
 from ui.ui_ser.servicewindow import Ui_ServiceWindow
-
-
 from config.settings import settings, save_settings
 
 class AddressScannerThread(QThread):
@@ -491,7 +489,7 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         self.buttons_service = [
             self.DoorButtonS, self.StartButtonS, self.StopButtonS, self.DoorLightS, self.StartLightS, self.StopLightS, 
             self.VE1ButtonS, self.VE2ButtonS,
-            self.VE01ButtonS, self.NIButtonS, self.BuzzButtonS, self.ButtonClose
+            self.VE01ButtonS, self.NIButtonS, self.BuzzButtonS, self.ButtonCancel
         ]
     
     def handle_commands(self, sender):
@@ -609,7 +607,7 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             'ADDRESS_RRG1': self.config_address_rrg1.value(),
             'ADDRESS_RRG2': self.config_address_rrg2.value(),
             'ADDRESS_RRG3': self.config_address_rrg3.value(),
-            'ADDRESS_RRG3': self.config_address_rrg4.value(),
+            'ADDRESS_RRG4': self.config_address_rrg4.value(),
 
             'MIN_FLOW_RRG': self.config_min_flow.value(),
             'MAX_FLOW_RRG': self.config_max_flow.value(),
@@ -911,7 +909,7 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             errors.append("Порт для РРГ не задан")
             flag = False
         else:
-            baudrate_rrg = int(self.config_baudrate_RRG.currentText())
+            baudrate_rrg = int(self.config_baudrate_RRG.value())
             # Проверяем только реальное количество газов
             num_gases = settings.get('NUMBER_GASES', 2)
             addresses_rrg = []
@@ -938,7 +936,7 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             errors.append("Порт для RF не задан")
             flag = False
         else:
-            baudrate_rf = int(self.config_baudrate_RF.currentText())
+            baudrate_rf = int(self.config_baudrate_RF.value())
             address_rf = self.config_address_rf.value()
             instrument = None
             try:
