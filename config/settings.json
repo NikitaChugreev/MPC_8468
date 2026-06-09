@@ -34,5 +34,6 @@
     "coef_rrg4": 1.0,
     "LANG": 0,
     "enable_sound": true,
-    "check_water_flow": true
+    "check_water_flow": true,
+    "auto_venting_atm": true
 }

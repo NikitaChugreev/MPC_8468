@@ -1762,8 +1762,12 @@ class PlasmaAutoProcess:
                 
 
             elif self.current_step == 5:
+                if settings.get('auto_venting_atm', True):
+                    self.current_step = 3
+                else:
+                    self.current_step = 0
+                
                 self.attempt = 0
-                self.current_step = 0
                 self.current_state = 'venting_atm'
                 QTimer.singleShot(1000, self.process_venting_atm)
                 return

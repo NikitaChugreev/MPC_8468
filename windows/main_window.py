@@ -233,6 +233,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.user_mode = 'Operator'
 
+        self.blinking_active = False
+
         self.flow_thread = None
         self.flow_worker = None
         self._flow_thread_lock = threading.Lock()
@@ -738,6 +740,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             logging.error(f"DEBUG: ERROR in _update_ui_after_stop: {e}", exc_info=True)
 
     def update_values(self):
+        if self.blinking_active:
+            return
+        
         current_state = getattr(self.plasma_process, 'current_state', 'unknown')
         plasma_on = getattr(self.controller, '_cached_plasma_status', False)
 
@@ -962,6 +967,32 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.ButtonStart.setText(self.translator.tr('stop'))
                 self.ButtonStart.setIcon(QtGui.QIcon(ui_dir + 'Pictures13/Stop.png'))
                 QtWidgets.QApplication.processEvents()
+
+        QTimer.singleShot(500, self._blink_start_stop_leds)
+
+    def _blink_start_stop_leds(self):
+        self.blinking_active = True
+        self.blink_step = 0
+        self.blink_count = 0
+        self._blink_next_step()
+
+    def _blink_next_step(self):
+        if self.blink_count >= 2:
+            self.blinking_active = False
+            return
+
+        if self.blink_step % 2 == 0:
+            self.controller.handle_command('on_led_start')
+            self.controller.handle_command('on_led_stop')
+            self.controller.handle_command('on_led_vacuum')
+        else:
+            self.controller.handle_command('off_led_start')
+            self.controller.handle_command('off_led_stop')
+            self.controller.handle_command('off_led_vacuum')
+            self.blink_count += 1
+
+        self.blink_step += 1
+        self.blink_timer.start(250)
 
     def on_start_button_clicked(self):
         current_state = self.plasma_process.current_state
