@@ -235,6 +235,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.values_adc = None
 
+        self.blink_timer = QTimer()
+        self.blink_timer.timeout.connect(self._blink_next_step)
+        self.blink_timer.setSingleShot(True)
+        self.blink_step = 0
+        self.blink_count = 0
         self.blinking_active = False
 
         self.flow_thread = None
@@ -945,6 +950,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.blink_count += 1
 
         self.blink_step += 1
+
         self.blink_timer.start(250)
 
     def on_start_button_clicked(self):

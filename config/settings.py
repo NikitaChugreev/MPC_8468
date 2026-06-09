@@ -38,7 +38,7 @@ DEFAULT_SETTINGS = {
     "coef_rrg4": 1.0,
     "LANG": 0,
     "enable_sound": True,
-    "check_water_flow": True,
+    "check_water_flow": False,
     "auto_venting_atm": True,
     "last_ve1": 0,
     "last_ve2": 0,

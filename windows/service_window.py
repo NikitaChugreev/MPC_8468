@@ -452,19 +452,10 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
 
         self.connect_buttons()
 
-        self.BAUD_INDEX_MAP = {
-            '9600': 0, '14440': 1, '19200': 2,
-            '38400': 3, '56000': 4, '57600': 5, '115200': 6
-        }
-        
-        self.BAUD_CODE_MAP = {
-            '9600': 1, '14440': 2, '19200': 3,
-            '38400': 4, '56000': 5, '57600': 6, '115200': 7
-        }
-
         self.TYPE_RF_MAP = {
             'RSG1000S': 0,
-            'APEL': 1
+            'RSG500S': 1,
+            'APEL': 2
         }
         
         self.NUM_GASES_MAP = {
@@ -472,24 +463,14 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             '3': 1, 
             '4': 2
         }
-        self.ANS_BOOL_MAP = {
-            'true': 0, 
-            'false': 1
-        }
-
-        self.ANS_BOOL_REVERSE = {
-            'Да': 'true', 
-            'Нет': 'false'
-        }
 
         self.read_config()
         self.check_ports()
 
-
         self.buttons_service = [
             self.DoorButtonS, self.StartButtonS, self.StopButtonS, self.DoorLightS, self.StartLightS, self.StopLightS, 
-            self.VE1ButtonS, self.VE2ButtonS,
-            self.VE01ButtonS, self.NIButtonS, self.BuzzButtonS, self.ButtonCancel
+            self.VE1ButtonS, self.VE2ButtonS, self.VE3ButtonS, self.VE4ButtonS, self.VE01ButtonS, self.VE02ButtonS, 
+            self.NIButtonS, self.BuzzButtonS, self.ButtonCancel
         ]
     
     def handle_commands(self, sender):
@@ -591,12 +572,12 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         self.config_max_power.setValue(settings.get('MAX_POWER_BP'))
         self.config_type_RF.setCurrentIndex(self.TYPE_RF_MAP.get(settings.get('TYPE_RF')))
 
-        self.config_water.setCurrentIndex(self.ANS_BOOL_MAP.get(settings.get('sensor_water', 'false')))
-        self.config_hall.setCurrentIndex(self.ANS_BOOL_MAP.get(settings.get('sensor_door', 'false')))
-        self.config_purge.setCurrentIndex(self.ANS_BOOL_MAP.get(settings.get('enable_purge', 'false')))
-        self.config_res_pressure.setValue(settings.get('ResPressure'))
+        self.config_water.setCurrentIndex(0 if settings.get('sensor_water', False) else 1)
+        self.config_hall.setCurrentIndex(0 if settings.get('sensor_door', False) else 1)
+        self.config_purge.setCurrentIndex(0 if settings.get('enable_purge', False) else 1)
 
-                            
+        self.config_res_pressure.setValue(settings.get('ResPressure'))
+                          
     def save_config(self):
         config = {
             'NUMBER_GASES': int(self.config_number_gases.currentText()),
@@ -620,9 +601,10 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             'MAX_POWER_BP': self.config_max_power.value(),
             'TYPE_RF': self.config_type_RF.currentText(),
 
-            'sensor_water': self.ANS_BOOL_REVERSE.get(self.config_water.currentText()),
-            'sensor_door': self.ANS_BOOL_REVERSE.get(self.config_hall.currentText()),
-            'enable_purge': self.ANS_BOOL_REVERSE.get(self.config_purge.currentText()),
+            'sensor_water': self.config_water.currentText() == 'Да',
+            'sensor_door': self.config_hall.currentText() == 'Да',
+            'enable_purge': self.config_purge.currentText() == 'Да',
+
             'ResPressure': self.config_res_pressure.value()
         }
 
@@ -636,7 +618,6 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
     def read_current_addresses(self):
         for i in range(1, 5):
             getattr(self, f'label_currentAddressRRG{i}').setText(str(settings.get(f'ADDRESS_RRG{i}', 0)))
-
 
     def make_instrument(self, port, baudrate, address, timeout=0.5):
         instrument = minimalmodbus.Instrument(port=port, slaveaddress=address)
@@ -761,7 +742,7 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
 
     def apply_new_address_rrg(self, num):
         port = settings.get('PORT_RRG')
-        baudrate = settings.get('BAUDRATE_RRG'),
+        baudrate = settings.get('BAUDRATE_RRG')
         current_address = 0xFE
         new_address = getattr(self, f'edit_newAddressRRG{num}').value()
 
