@@ -355,8 +355,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ])
             self.buttons_service.append(getattr(self, f'VE{i}ButtonS'))
 
-        self.PressProgress.hide()
-        self.TimeProgress.hide()
+        if number_gases == 2:
+            self.VE1ComboBox.setCurrentIndex(settings.get('last_ve1', 0))
+            self.VE2ComboBox.setCurrentIndex(settings.get('last_ve2', 0))
+        elif number_gases == 3:
+            self.VE1ComboBox.setCurrentIndex(settings.get('last_ve1', 0))
+            self.VE2ComboBox.setCurrentIndex(settings.get('last_ve2', 0))
+            self.VE3ComboBox.setCurrentIndex(settings.get('last_ve3', 0))
 
         if self.controller.init_is_successfully:
             self.timer_update_time.start(1000)

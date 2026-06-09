@@ -1,4 +1,5 @@
 import time
+import subprocess
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -207,12 +208,23 @@ class ProfWindow(QtWidgets.QMainWindow, Ui_ProfWindow):
         set.show()
 
     def power_off(self):
-        import subprocess
+        current_time = settings.get('time_work', 0) + (time.time() - self.parent().time_start_work)
+        number_gases = settings.get("NUMBER_GASES", 2)
 
-        self.time_work = time.time() - self.parent().time_start_work
-        last_time = settings.get('time_work', 0)
-        current_time = last_time + self.time_work
-        settings.update({'time_work': current_time})
+        data = {}
+        if number_gases == 2:
+            data = {'time_work': current_time, 
+                    'last_ve1': self.parent().VE1ComboBox.currentIndex(), 
+                    'last_ve2': self.parent().VE2ComboBox.currentIndex()
+                }
+        elif number_gases == 3:
+            data = {'time_work': current_time, 
+                    'last_ve1': self.parent().VE1ComboBox.currentIndex(), 
+                    'last_ve2': self.parent().VE2ComboBox.currentIndex(),
+                    'last_ve3': self.parent().VE3ComboBox.currentIndex()
+                }
+            
+        settings.update(data)
         save_settings(settings)
         
         subprocess.run(['shutdown', '-h', 'now'])
