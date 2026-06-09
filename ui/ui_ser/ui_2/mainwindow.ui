@@ -1528,7 +1528,7 @@ border-radius: 2px;</string>
         <bool>true</bool>
        </property>
       </widget>
-     </item
+     </item>
      <item row="11" column="2">
       <widget class="QPushButton" name="BuzzButtonS">
        <property name="text">
