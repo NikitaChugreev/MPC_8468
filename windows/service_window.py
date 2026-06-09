@@ -450,6 +450,11 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         super().__init__()
         self.setupUi(self)
 
+        self.buttons_service = [
+            self.DoorButtonS, self.StartButtonS, self.StopButtonS, self.DoorLightS, self.StartLightS, self.StopLightS, 
+            self.VE1ButtonS, self.VE2ButtonS, self.VE3ButtonS, self.VE4ButtonS, self.VE01ButtonS, self.VE02ButtonS, 
+            self.NIButtonS, self.BuzzButtonS, self.ButtonCancel
+        ]
         self.connect_buttons()
 
         self.TYPE_RF_MAP = {
@@ -468,14 +473,8 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         self.check_ports()
 
 
-        try:
-            self.buttons_service = [
-                self.DoorButtonS, self.StartButtonS, self.StopButtonS, self.DoorLightS, self.StartLightS, self.StopLightS, 
-                self.VE1ButtonS, self.VE2ButtonS, self.VE3ButtonS, self.VE4ButtonS, self.VE01ButtonS, self.VE02ButtonS, 
-                self.NIButtonS, self.BuzzButtonS, self.ButtonCancel
-            ]
-        except Exception as e:
-            print(e)
+        
+        
     
     def handle_commands(self, sender):
         try:
