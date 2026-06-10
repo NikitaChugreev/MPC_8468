@@ -469,8 +469,8 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
             '4': 2
         }
 
-        # self.read_config()
-        # self.check_ports()
+        self.read_config()
+        self.check_ports()
     
     def handle_commands(self, sender):
         try:
@@ -486,6 +486,8 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
                 command = 'open_valve_ve4' if getattr(self, sender).isChecked() else 'close_valve_ve4'
             if sender == 'VE01ButtonS':
                 command = 'open_valve_ve01' if getattr(self, sender).isChecked() else 'close_valve_ve01'
+            if sender == 'VE02ButtonS':
+                command = 'open_valve_ve02' if getattr(self, sender).isChecked() else 'close_valve_ve02'
             if sender == 'NIButtonS':
                 command = 'on_pump' if getattr(self, sender).isChecked() else 'off_pump'
             if sender == 'BuzzButtonS':
