@@ -457,6 +457,16 @@ class ServiceWindow(QtWidgets.QMainWindow, Ui_ServiceWindow):
         ]
         self.connect_buttons()
 
+        self.BAUD_CODE_MAP = {
+            '9600': 0,
+            '14400': 1,
+            '19200': 2,
+            '38400': 3,
+            '56000': 4,
+            '57600': 5,
+            '115200': 6
+        }
+
         self.TYPE_RF_MAP = {
             'RSG1000S': 0,
             'RSG500S': 1,

@@ -901,7 +901,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for i in work_gases:
             getattr(self, f'VE{i}ComboBox').setItemText(0, self.translator.tr('air'))
             getattr(self, f'VE{i}ComboBox').setItemText(1, self.translator.tr('argon'))
-            getattr(self, f'VE{i}ComboBox').setItemText(2, self.translator.tr('oxigen'))
+            getattr(self, f'VE{i}ComboBox').setItemText(2, self.translator.tr('oxygen'))
             getattr(self, f'VE{i}ComboBox').setItemText(3, self.translator.tr('nitrogen'))
             if getattr(self, f'VE{i}ComboBox').count() < 5:
                 getattr(self, f'VE{i}ComboBox').addItem("") 

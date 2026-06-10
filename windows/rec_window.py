@@ -82,7 +82,7 @@ class RecWindow(QtWidgets.QMainWindow, Ui_RecWindow):
         self.map_num_gas = {
             '0': self.translator.tr('air'),
             '1': self.translator.tr('argon'),
-            '2': self.translator.tr('oxigen'),
+            '2': self.translator.tr('oxygen'),
             '3': self.translator.tr('nitrogen'),
             '4': self.translator.tr('custom_gas'),
         }

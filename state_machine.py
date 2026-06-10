@@ -85,7 +85,6 @@ class PlasmaAutoProcess:
 
         self.FLOW_TOLERANCE = 1
         self.TEMP_TOLERANCE = 1
-        self.POWER_TOLERANCE = 10
 
         self.max_reflected_power = 10
 
@@ -627,7 +626,7 @@ class PlasmaAutoProcess:
                     conditions_error = True
                 else:
                     power_value = float(self.recipe_params.get('power', 0))
-                    conditions_error = any([abs(power_value) < self.POWER_TOLERANCE, 
+                    conditions_error = any([abs(power_value) < settings.get('MIN_POWER_BP'), 
                                             self.recipe_params.get('time', '00:00') == '00:00'])
                     
                 if conditions_error:
@@ -1910,7 +1909,7 @@ class PlasmaAutoProcess:
                 map_num_gas = {
                     '0': self.translator.tr('air'),
                     '1': self.translator.tr('argon'),
-                    '2': self.translator.tr('oxigen'),
+                    '2': self.translator.tr('oxygen'),
                     '3': self.translator.tr('nitrogen'),
                     '4': self.translator.tr('custom_gas'),
                 }
