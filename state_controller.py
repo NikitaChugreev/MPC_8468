@@ -140,6 +140,10 @@ class RRG_MFC_UT:
                     else:
                         coef = self.coef_gas.get(type_gas_str, 1.0)  # Используем 1.0 по умолчанию
                     flow = float((resp / 100.0) * coef * 0.06)
+
+                    if flow < settings.get('MIN_FLOW_RRG', 0.5):
+                        flow = 0.0
+
                     flow_rounded = round(flow, 1)
                     return flow_rounded
                 except Exception as e:

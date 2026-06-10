@@ -1710,15 +1710,22 @@ class PlasmaAutoProcess:
                 QTimer.singleShot(1000, self.process_processing)
 
             elif self.current_step == 3:
+                is_valid = True
+                
+                for i in work_gases:
+                    recipe_gas = self.recipe_params.get(f"VE{i}", {})
+                    type_gas = recipe_gas.get('gas') if recipe_gas.get('gas') is not None else 0
+                    self.controller.handle_command('set_flow', num_rrg=i, flow_lh=0.0, type_gas=type_gas)
+                    time.sleep(0.05) # Краткая задержка для гарантированной отправки команды по Modbus
+
                 for i in work_gases:
                     self.controller.handle_command(f"close_valve_ve{i}")
 
-                is_valid = True
                 for i in work_gases:
                     valves_check = self.safe_get_valves_states()
                     if valves_check.get(f"valve_ve{i}", 'close') == 'open':
                         is_valid = False
-
+                
                 if is_valid:
                     self.parent.update_status(self.translator.tr('valves_close'))
                     self.attempt = 0
@@ -2356,6 +2363,15 @@ class PlasmaAutoProcess:
             self.parent.StatusLine.setText(self.translator.tr('plasma_off'))
             time.sleep(0.3)
         
+        for valve in work_gases:
+            recipe_gas = {}
+            if hasattr(self.parent, 'current_recipe') and self.parent.current_recipe:
+                recipe_gas = self.parent.get_current_recipe().get(f'VE{valve}', {})
+            type_gas = recipe_gas.get('gas', 0) if recipe_gas else 0
+            
+            self.controller.handle_command('set_flow', num_rrg=valve, flow_lh=0.0, type_gas=type_gas)
+            time.sleep(0.05)
+
         # Затем выключаем остальные устройства
         for attempt in range(self.max_attempts):
             states = self.controller.handle_command('get_states')
